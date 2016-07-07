@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.06.10
-\version 2016.07.06
+\version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -183,7 +183,7 @@ public:
 
 	//! Присваивание
 	/*! Присваивание образам значений из массива valsRight. */
-	Func& operator=(const _T valsRight[_size])
+	Func& operator=(const _T (&valsRight)[_size])
 	{	
 		for (word x = 0; x < _size; x++)
 			_vals[x] = valsRight[x];
@@ -341,10 +341,13 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Func<_n, _T>& fRight)
 
 template<size_t _n> class BFunc : public Func<_n, bool>
 {
-protected:
+public:
 	using typename Func<_n, bool>::Image;
 	using typename Func<_n, bool>::Preimage;
+protected:
 	using Func<_n, bool>::_size;
+	static unsigned abs(int x) { return unsigned(x < 0 ? -x : x); }
+public:
 	using Func<_n, bool>::Get;
 	using Func<_n, bool>::Set;
 	using Func<_n, bool>::Size;
@@ -573,7 +576,6 @@ public:
 		return record;
 	}
 
-
 // конструкторы
 public:
 	//! Конструктор по умолчанию
@@ -598,10 +600,12 @@ public:
 
 template<size_t _n, size_t _m> class VFunc : public Func<_n, Word<_m> >
 {
-protected:
+public:
 	using typename Func<_n, Word<_m> >::Image;
 	using typename Func<_n, Word<_m> >::Preimage;
+protected:
 	using Func<_n, Word<_m> >::_size;
+public:
 	using Func<_n, Word<_m> >::Get;
 	using Func<_n, Word<_m> >::Set;
 	using Func<_n, Word<_m> >::Size;
@@ -839,9 +843,11 @@ public:
 
 template<size_t _n> class VSubst : public VFunc<_n, _n>
 {
-protected:
+public:
 	using typename VFunc<_n, _n>::Image;
+protected:
 	using VFunc<_n, _n>::_size;
+protected:
 	using VFunc<_n, _n>::Get;
 	using VFunc<_n, _n>::Set;
 // подстановка
@@ -928,9 +934,9 @@ public:
 	{
 		// ищем с конца убывающую цепочку
 		word i = _size - 2;
-		while (i != -1 && Get(i) > Get(i + 1)) i--;
+		while (i != WORD_MAX && Get(i) > Get(i + 1)) i--;
 		// достигли начала, т.е. последняя подстановка?
-		if (i == -1)
+		if (i == WORD_MAX)
 		{
 			First();
 			return false;
@@ -1000,7 +1006,7 @@ public:
 	//! Конструктор по значениям-машинным словам
 	/*! Создается подстановка со значениями из массива машинных 
 		слов valsRight. */
-	VSubst(const word valsRight[_size]) : VFunc<_n, _n>(valsRight)
+	VSubst(const word (&valsRight)[_size]) : VFunc<_n, _n>(valsRight)
 	{	
 		assert(IsBijection());
 	}

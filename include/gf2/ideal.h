@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.06
+\version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -1096,11 +1096,12 @@ public:
 				// добавить в базис
 				polyQB.Union(mon);
 				// умножаем его на всевозможные существенные переменные
-				for (size_t prev = -1, cur = 0; cur < _n; cur++)
+				for (size_t prev = SIZE_MAX, cur = 0; cur < _n; cur++)
 					if (vars.Test(cur) && !mon.Test(cur))
 					{
 						mon.Set(cur, 1);
-						if (prev != -1) mon.Set(prev, 0);
+						if (prev != SIZE_MAX) 
+							mon.Set(prev, 0);
 						prev = cur;
 						tosee.Union(mon);
 					}

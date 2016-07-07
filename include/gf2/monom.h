@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.06
+\version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -74,7 +74,7 @@ public:
 	bool Calc(const Word<_n>& val) const
 	{	
 		for (size_t pos = 0; pos < _wcount; pos++)
-			if ((val.GetWord(pos) | ~_words[pos]) != -1)
+			if ((val.GetWord(pos) | ~_words[pos]) != SIZE_MAX)
 				return false;
 		return true;
 	}

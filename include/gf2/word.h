@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.06
+\version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -211,17 +211,17 @@ public:
 		if (pos = pos1 % _bitsperword)
 		{
 			(_words[wpos1] <<= (_bitsperword - pos)) >>= _bitsperword - pos;
-			if (val) _words[wpos1] |= word(-1) << pos;
+			if (val) _words[wpos1] |= WORD_MAX << pos;
 			wpos1++;
 		}
 		// заканчиваем посередине слова представления?
 		if (pos = pos2 % _bitsperword)
 		{
 			(_words[wpos2] >>= pos) <<= pos;
-			if (val) _words[wpos2] |= word(-1) >> (_bitsperword - pos);
+			if (val) _words[wpos2] |= WORD_MAX >> (_bitsperword - pos);
 		}
 		// заполняем полные слова
-		for (pos = wpos1; pos < wpos2; _words[pos++] = (val ? -1 : 0));
+		for (pos = wpos1; pos < wpos2; _words[pos++] = (val ? WORD_MAX : 0));
 	}
 
 	//! Заполнение константой
@@ -229,7 +229,7 @@ public:
 	void SetAll(bool val)
 	{	
 		for (size_t pos = 0; pos < _wcount; pos++)
-			_words[pos] = val ? -1 : 0;
+			_words[pos] = val ? WORD_MAX : 0;
 		if (val) Trim();
 	}
 
@@ -282,7 +282,7 @@ public:
 	/*! Инвертировать все символы слова. */
 	Word& FlipAll()
 	{	
-		for (size_t pos = 0; pos < _wcount; _words[pos++] ^= -1);
+		for (size_t pos = 0; pos < _wcount; _words[pos++] ^= WORD_MAX);
 		Trim();
 		return *this;
 	}
@@ -297,10 +297,10 @@ public:
 		// проверить все слова представления, кроме последнего
 		size_t pos = 0;
         for (; pos + 1 < _wcount; pos++)
-			if (_words[pos] != (val ? -1 : 0))
+			if (_words[pos] != (val ? WORD_MAX : 0))
 				return false;
 		// проверить последнее слово представления
-		return _words[pos] == (val ? word(-1) << _trimbits >> _trimbits : 0);
+		return _words[pos] == (val ? WORD_MAX << _trimbits >> _trimbits : 0);
 	}
 
 	//! Нулевое слово?
@@ -404,7 +404,7 @@ public:
 					_words[pos] = (_words[pos + wshift] >> shift) |
 						(_words[pos + wshift + 1] << (_bitsperword - shift));
 				// последнее слово
-				_words[pos++] = _words[pos + wshift] >> shift;
+				_words[pos] = _words[pos + wshift] >> shift, ++pos;
 			}
 			// величина сдвига кратна длине слова
 			else for (pos = 0; pos + wshift < _wcount; pos++)
@@ -434,7 +434,7 @@ public:
 					_words[pos] = (_words[pos - wshift] << shift) |
 						(_words[pos - wshift - 1] >> (_bitsperword - shift));
 				// первое слово
-				_words[pos--] = _words[pos - wshift] << shift;
+				_words[pos] = _words[pos - wshift] << shift, --pos;
 			}
 			// величина сдвига кратна длине слова
 			else for (pos = _wcount - 1; pos + 1 > wshift; pos--)
@@ -442,7 +442,7 @@ public:
 			// очистка последнего слова
 			Trim();
 			// обнуление левых слов
-			for (; pos != -1; _words[pos--] = 0);
+			for (; pos != SIZE_MAX; _words[pos--] = 0);
 		}
 		else SetAllZero();
 		return *this;
@@ -620,7 +620,7 @@ public:
 	{	
 		Word<_n> temp;
 		for (size_t pos = 0; pos < _n; ++pos)
-			temp.Set(pos, pi[pos] == - 1 ? 0 : Test(pi[pos]));
+			temp.Set(pos, pi[pos] == SIZE_MAX ? 0 : Test(pi[pos]));
 		return operator=(temp);
 	}
 
@@ -631,7 +631,7 @@ public:
 		\return -1 (<), 0 (=), 1 (>). */
 	int Compare(const Word& wRight) const
 	{
-		for (size_t pos = _wcount - 1; pos != -1; pos--)
+		for (size_t pos = _wcount - 1; pos != SIZE_MAX; pos--)
 			if (_words[pos] > wRight.GetWord(pos)) return 1;
 			else if (_words[pos] < wRight.GetWord(pos)) return -1;
 		return 0;
@@ -652,7 +652,7 @@ public:
 		}
 		else for (pos = wRight.WordSize() - 1; pos != _wcount - 1; pos--)
 		if (wRight.GetWord(pos) != 0) return -1;
-		for (; pos != -1; pos--)
+		for (; pos != SIZE_MAX; pos--)
 			if (_words[pos] > wRight.GetWord(pos)) return 1;
 			else if (_words[pos] < wRight.GetWord(pos)) return -1;
 		return 0;
@@ -732,7 +732,7 @@ public:
 		if (!saveWeight)
 		{
 			// декремент слова-как-числа
-			while (pos < _wcount && --_words[pos] == -1) pos++;
+			while (pos < _wcount && --_words[pos] == SIZE_MAX) pos++;
 			// перенос не попал или остался в последнем слове представления?
 			if (pos < _wcount) return true;
 			Trim();
@@ -763,7 +763,7 @@ public:
 			return false;
 		}
 		// сдвигаем 1^{end}0^{pos-end}1... -> 0^{pos-end-1}1^{end+1}0...
-		Set(0, pos - end - 1, 0); Set(pos - end - 1, pos, 1); Set(pos, 0);
+		Set(0, pos - end - 1, 0), Set(pos - end - 1, pos, 1), Set(pos, 0);
 		return true;
 	}
 

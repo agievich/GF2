@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.06
+\version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -237,10 +237,10 @@ public:
 	/*! Из числа вычитается машинное слово wRight. */
 	ZZ& operator-=(word wRight)
 	{	
- 		if ((_words[0] -= wRight) > word(-1) - wRight)
+ 		if ((_words[0] -= wRight) > WORD_MAX - wRight)
 		{
 			size_t pos = 1;
-			while (pos < _wcount && --_words[pos] == word(-1)) pos++;
+			while (pos < _wcount && --_words[pos] == WORD_MAX) pos++;
 		}
 		Trim();
 		return *this;
@@ -252,11 +252,11 @@ public:
 	{	
 		word borrow = 0;
 		for (size_t pos = 0; pos < _wcount; pos++)
-			if ((_words[pos] -= borrow) > word(-1) - borrow) 
+			if ((_words[pos] -= borrow) > WORD_MAX - borrow) 
 				_words[pos] -= zRight.GetWord(pos);
             else 
 				borrow = (_words[pos] -= zRight.GetWord(pos)) > 
-					word(-1) - zRight.GetWord(pos);
+					WORD_MAX - zRight.GetWord(pos);
 		Trim();
 		return *this;
 	}
@@ -269,13 +269,13 @@ public:
 		word borrow = 0;
 		size_t pos;
 		for (pos = 0; pos < min(_wcount, zRight.WordSize()); pos++)
-			if ((_words[pos] -= borrow) > word(-1) - borrow) 
+			if ((_words[pos] -= borrow) > WORD_MAX - borrow) 
 				_words[pos] -= zRight.GetWord(pos);
             else 
 				borrow = (_words[pos] -= zRight.GetWord(pos)) > 
-					word(-1) - zRight.GetWord(pos);
+					WORD_MAX - zRight.GetWord(pos);
 		if (borrow)
-			while (pos < _wcount && --_words[pos] == word(-1)) pos++;
+			while (pos < _wcount && --_words[pos] == WORD_MAX) pos++;
 		Trim();
 		return *this;
 	}
@@ -364,7 +364,7 @@ public:
 			return *this;
 		}
 		dword divisor;
-		for (size_t pos = _wcount - 1; pos != -1; pos--)
+		for (size_t pos = _wcount - 1; pos != SIZE_MAX; pos--)
 		{
 			// делим (предыдущий_остаток, текущий_разряд) на wRight
 			divisor = rem;
@@ -445,7 +445,7 @@ public:
 			q <<= _bitsperword;
 			q |= divident.GetWord(pos - 1);
 			q /= divisor.GetWord(digits);
-			if (q > word(-1)) q = word(-1);
+			if (q > WORD_MAX) q = WORD_MAX;
 			// определить старшие разряды делимого
 			ZZ<3 * _bitsperword> dividentHi;
 			dividentHi.SetWord(0, divident.GetWord(pos - 2));
@@ -685,7 +685,7 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const ZZ<_n>& zRight)
 		bool waitfirst = true;
 		if (os.flags() & std::ios_base::showbase)
 			os << "0x";
-		for (; pos != -1; pos--)
+		for (; pos != SIZE_MAX; pos--)
 		{
 			if (waitfirst)
 				::sprintf(buffer, "%X", zRight.GetWord(pos));

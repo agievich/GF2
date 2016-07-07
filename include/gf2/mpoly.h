@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.06
+\version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -949,28 +949,28 @@ public:
 		bool PopLM(Monom<_n>& lm)
 		{
 			int cmp;
-			size_t i = -1, j = (size_t)_buckets.size();
+			size_t i = SIZE_MAX, j = (size_t)_buckets.size();
 			const _O& o = _buckets[0].GetOrder();
 			do
 			{
 				// пропускаем пустые корзины
 				if (_buckets[--j].IsEmpty()) continue;
 				// новый старший моном?
-				if (i == -1 || (cmp = o.Compare(_buckets[j].LM(), lm)) > 0)
+				if (i == SIZE_MAX || (cmp = o.Compare(_buckets[j].LM(), lm)) > 0)
 					lm = _buckets[i = j].LM();
 				// одинаковые мономы?
 				else if (cmp == 0) 
 				{
 					// удаляем мономы из корзин и начинаем все сначала
 					_buckets[i].PopLM(), _buckets[j].PopLM();
-					i = -1, j = (size_t)_buckets.size();
+					i = SIZE_MAX, j = (size_t)_buckets.size();
 				}
 			}
 			while (j != 0);
 			// моногочлен ненулевой?
-			if (i != -1) _buckets[i].PopLM();
-			// возвращаем признак успеха
-			return i != -1;
+			if (i != SIZE_MAX) _buckets[i].PopLM();
+			// признак успеха
+			return i != SIZE_MAX;
 		}
 
 		//! Сборка многочлена

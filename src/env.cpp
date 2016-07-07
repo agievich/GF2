@@ -37,7 +37,11 @@ using namespace GF2;
 	#include <windows.h>
 #elif defined OS_LINUX
 	#include <sys/types.h>
+	#include <sys/time.h>
 	#include <unistd.h>
+#elif defined OS_APPLE
+	#include <mach/clock.h>
+	#include <mach/mach.h>
 #endif
 
 // Статическая проверка среды
@@ -161,13 +165,22 @@ u32 Env::Ticks()
 {	
 #ifdef OS_WIN
 	return (u32)::GetTickCount();
-#else
+#elif defined OS_LINUX
 	timespec ts;
     u32 ticks = 0U;
     ::clock_gettime( CLOCK_MONOTONIC, &ts);
     ticks  = ts.tv_nsec / 1000000;
     ticks += ts.tv_sec * 1000;
     return ticks;
+#elif defined OS_APPLE
+	clock_serv_t cclock;
+	mach_timespec_t mts;
+    u32 ticks = 0U;
+	host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+	clock_get_time(cclock, &mts);
+	mach_port_deallocate(mach_task_self(), cclock);
+    ticks  = mts.tv_nsec / 1000000;
+    ticks += mts.tv_sec * 1000;
 #endif
 }
 

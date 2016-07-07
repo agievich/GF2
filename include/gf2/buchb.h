@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2006.01.01
-\version 2016.07.06
+\version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -40,7 +40,7 @@ namespace GF2{
 -#	Структура поддерживает хранение критических пар алгоритма Бухбергера.
 -#	Первым многочленом пары может быть либо неявное "уравнение поля"
 	x_i^2-x_i (номер i сохраняется в var1), либо явный многочлен 
-	(сохраняется в iter1, при этом var1 полагается равным -1).
+	(сохраняется в iter1, при этом var1 полагается равным SIZE_MAX).
 	Вторым многочленом пары (поле iter2) всегда является явный 
 	многочлен. Старшие мономы многочленов дублируются в полях lm1
 	и lm2.
@@ -49,7 +49,7 @@ namespace GF2{
 -#	НОК старших мономов многочленов кэшируется и используется 
 	при сравнении пар и при проверке делимости (см. перегруженные 
 	методы operator==(), operator!=(), operator|()).
-	Важно, что в этих операциях при var1 != -1 НОК неявно 
+	Важно, что в этих операциях при var1 != SIZE_MAX НОК неявно 
 	домножается на переменную с номером var1.
 -#	В структуре сохраняются атрибуты многочленов пары 
 	(поля attr1 и attr2), а также атрибуты S-многочлена (поле attr). 
@@ -97,7 +97,7 @@ public:
 	};
 	//! НОК старших мономов
 	/*! НОК старших мономов пары многочленов
-		\remark При использовании уравнения поля (first.var != -1)
+		\remark При использовании уравнения поля (first.var != SIZE_MAX)
 		НОК неявно домножается на переменную c номером first.var
 		в методах сравнения и проверки делимости. */
 	const Monom<_n> lcm;
@@ -112,7 +112,7 @@ public:
 	{
 		spoly.SetOrder(iter2->GetOrder());
 		spoly = *iter2;
-		if (var1 == -1)
+		if (var1 == SIZE_MAX)
 			// S-многочлен для пары явных многочленов
 			spoly.SPoly(*iter1);
 		else
@@ -147,7 +147,7 @@ public:
 		НОК старших мономов пары cpRight.*/
 	bool operator|(const CritPair& cpRight) const
 	{
-		return (var1 == cpRight.var1 || var1 == -1) && 
+		return (var1 == cpRight.var1 || var1 == SIZE_MAX) && 
 			(lcm | cpRight.lcm);
 	}
 
@@ -156,7 +156,7 @@ public:
 		пары (признак отстутствия зацепления). */
 	bool IsRelPrime() const
 	{	
-		return var1 != -1 ? lm2.Test(var1) == 0 : GCD(lm1, lm2).IsAllZero();
+		return var1 != SIZE_MAX ? lm2.Test(var1) == 0 : GCD(lm1, lm2).IsAllZero();
 	}
 
 	//! R-пара?
@@ -164,53 +164,6 @@ public:
 	bool IsRPair() const
 	{
 		return lm2 | lm1;
-	}
-
-	//! Завершает треугольник?
-	/*! Возвращается признак того, что между целевой парой и входными парами 
-		есть попарное зацепление многочленов. */
-	bool IsTriangle(const CritPair& cp1, const CritPair& cp2) const
-	{
-		// пары cp1 и cp2 зацепляются первыми многочленами?
-		if (cp1.var1 == cp2.var1 && cp1.lm1 == cp2.lm1)
-			// многочлены пары не могут быть многочленами поля
-			// эти многочлены должны совпадать со вторыми многочленами cp1, cp2
-			return var1 == -1 && (lm1 == cp1.lm2 || lm1 == cp2.lm2) &&
-				(lm2 == cp1.lm2 || lm2 == cp2.lm2);
-
-		// пары cp1 и cp2 зацепляются первым и вторым многочленами?
-		if (cp1.var1 == -1 && cp1.lm1 == cp2.lm2)
-			// сp2 не содержит многочленов поля?
-			if (cp2.var1 != -1)
-	 			return var1 == -1 && (lm1 == cp1.lm2 || lm1 == cp2.lm1) &&
-					(lm2 == cp1.lm2 || lm2 == cp2.lm1);
-			else
-				return var1 == cp2.var1 && lm2 == cp1.lm2;
-		
-		// пары cp1 и cp2 зацепляются вторым и первым многочленами?
-		if (cp2.var1 == -1 && cp2.lm1 == cp1.lm2)
-			// сp1 не содержит многочлена поля?
-			if (cp1.var1 != -1)
-	 			return var1 == -1 && (lm1 == cp2.lm2 || lm1 == cp1.lm1) &&
-					(lm2 == cp2.lm2 || lm2 == cp1.lm1);
-			// .. содержит
-			else
-				return var1 == cp1.var1 && lm2 == cp2.lm2;
-
-		// пары cp1 и cp2 зацепляются вторыми многочленами?
-		if (cp1.lm2 == cp2.lm2)
-			// есть многочлен поля?
-			if (var1 != -1)
-	 			return var1 == cp1.var1 && lm2 == cp2.lm2 ||
-					var1 == cp2.var1 && lm2 == cp1.lm2;
-			// ..нет
-			else 
-	 			return cp1.var1 == -1 && cp2.var1 == -1 &&
-					(lm1 == cp1.lm1 || lm1 == cp2.lm1) &&
-					(lm2 == cp1.lm1 || lm2 == cp2.lm1);
-
-		// пары cp1 и cp2 не зацепляются
-		return false;
 	}
 
 	//! Меньше?
@@ -225,7 +178,7 @@ public:
 	void Print() const
 	{
 		std::cout << '[';
-		if (var1 != -1)
+		if (var1 != SIZE_MAX)
 			Env::Print("x_%d^2-x_%d", var1, var1);
 		else
 			std::cout << lm1;
@@ -239,7 +192,7 @@ public:
 	//! Конструктор по двум итераторам и атрибутам
 	/*! Создается пара многочленов (*i1, *i2). */
 	CritPair(iterator i1, iterator i2) :
-		var1(-1), iter1(i1), lm1(iter1->LM()),
+		var1(SIZE_MAX), iter1(i1), lm1(iter1->LM()),
 		iter2(i2), lm2(i2->LM()),
 		lcm(LCM(lm1, lm2))
 	{
@@ -302,7 +255,7 @@ public:
 	В конструкторе класса Buchb можно передать степень обрезки 
 	S-многочленов. При работе алгоритма Бухбергера S-многочлены, степень
 	которых больше степени обрезки игнорируются. По умолчанию степень обрезки
-	равняется (word)-1, т.е. обрезка не выполняется. При обрезке S-многочленов
+	равняется WORD_MAX, т.е. обрезка не выполняется. При обрезке S-многочленов
 	результат не обязательно будет базисом Гребнера.
 -#	Метод ValidatePre() аналогичен Validate(). Отличие только в том, что
 	ValidatePre() выполняется до приведения S-многочлена по модулю текущей 
@@ -339,21 +292,9 @@ protected:
 		size_t c_criterion; // число пар, исключенных C-критерием
 		size_t buch_criterion; // число пар, исключенных I критерием Бухбергера
 		size_t r_criterion; // число многочленов, переведенных в резерв
-		size_t triangles; // использовано треугольников при исключении кп
 	} _stat; // статистика
 // вычисления
 protected:
-	bool _HasTriangle(const _CP& cp1, const _CP& cp2)
-	{
-		typename _CPs::iterator pos = _pairs_processed.begin();
-		for (; pos != _pairs_processed.end(); ++pos)
-			if (pos->IsTriangle(cp1, cp2))
-			{
-				_stat.triangles++;
-				return true;
-			}
-		return false;
-	}
 	//! Внутреннее обновление
 	/*! Список критических пар обновляется с учетом пар,
 		которые включают многочлен системы в позиции posPoly. */
@@ -436,8 +377,7 @@ protected:
 			{
 				// выполняются условия делимости?
 				if ((*posPair | newpair) && 
-					(!(posPoly->LM() | LCM(posPair->lm1, posBasis->LM())) || 
-						_HasTriangle(*posPair, newpair)))
+					(!(posPoly->LM() | LCM(posPair->lm1, posBasis->LM()))))
 				{
 					// новая пара исключается критерием B?
 					if (*posPair != newpair)
@@ -463,8 +403,7 @@ protected:
 			for (posPair = newpairs.begin(); posPair != newpairs.end();)
 				// критерий B исключает *posPair?
 				if ((newpair | *posPair) && newpair != *posPair &&
-					(!(posPoly->LM() | LCM(posPair->lm1, posBasis->LM())) || 
-						_HasTriangle(*posPair, newpair)))
+					(!(posPoly->LM() | LCM(posPair->lm1, posBasis->LM()))))
 						posPair = newpairs.erase(posPair), _stat.b_criterion++;
 				else
 					++posPair;
@@ -662,15 +601,13 @@ public:
 			"       %d - max degree of S-polynomials\n"
 			"       %d/%d/%d times the A/B/C criteria were applied\n"
 			"       %d applications of the 1st Buchberger criterion\n"
-			"       %d polynomials were removed\n"
-			"       %d triangles were used to discard critical pairs\n",
+			"       %d polynomials were moved to the reserve\n",
 			_basis.Size(), _basis.MinDeg(), _basis.MaxDeg(),
 			_stat.pairs_processed, _stat.reduction_to_zero,
 			_stat.max_deg,
 			_stat.a_criterion, _stat.b_criterion, _stat.c_criterion,
 			_stat.buch_criterion,
-			_stat.r_criterion,
-			_stat.triangles);
+			_stat.r_criterion);
 	}
 	
 	//! Конструктор

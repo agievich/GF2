@@ -1,5 +1,5 @@
-GF2: a C++ library for algebraic structures over GF(2)
-======================================================
+GF2: A C++ library for algebra over GF(2)
+=========================================
 
 [![Build Status](https://travis-ci.org/agievich/gf2.svg?branch=master)](https://travis-ci.org/agievich/gf2)
 

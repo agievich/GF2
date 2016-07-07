@@ -95,6 +95,7 @@ bool bashTest()
 	bb.Update(i);
 	bb.Process();
 	bb.Done(i);
+	bb.PrintStat();
 	// завершение
 	Env::Trace("");
 	return i.Size() == 14;

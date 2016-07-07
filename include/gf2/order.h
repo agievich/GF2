@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.06
+\version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -296,9 +296,9 @@ template<size_t _n> struct OrderGrevlex : public Order<_n>
 	{
 		size_t end = _n - 1;
 		// ищем окончание серии из единиц
-		while (end != -1 && !m.Test(end)) end--;
+		while (end != SIZE_MAX && !m.Test(end)) end--;
 		// единиц нет (нулевая экспонента)?
-		if (end == -1)
+		if (end == SIZE_MAX)
 		{
 			// установить экспоненту 100..0
 			if (_n > 0) m.Set(0, 1);
@@ -313,9 +313,9 @@ template<size_t _n> struct OrderGrevlex : public Order<_n>
 		}
 		// ищем начало серии из единиц
 		size_t start = end - 1;
-		while (start != -1 && m.Test(start)) start--;
+		while (start != SIZE_MAX && m.Test(start)) start--;
 		// все единицы?
-		if (start == -1)
+		if (start == SIZE_MAX)
 		{
 			m.SetAllZero();
 			return false;
@@ -323,9 +323,9 @@ template<size_t _n> struct OrderGrevlex : public Order<_n>
 		// сохраняем длину серии в end
 		end -= start;
 		// ищем вправо еще одну единицу
-		while (--start != -1 && !m.Test(start));
+		while (--start != SIZE_MAX && !m.Test(start));
 		// экспонента имеет вид 00...011...1?
-		if (start == -1)
+		if (start == SIZE_MAX)
 		{
 			// переходим к следующему весу
 			m.Set(0, end + 1, 1); m.Set(end + 1, _n, 0); 
@@ -382,7 +382,7 @@ template<size_t _n> struct OrderAlex : public Order<_n>
 	int Compare(const Monom<_n>& m1, const Monom<_n>& m2) const
 	{
 		// цикл по столбцам справа налево
-		for (size_t row = _n - 1; row != -1; row--)
+		for (size_t row = _n - 1; row != SIZE_MAX; row--)
 		{
 			// умножаем векторы экспонент на столбец A
 			word sum1 = 0, sum2 = 0;
