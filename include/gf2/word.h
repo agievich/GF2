@@ -500,7 +500,8 @@ public:
 	{
 		assert(_m <= _n && this != (void*)&w);
 		size_t pos = 0;
-		for (; pos + 1 < w.WordSize(); _words[pos++] = w.GetWord(pos));
+		for (; pos + 1 < w.WordSize(); ++pos)
+			_words[pos] = w.GetWord(pos);
 		// неполное последнее слово mon?
 		if (size_t trim = _m % _bitsperword)
 		{
