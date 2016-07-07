@@ -1,0 +1,79 @@
+\documentclass[12pt,a4paper]{book}
+
+\usepackage{cmap}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8x,utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{ucs} 
+\usepackage{textcase}
+
+\pdfpkresolution=2000
+\pdfpkmode={supre}
+
+\usepackage{amsmath,amssymb,amsthm,xspace,ifthen,graphicx,float}
+
+\usepackage[
+  pdftitle={GF2: a C++ library for algebraic structures over GF(2)},
+  pdfauthor={},
+  pdfpagemode=UseOutlines,
+  pdfstartview=FitH,
+  linkcolor=black,
+  citecolor=black]{hyperref}
+
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{listings}
+
+\usepackage{ulem}
+\normalem
+
+\usepackage{longtable}
+\setlongtables
+
+\usepackage{defs}
+
+\renewcommand{\baselinestretch}{1.15}
+\renewcommand{\thefootnote}{}
+\setcounter{tocdepth}{1}
+\pagestyle{headings}
+
+\hoffset          = -1in 
+\voffset          = -1in
+\oddsidemargin    = 30mm
+\evensidemargin   = 10mm
+\textwidth        = 170mm
+\topmargin        = 20mm
+\textheight       = 252mm  
+\headsep          = 1\baselineskip
+\headheight       = 2\baselineskip
+\addtolength{\topmargin}{-\headheight}
+\addtolength{\topmargin}{-\headsep}
+\parindent        = 0.8cm
+
+% doxygen packages
+\usepackage{makeidx,fancyhdr,graphicx,multicol,float,textcomp,alltt}
+\usepackage{doxygen}
+
+% change doxygen.sty footers
+\rfoot[\fancyplain{}{\bfseries\scriptsize Библиотека GF2 (\today)}]{}
+\lfoot[]{\fancyplain{}{\bfseries\scriptsize Библиотека GF2 (\today)}}
+
+% other settings
+\makeindex
+\setcounter{tocdepth}{1}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+\begin{titlepage}
+\vspace*{7cm}
+\begin{center}
+{\Huge\bf\scshape Описание библиотеки GF2}\\[2ex]
+{\large\scshape Версия 0.9}\\[1ex]
+{\scshape\today}\\
+\end{center}
+\end{titlepage}
+\clearemptydoublepage
+\pagenumbering{roman}
+\tableofcontents
+\clearemptydoublepage
+\pagenumbering{arabic}
+
