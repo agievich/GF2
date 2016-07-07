@@ -1,11 +1,13 @@
 GF2: a C++ library for algebraic structures over GF(2)
 ======================================================
 
+[![Build Status](https://travis-ci.org/agievich/gf2.svg?branch=master)](https://travis-ci.org/agievich/gf2)
+
 What is GF2?
 -------------
 
-GF2 is an C++ library which maintains the following algebraic structures
-over GF(2):
+GF2 is a C++ library which maintains the following algebraic structures 
+over GF(2): 
 
 1. Word: words in GF(2) of arbitrary finite length.
 2. ZZ: words in GF(2) as unsigned integers.

@@ -1,0 +1,32 @@
+# Travis-CI Build for gf2
+# see travis-ci.org for details
+
+language: cpp
+
+branches:
+  only:
+    - master
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: BUILD_TYPE=Release
+    - os: linux
+      compiler: clang
+      env: BUILD_TYPE=Debug
+    - os: osx
+      compiler: gcc
+      env: BUILD_TYPE=ASan
+    - os: osx
+      compiler: clang
+      env: BUILD_TYPE=Check
+    - os: linux
+      compiler: gcc
+      env: BUILD_TYPE=Coverage
+
+script: 
+  - mkdir build && cd build 
+  - cmake -DBUILD_TYPE=$BUILD_TYPE ..
+  - make
+  - make test
