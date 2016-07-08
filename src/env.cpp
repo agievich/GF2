@@ -135,7 +135,7 @@ void Env::Trace(const char* format,...)
 	{
 #ifdef OS_WIN
 		::SetConsoleTitleA(Name());
-#elif defined OS_LINUX
+#else
 		printf("\033]0;%s\007", Name());
 #endif
 		return;
@@ -155,7 +155,7 @@ void Env::Trace(const char* format,...)
 	if (::strcmp(prevbuffer, buffer) == 0)
 		return;
 	::SetConsoleTitleA(buffer);
-#elif defined OS_LINUX
+#else
 	printf("\033]0;%s\007", buffer);
 #endif
 }
@@ -169,7 +169,7 @@ u32 Env::Ticks()
 	timespec ts;
     u32 ticks = 0;
     ::clock_gettime( CLOCK_MONOTONIC, &ts);
-    ticks  = ts.tv_nsec / 1000000;
+    ticks = ts.tv_nsec / 1000000;
     ticks += ts.tv_sec * 1000;
     return ticks;
 #elif defined OS_APPLE
@@ -179,7 +179,7 @@ u32 Env::Ticks()
 	host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
 	clock_get_time(cclock, &mts);
 	mach_port_deallocate(mach_task_self(), cclock);
-    ticks  = mts.tv_nsec / 1000000;
+    ticks = mts.tv_nsec / 1000000;
     ticks += mts.tv_sec * 1000;
 	return ticks;
 #endif

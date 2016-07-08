@@ -56,6 +56,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
   endif(CMAKE_COMPILER_IS_CLANG)
 endif(CMAKE_BUILD_TYPE STREQUAL "Coverage")
 
+# To support clock_gettime
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lrt")
+
 include_directories(include/)
 add_subdirectory(include)
 
