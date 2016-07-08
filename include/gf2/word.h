@@ -297,8 +297,7 @@ public:
 		// проверить все слова представления, кроме последнего
 		size_t pos = 0;
         for (; pos + 1 < _wcount; pos++)
-			if (_words[pos] != (val ? WORD_MAX : 0))
-				return false;
+			if (_words[pos] != (val ? WORD_MAX : 0)) return false;
 		// проверить последнее слово представления
 		return _words[pos] == (val ? WORD_MAX << _trimbits >> _trimbits : 0);
 	}

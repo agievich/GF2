@@ -154,7 +154,7 @@ void Env::Trace(const char* format,...)
 		return;
 	::SetConsoleTitleA(buffer);
 #else
-	fprintf(stdout, "%s\n", buffer);
+	fprintf(stderr, "%s\n", buffer);
 #endif
 }
 

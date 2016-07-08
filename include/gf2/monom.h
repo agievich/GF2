@@ -74,7 +74,7 @@ public:
 	bool Calc(const Word<_n>& val) const
 	{	
 		for (size_t pos = 0; pos < _wcount; pos++)
-			if ((val.GetWord(pos) | ~_words[pos]) != SIZE_MAX)
+			if ((val.GetWord(pos) | ~_words[pos]) != WORD_MAX)
 				return false;
 		return true;
 	}
