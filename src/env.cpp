@@ -135,8 +135,6 @@ void Env::Trace(const char* format,...)
 	{
 #ifdef OS_WIN
 		::SetConsoleTitleA(Name());
-#else
-		printf("\033]0;%s\007", Name());
 #endif
 		return;
 	}
@@ -156,7 +154,7 @@ void Env::Trace(const char* format,...)
 		return;
 	::SetConsoleTitleA(buffer);
 #else
-	printf("\033]0;%s\007", buffer);
+	fprintf(stderr, "%s\n", buffer);
 #endif
 }
 
