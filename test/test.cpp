@@ -46,6 +46,8 @@ template class Func<5, int>;
 
 #	orderTest: проверка тождественности OrderGrlex<6> и OrderGr<OrderLex<6> >;
 #	bentTest: проверка бентовости функции Майораны-МакФарланда;
+#	sboxTest: проверка криптографических характеристик 4-битового S-блока 
+	(by.gost28147.params.1);
 #	bashTest: базис Гребнера идеала, описывающего S-блок Bash.
 *******************************************************************************
 */
@@ -83,6 +85,16 @@ bool bentTest()
 	return bf.IsBent();
 }
 
+bool sboxTest()
+{
+	static const word s_table[16] = {2,6,3,14,12,15,7,5,11,13,8,9,10,0,4,1};
+	VSubst<4> s(s_table);
+	// характеристики
+	return s.Nl() == 4 && 
+		s.Deg() == 3 && s.DegSpan() == 3 &&
+		s.Dc(0) == 4 && s.Dc(1) == 4 && s.Dc(2) == 4 && s.Dc(3) == 3;
+}
+
 bool bashTest()
 {
 	typedef OrderGrevlex<6> O;
@@ -109,11 +121,9 @@ bool bashTest()
 	bb.Update(i);
 	bb.Process();
 	bb.Done(i);
-	bb.PrintStat();
 	// завершение
 	Env::Trace("");
 	return i.Size() == 14;
-
 }
 
 /*
@@ -130,6 +140,8 @@ int main()
 	Env::Print("orderTest: %s\n", (code = orderTest()) ? "OK" : "Err"), 
 		ret |= !code;
 	Env::Print("bentTest: %s\n", (code = bentTest()) ? "OK" : "Err"), 
+		ret |= !code;
+	Env::Print("sboxTest: %s\n", (code = sboxTest()) ? "OK" : "Err"), 
 		ret |= !code;
 	Env::Print("bashTest: %s\n", (code = bashTest()) ? "OK" : "Err"), 
 		ret |= !code;

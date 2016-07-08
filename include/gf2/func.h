@@ -435,13 +435,13 @@ public:
 		while (x.Next());
 		// zf <- FWHT(zf)
 		for (word i = 0; i < _n; ++i)
-		for (word j = 0; j < _size; j += word(1) << (i + 1))
-		for (word k = 0; k < word(1) << i; ++k)
+		for (word j = 0; j < _size; j += WORD_1 << (i + 1))
+		for (word k = 0; k < WORD_1 << i; ++k)
 		{
 			int t = zfRight[j + k];
-			zfRight[j + k] += zfRight[j + k + (word(1) << i)];
-			zfRight[j + k + (word(1) << i)] = 
-				t - zfRight[j + k + (word(1) << i)];
+			zfRight[j + k] += zfRight[j + k + (WORD_1 << i)];
+			zfRight[j + k + (WORD_1 << i)] = 
+				t - zfRight[j + k + (WORD_1 << i)];
 		}
 	}
 
