@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2016.07.06
-\version 2016.07.06
+\version 2016.07.08
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -44,7 +44,8 @@ template class Func<5, int>;
 *******************************************************************************
 Тесты 
 
-#	orderTest: проверка тождественности OrderGrlex<5> и OrderGr<OrderLex<6> >;
+#	orderTest: проверка тождественности OrderGrlex<6> и OrderGr<OrderLex<6> >;
+#	bentTest: проверка бентовости функции Майораны-МакФарланда;
 #	bashTest: базис Гребнера идеала, описывающего S-блок Bash.
 *******************************************************************************
 */
@@ -67,6 +68,19 @@ bool orderTest()
 	}
 	while (m1.Next());
 	return true;
+}
+
+bool bentTest()
+{
+	typedef Monom<12> X;
+	MPoly<12> p;
+	BFunc<12> bf;
+	// многочлен
+	p = X(0,6) + X(1, 7) + X(2, 8) + X(3, 9);
+	p += X(4, 10) + X(5, 11);
+	// функция
+	bf.Import(p);
+	return bf.IsBent();
 }
 
 bool bashTest()
@@ -114,6 +128,8 @@ int main()
 	int ret = 0;
 	Env::Print("gf2/test [gf2 version %s]\n", Env::Version());
 	Env::Print("orderTest: %s\n", (code = orderTest()) ? "OK" : "Err"), 
+		ret |= !code;
+	Env::Print("bentTest: %s\n", (code = bentTest()) ? "OK" : "Err"), 
 		ret |= !code;
 	Env::Print("bashTest: %s\n", (code = bashTest()) ? "OK" : "Err"), 
 		ret |= !code;

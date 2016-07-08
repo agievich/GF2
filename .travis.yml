@@ -10,27 +10,14 @@ branches:
 matrix:
   include:
     - os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8']
-      env: BUILD_TYPE=Release COMPILER=g++-4.8
-    - os: linux
       compiler: clang
-      env: BUILD_TYPE=Debug COMPILER=clang++
-#    - os: osx
-#      compiler: gcc
-#      env: BUILD_TYPE=ASan
-#    - os: osx
-#      compiler: clang
-#      env: BUILD_TYPE=Check
-#    - os: linux
-#      compiler: gcc
-#      env: BUILD_TYPE=Coverage
+      env: BUILD_TYPE=Release
+    - os: osx
+      compiler: clang
+      env: BUILD_TYPE=Debug
 
 script: 
   - mkdir build && cd build 
   - cmake -DBUILD_TYPE=$BUILD_TYPE ..
-  - make CXX=$COMPILER -j3
+  - make
   - ctest -V

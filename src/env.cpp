@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.05
+\version 2016.07.08
 \license This program is released under the MIT License. See Copyright Notices
 in GF2/info.h.
 *******************************************************************************
@@ -154,7 +154,7 @@ void Env::Trace(const char* format,...)
 		return;
 	::SetConsoleTitleA(buffer);
 #else
-	fprintf(stderr, "%s\n", buffer);
+	fprintf(stdout, "%s\n", buffer);
 #endif
 }
 
@@ -166,7 +166,7 @@ u32 Env::Ticks()
 #elif defined OS_LINUX
 	timespec ts;
     u32 ticks = 0;
-    ::clock_gettime( CLOCK_MONOTONIC, &ts);
+    ::clock_gettime(CLOCK_MONOTONIC, &ts);
     ticks = ts.tv_nsec / 1000000;
     ticks += ts.tv_sec * 1000;
     return ticks;
