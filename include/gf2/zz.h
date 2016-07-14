@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.07
+\version 2016.07.13
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -63,7 +63,6 @@ namespace GF2{
 template<size_t _n> class ZZ : public Word<_n>
 {
 protected:
-	using Word<_n>::_bitsperword;
 	using Word<_n>::_wcount;
 	using Word<_n>::_words;
 public:
@@ -298,7 +297,7 @@ public:
 				mul += carry;
 				mul += _words[pos];
 				_words[pos] = word(mul);
-				carry = word(mul >> _bitsperword);
+				carry = word(mul >> B_PER_W);
 			}
 			Trim();
 		}
@@ -324,7 +323,7 @@ public:
 				mul += carry;
 				mul += res.GetWord(pos + posRight);
 				res.SetWord(pos + posRight, (word)mul);
-				carry = word(mul >> _bitsperword);
+				carry = word(mul >> B_PER_W);
 			}
 		}
 		res.Trim();
@@ -368,7 +367,7 @@ public:
 		{
 			// делим (предыдущий_остаток, текущий_разряд) на wRight
 			divisor = rem;
-			divisor <<= _bitsperword;
+			divisor <<= B_PER_W;
 			divisor |= _words[pos];
 			_words[pos] = word(divisor / wRight);
 			rem = word(divisor % wRight);
@@ -422,18 +421,18 @@ public:
 		while (zRight.GetWord(digits) == 0) digits--;
 		// определить сдвиг нормализации
 		word shift = 0;
-		while ((zRight.GetWord(digits) << shift) < 
-			(word(1) << (_bitsperword - 1))) shift++;
+		while ((zRight.GetWord(digits) << shift) < (WORD_1 << (B_PER_W - 1))) 
+			shift++;
 		// делимое, в которое поместится результат нормализации
-		ZZ<_n + _bitsperword - 1 > divident(*this);
+		ZZ<_n + B_PER_W - 1 > divident(*this);
 		// делитель, длина которого кратна длине машинного слова
-		ZZ<(_m + _bitsperword - 1) / _bitsperword * _bitsperword> 
+		ZZ<(_m + B_PER_W - 1) / B_PER_W * B_PER_W> 
 			divisor(zRight);
 		// выполнить нормализацию
 		divident.Shr(shift);
 		divisor.Shr(shift);
 		// сохранить старшие разряды делителя
-		ZZ<3 * _bitsperword> divisorHi;
+		ZZ<3 * B_PER_W> divisorHi;
 		divisorHi.SetWord(0, divisor.GetWord(digits - 1));
 		divisorHi.SetWord(1, divisor.GetWord(digits));
 		// цикл по разрядам делимого
@@ -442,12 +441,12 @@ public:
 		{
 			// вычисление пробного частного
 			dword q = (pos == divident.WordSize()) ? 0 : divident.GetWord(pos);
-			q <<= _bitsperword;
+			q <<= B_PER_W;
 			q |= divident.GetWord(pos - 1);
 			q /= divisor.GetWord(digits);
 			if (q > WORD_MAX) q = WORD_MAX;
 			// определить старшие разряды делимого
-			ZZ<3 * _bitsperword> dividentHi;
+			ZZ<3 * B_PER_W> dividentHi;
 			dividentHi.SetWord(0, divident.GetWord(pos - 2));
 			dividentHi.SetWord(1, divident.GetWord(pos - 1));
 			dividentHi.SetWord(2, pos == divident.WordSize() ? 
@@ -455,16 +454,16 @@ public:
 			// уточнить пробное частное
 			while (divisorHi * word(q) > dividentHi) q--;
 			// умножить делитель на пробное_частное и степень основания
-			ZZ<_n + _bitsperword - 1> mul(divisor);
-			mul.Shr(_bitsperword * (pos - digits - 1));
+			ZZ<_n + B_PER_W - 1> mul(divisor);
+			mul.Shr(B_PER_W * (pos - digits - 1));
 			mul *= word(q);
 			if (divident < mul)
 			{
 				// корректировка пробного частного
 				q--;
 				// и результата умножения
-				mul -= ZZ<_n + _bitsperword - 1>(divisor).
-					Shr(_bitsperword * (pos - digits - 1));
+				mul -= ZZ<_n + B_PER_W - 1>(divisor).
+					Shr(B_PER_W * (pos - digits - 1));
 			}
 			// вычесть
 			assert(divident >= mul);

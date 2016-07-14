@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.01.01
-\version 2016.07.07
+\version 2016.07.13
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -101,7 +101,7 @@ namespace GF2{
 	std::cout << (w ^ 1);
 	\endcode
 	оператор w ^ 1 может быть интерпретирован двояко: 
-	как (word)w ^ 1 и как w ^ (word)1. Дело в том, что 1 
+	как (word)w ^ 1 и как w ^ WORD_1. Дело в том, что 1 
 	является константой типа int, а не word. Явно указать на второй тип 
 	можно, написав 1u вместо 1.
 *******************************************************************************
@@ -153,12 +153,10 @@ public:
 // данные
 protected:
 	enum 
-	{	// число битов в машинном слове
-		_bitsperword = 8 * sizeof(word),
-		// число машинных слов для хранения данных
-		_wcount = (_n + _bitsperword - 1) / _bitsperword,
+	{	// число машинных слов для хранения данных
+		_wcount = (_n + B_PER_W - 1) / B_PER_W,
 		// число неиспользуемых битов в последнем машинном слове
-		_trimbits = _n % _bitsperword ? _bitsperword - _n % _bitsperword : 0,
+		_trimbits = _n % B_PER_W ? B_PER_W - _n % B_PER_W : 0,
 	};
 	// машинные слова
 	word _words[_wcount];
@@ -191,8 +189,8 @@ public:
 	void Set(size_t pos, bool val)
 	{
 		assert(pos < _n);
-		if (val) _words[pos / _bitsperword] |= word(1) << pos % _bitsperword;
-		else _words[pos / _bitsperword] &= ~(word(1) << pos % _bitsperword);
+		if (val) _words[pos / B_PER_W] |= WORD_1 << pos % B_PER_W;
+		else _words[pos / B_PER_W] &= ~(WORD_1 << pos % B_PER_W);
 	}
 
 	//! Установка символов
@@ -200,7 +198,7 @@ public:
 	void Set(size_t pos1, size_t pos2, bool val)
 	{	
 		// номера слов представлений
-		size_t wpos1 = pos1 / _bitsperword, wpos2 = pos2 / _bitsperword, pos;
+		size_t wpos1 = pos1 / B_PER_W, wpos2 = pos2 / B_PER_W, pos;
 		// в одном слове?
 		if (wpos1 == wpos2)
 		{
@@ -208,17 +206,17 @@ public:
 			return;
 		}
 		// начинаем посередине слова представления?
-		if (pos = pos1 % _bitsperword)
+		if (pos = pos1 % B_PER_W)
 		{
-			(_words[wpos1] <<= (_bitsperword - pos)) >>= _bitsperword - pos;
+			(_words[wpos1] <<= (B_PER_W - pos)) >>= B_PER_W - pos;
 			if (val) _words[wpos1] |= WORD_MAX << pos;
 			wpos1++;
 		}
 		// заканчиваем посередине слова представления?
-		if (pos = pos2 % _bitsperword)
+		if (pos = pos2 % B_PER_W)
 		{
 			(_words[wpos2] >>= pos) <<= pos;
-			if (val) _words[wpos2] |= WORD_MAX >> (_bitsperword - pos);
+			if (val) _words[wpos2] |= WORD_MAX >> (B_PER_W - pos);
 		}
 		// заполняем полные слова
 		for (pos = wpos1; pos < wpos2; _words[pos++] = (val ? WORD_MAX : 0));
@@ -237,8 +235,7 @@ public:
 	/*! Слово обнуляется. */
 	void SetAllZero()
 	{	
-		for (size_t pos = 0; pos < _wcount; pos++)
-			_words[pos] = 0;
+		for (size_t pos = 0; pos < _wcount; ++pos) _words[pos] = 0;
 	}
 
 	//! Значение символа
@@ -246,8 +243,7 @@ public:
 	bool Test(size_t pos) const
 	{
 		assert(pos < _n);
-		return (_words[pos / _bitsperword] & 
-			(word(1) << pos % _bitsperword)) != 0;
+		return (_words[pos / B_PER_W] & (WORD_1 << pos % B_PER_W)) != 0;
 	}
 
 	//! Значение символа
@@ -274,7 +270,7 @@ public:
 	Word& Flip(size_t pos)
 	{	
 		assert(pos < _n);
-		_words[pos / _bitsperword] ^= word(1) << pos % _bitsperword;
+		_words[pos / B_PER_W] ^= WORD_1 << pos % B_PER_W;
 		return *this;
 	}
 
@@ -333,14 +329,30 @@ public:
 		return _words[pos];
 	}
 
+	//! Возврат октета представления
+	/*! Определяется октет представления с номером pos. */ 
+	octet GetOctet(size_t pos) const
+	{	
+		assert(pos < _wcount * O_PER_W);
+		return octet(_words[pos / O_PER_W] >> pos % O_PER_W * 8);
+	}
+
 	//! Устанавка слова представления
-	/*! Устанавливается значение val слова представления 
-		с номером pos.*/
+	/*! Слово представления с номером pos устанавливается равным val.*/
 	void SetWord(size_t pos, word val)
 	{	
 		assert(pos < _wcount);
 		_words[pos] = val;
 		if (pos == _wcount - 1) Trim();
+	}
+
+	//! Установка октета представления
+	/*! Октет представления с номером pos устанавливается равным val.*/
+	void SetOctet(size_t pos, octet val)
+	{	
+		assert(pos < _wcount * O_PER_W);
+		_words[pos / O_PER_W] &= ~(word(255) << pos % O_PER_W * 8);
+		_words[pos / O_PER_W] |= word(val) << pos % O_PER_W * 8;
 	}
 
 	//! Обмен
@@ -359,7 +371,7 @@ public:
 	/*! Определяется вес (число ненулевых символов) слова. */
 	size_t Weight() const
 	{	
-		static char _bitsperbyte[256] = 
+		static char _bitsperoctet[256] = 
 		{
 			0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
 			1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
@@ -371,8 +383,8 @@ public:
 			3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
 		};
 		size_t weight = 0;
-		for (size_t pos = 0; pos < _wcount * sizeof(word); pos++)
-				weight += _bitsperbyte[((u8*)_words)[pos]];
+		for (size_t pos = 0; pos < _wcount * O_PER_W; pos++)
+				weight += _bitsperoctet[GetOctet(pos)];
 		return weight;
 	}
 
@@ -394,14 +406,14 @@ public:
 	{	
 		if (shift < _n)
 		{
-			size_t wshift = shift / _bitsperword, pos;
+			size_t wshift = shift / B_PER_W, pos;
 			// величина сдвига не кратна длине слова?
-			if (shift %= _bitsperword)
+			if (shift %= B_PER_W)
 			{
 				// сдвиг всех слов, кроме последнего
 				for (pos = 0; pos + wshift + 1 < _wcount; pos++)
 					_words[pos] = (_words[pos + wshift] >> shift) |
-						(_words[pos + wshift + 1] << (_bitsperword - shift));
+						(_words[pos + wshift + 1] << (B_PER_W - shift));
 				// последнее слово
 				_words[pos] = _words[pos + wshift] >> shift, ++pos;
 			}
@@ -424,14 +436,14 @@ public:
 	{	
 		if (shift < _n)
 		{
-			size_t wshift = shift / _bitsperword, pos;
+			size_t wshift = shift / B_PER_W, pos;
 			// величина сдвига не кратна длине слова?
-			if (shift %= _bitsperword)
+			if (shift %= B_PER_W)
 			{
 				// сдвиг всех слов, кроме первого
 				for (pos = _wcount - 1; pos > wshift; pos--)
 					_words[pos] = (_words[pos - wshift] << shift) |
-						(_words[pos - wshift - 1] >> (_bitsperword - shift));
+						(_words[pos - wshift - 1] >> (B_PER_W - shift));
 				// первое слово
 				_words[pos] = _words[pos - wshift] << shift, --pos;
 			}
@@ -502,7 +514,7 @@ public:
 		for (; pos + 1 < w.WordSize(); ++pos)
 			_words[pos] = w.GetWord(pos);
 		// неполное последнее слово mon?
-		if (size_t trim = _m % _bitsperword)
+		if (size_t trim = _m % B_PER_W)
 		{
 			// очищаем младшие trim битов
 			(_words[pos] >>= trim) <<= trim;
@@ -522,15 +534,15 @@ public:
 	{
 		assert(_m <= _n && this != (void*)&w);
 		// первое слово, в котором начинается правая часть
-		size_t start = (_n - _m) / _bitsperword;
+		size_t start = (_n - _m) / B_PER_W;
 		// правая часть начинается посередине слова (со смещением offset)?
 		size_t pos;
-		if (size_t offset = (_n - _m) % _bitsperword)
+		if (size_t offset = (_n - _m) % B_PER_W)
 		{
 			// объединять биты двух последовательных слов
 			for (pos = 0; pos + start + 1 < _wcount; pos++)
 				w.SetWord(pos, (_words[pos + start] >> offset) | 
-					(_words[pos + start + 1] << (_bitsperword - offset)));
+					(_words[pos + start + 1] << (B_PER_W - offset)));
 			// использовать биты последнего слова
 			if (pos < w.WordSize())
 				w.SetWord(pos, _words[pos + start] >> offset);
@@ -558,24 +570,24 @@ public:
 	{
 		assert(_m <= _n && this != (void*)&w);
 		// первое слово, в котором начинается правая часть
-		size_t start = (_n - _m) / _bitsperword;
+		size_t start = (_n - _m) / B_PER_W;
 		// правая часть начинается посередине слова (со смещением offset)?
-		if (size_t offset = (_n - _m) % _bitsperword)
+		if (size_t offset = (_n - _m) % B_PER_W)
 		{
-			// очистить старшие _bitsperword - offset битов _words[start]
-			(_words[start] <<= _bitsperword - offset) >>= 
-				_bitsperword - offset;
+			// очистить старшие B_PER_W - offset битов _words[start]
+			(_words[start] <<= B_PER_W - offset) >>= 
+				B_PER_W - offset;
 			// и записать в них младшие биты первого слова w
 			_words[start] |= w.GetWord(0) << offset;
 			// далее объединять биты двух последовательных слов w
 			size_t pos;
 			for (pos = 1; pos < w.WordSize(); pos++)
 				_words[pos + start] = (w.GetWord(pos) << offset) |
-					(w.GetWord(pos - 1) >> (_bitsperword - offset));
+					(w.GetWord(pos - 1) >> (B_PER_W - offset));
 			// обработать остатки
 			if (pos + start < _wcount)
 				_words[pos + start] = 
-					w.GetWord(pos - 1) >> (_bitsperword - offset);
+					w.GetWord(pos - 1) >> (B_PER_W - offset);
 		}
 		else for (size_t pos = 0; pos < w.WordSize(); pos++)
 				_words[pos + start] = w.GetWord(pos);
@@ -595,8 +607,8 @@ public:
 			if (wMask.Test(posMask))
 				Set(pos++, Test(posMask));
 		// добиваем нулями
-		for (; pos < _n && pos % _bitsperword; Set(pos++, 0));
-		for ((pos += _bitsperword - 1) /= _bitsperword; pos < _wcount; 
+		for (; pos < _n && pos % B_PER_W; Set(pos++, 0));
+		for ((pos += B_PER_W - 1) /= B_PER_W; pos < _wcount; 
 			_words[pos++] = 0);
 		return *this;
 	}

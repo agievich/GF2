@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.06.10
-\version 2016.07.07
+\version 2016.07.12
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -509,7 +509,7 @@ public:
 	bool IsPlateaued(word r) const
 	{	
 		if (r % 2) return false;
-		r = word(1) << (_n - r / 2);
+		r = WORD_1 << (_n - r / 2);
 		Func<_n, int> zf;
 		FWHT(zf);
 		Word<_n> x;
@@ -531,7 +531,7 @@ public:
 		FWHT(zf);
 		Word<_n> x;
 		do
-			if (abs(zf.Get(x)) != (word(1) << _n / 2))
+			if (abs(zf.Get(x)) != (WORD_1 << _n / 2))
 				return false;
 		while (x.Next());
 		return true;
@@ -559,7 +559,7 @@ public:
 		size_t record = 0;
 		for (size_t i = 0; i < _n; ++i)
 		{
-			word mask = (word)1 << i;
+			word mask = WORD_1 << i;
 			size_t count = 0;
 			for (word x = 0; x < Size(); ++x)
 			{

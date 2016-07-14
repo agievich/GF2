@@ -146,5 +146,4 @@ int main()
 	Env::Print("bashTest: %s\n", (code = bashTest()) ? "OK" : "Err"), 
 		ret |= !code;
 	return ret;
-
 }

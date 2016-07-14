@@ -38,5 +38,5 @@ Build types (Release by default):
 License
 -------
 
-Bee2 is released under the terms of the MIT License. 
+GF2 is released under the terms of the MIT License. 
 See [LICENSE](LICENSE) for more information.
