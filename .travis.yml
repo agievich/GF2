@@ -7,6 +7,10 @@ branches:
   only:
     - master
 
+env:
+  global:
+    - secure: "XWVopDnLVitSI1I8ZyasnD68/2E1JN31ZTXzY5DQf94wjgqC/MjkhDyERU8W5EHnAwCtW4ReYzjwAUSZwVBV10+US4fE6uxGJ4BboL/Vx+DBIrUKhPnln3IZoksom8UjrDK6vMfNjMWmUB79WuECfWD0cDNPy0VloD7n83TIBbsaEAlFYa420e1yx+ahat+f4PncI14BS/BeGDGitK2OReatqV96HxSYAC3htanNjeSoiPkNUmdyxXxczdp7s4PdXzsRfydHekde03BlcXlIdhO2gVUHaQkKyvlNrPUs2qsm3eB2CZFA8A/AjlNsYaCDAaPLR/tYN61Ezl0ccfkg72zNhKILY2xn4LBkTsN08CD1XrxjkXgEBskWYsI1zKeStu3lyuMVfbs+FvLVXbyYVjxsvOKOmHi7fGpyVjUcOOAxi6CFQD+mTDg1sia043OQ+5QuzGEQmqWJbC2srNpRXeOfrBn2ARSq3lkKKkpEAXpVqyx1l5gYMRXL/Wjz7AAZOtJ6FZfpGVI/qOiIsuU4JJBvGfP84uXbDTkzAp54MupIYaut+oz2+WLxhk0sfFtKNS0ZG968TudbMM9fl+xBQLgVfLPbNsgeGb/njCgtUSCGCBtZSKeEkVXUiGsHQGcqUnQVfY+Nc7OydXNh6Yj644YDdCVDLW/4ziBGQZJHpsw="
+
 matrix:
   include:
     - os: linux
@@ -15,6 +19,16 @@ matrix:
     - os: osx
       compiler: clang
       env: BUILD_TYPE=Debug
+
+addons:
+  coverity_scan:
+    project:
+      name: "agievich/GF2"
+      description: "Build submitted via Travis CI"
+    notification_email: agievich@gmail.com
+    build_command_prepend: mkdir coverity && cd coverity && cmake -DCMAKE_BUILD_TYPE=Debug ..
+    build_command: make
+    branch_pattern: master
 
 script: 
   - mkdir build && cd build 
