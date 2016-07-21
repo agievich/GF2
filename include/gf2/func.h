@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2004.06.10
-\version 2016.07.12
+\version 2016.07.21
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -325,14 +325,14 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Func<_n, _T>& fRight)
 Класс BFunc
 
 -#	Поддерживает манипуляции с булевыми функциями от n переменных.
--#	Методы Export() / Import() поддерживают представления булевых функций 
+-#	Методы From() / To() поддерживают представления булевых функций 
 	многочленами Жегалкина и коэффициентами Уолша -- Адамара.
 
 В методе FWHT() реализовано быстрое преобразование Уолша-Адамара. За основу 
 взята реализация http://www.musicdsp.org/showone.php?id=18. В неявной матрице 
 Уолша--Адамара используется так называемая последовательная нумерация строк 
 (sequence ordering). Порядок нумерации отличаются от обычного 
-(natural ordering), реализованного в методе Export(), что приводит 
+(natural ordering), реализованного в методе To(), что приводит 
 к перестановке компонентов спектра Уолша-Адамара и инверсии знаков. При этом,
 впрочем, максимальное абсолютное значение спектра, которое используется 
 в методе Nl(), не меняется.
@@ -356,7 +356,7 @@ public:
 	//! Построение многочлена по функции
 	/*! По булевой функции строится многочлен Жегалкина polyRight. */
 	template<class _O>
-	void Export(MPoly<_n, _O>& polyRight) const
+	void To(MPoly<_n, _O>& polyRight) const
 	{	
 		polyRight = 0;
 		// цикл по мономам
@@ -375,7 +375,7 @@ public:
 
 	//! Построение многочлена по функции
 	/*! По многочлену Жегалкина polyRight определяется булева функция. */
-	void Import(const MPoly<_n>& polyRight)
+	void From(const MPoly<_n>& polyRight)
 	{	
 		Preimage x;
 		do Set(x, polyRight.Calc(x));			
@@ -386,7 +386,7 @@ public:
 	/*! По булевой функции расчитываются и сохраняются в zfRight коэффициенты 
 		Уолша -- Адамара. 
 	*/
-	void Export(Func<_n, int>& zfRight) const
+	void To(Func<_n, int>& zfRight) const
 	{	
 		Preimage x, u;
 		do
@@ -405,7 +405,7 @@ public:
 	//! Обратное преобразование Уолша -- Адамара
 	/*! По сохраненным в zfRight коэффициентам Уолша -- Адамара
 		восстанавливается булева функция. */
-	void Import(const Func<_n, int>& zfRight)
+	void From(const Func<_n, int>& zfRight)
 	{	
 		Preimage u, x;
 		do
@@ -463,7 +463,7 @@ public:
 	int Deg() const
 	{	
 		MPoly<_n> poly;
-		Export(poly);
+		To(poly);
 		return poly.Deg();
 	}
 
@@ -543,7 +543,7 @@ public:
 	{
 		assert(IsBent());
 		Func<_n, int> zf;
-		Export(zf);
+		To(zf);
 		Word<_n> x;
 		do 
 			Set(x, zf(x) < 0);
@@ -649,7 +649,7 @@ public:
 	/*! Создается система многочленов ideal, которая описывает 
 		действие функции. */
 	template<class _O>
-	void Export(Ideal<_n + _m, _O>& ideal) const
+	void To(Ideal<_n + _m, _O>& ideal) const
 	{
 		// очистить систему
 		ideal.SetEmpty();
@@ -660,7 +660,7 @@ public:
 		for (size_t i = 0; i < _m; i++)
 		{
 			GetCoord(i, bf);
-			bf.Export(poly);
+			bf.To(poly);
 			// добавляем многочлен y_i - bf(x)
 			ideal.Insert(MPoly<_n + _m, _O>(poly) += 
 				Monom<_n + _m>(_n + i));
@@ -722,7 +722,7 @@ public:
 		while (wComb.Next())
 		{
 			GetCoordComb(wComb, bf);
-			bf.Export(poly);
+			bf.To(poly);
 			if ((spr = poly.Size()) < record)
 				record = spr;
 		}

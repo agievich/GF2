@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2016.07.06
-\version 2016.07.08
+\version 2016.07.21
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -56,7 +56,6 @@ bool orderTest()
 {
 	OrderGrlex<6> o1;
 	OrderGr<OrderLex<6> > o2;
-	// S-блок и его идеал
 	Monom<6> m1;
 	do
 	{
@@ -81,7 +80,7 @@ bool bentTest()
 	p = X(0,6) + X(1, 7) + X(2, 8) + X(3, 9);
 	p += X(4, 10) + X(5, 11);
 	// функция
-	bf.Import(p);
+	bf.From(p);
 	return bf.IsBent();
 }
 
@@ -107,13 +106,13 @@ bool bashTest()
 	MPoly<3, O> p;
 	BFunc<3> bf;
 	s.GetCoord(0, bf);
-	bf.Export(p);
+	bf.To(p);
 	i.Insert(MPoly<6, O>(p) + X(3));
 	s.GetCoord(1, bf);
-	bf.Export(p);
+	bf.To(p);
 	i.Insert(MPoly<6, O>(p) + X(4));
 	s.GetCoord(2, bf);
-	bf.Export(p);
+	bf.To(p);
 	i.Insert(MPoly<6, O>(p) + X(5));
 	// базис Гребнера
 	Buchb<6, O> bb;
