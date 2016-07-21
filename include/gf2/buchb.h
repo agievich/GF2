@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2006.01.01
-\version 2016.07.07
+\version 2016.07.21
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -613,6 +613,7 @@ public:
 	//! Конструктор
 	Buchb() 
 	{
+		::memset(&_stat, 0, sizeof(_stat));
 	}
 };
 
