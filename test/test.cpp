@@ -5,7 +5,7 @@
 \project GF2 [GF(2) algebra library]
 \author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
 \created 2016.07.06
-\version 2016.07.21
+\version 2016.07.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -14,7 +14,7 @@ in GF2/info.h.
 #include "gf2/buchb.h"
 #include "gf2/func.h"
 #include "gf2/ideal.h"
-#include <fstream>
+#include <sstream>
 
 using namespace GF2;
 using namespace std;
@@ -48,7 +48,8 @@ template class Func<5, int>;
 #	bentTest: проверка бентовости функции Майораны-МакФарланда;
 #	sboxTest: проверка криптографических характеристик 4-битового S-блока 
 	(by.gost28147.params.1);
-#	bashTest: базис Гребнера идеала, описывающего S-блок Bash.
+#	bashTest: базис Гребнера идеала, описывающего S-блок Bash;
+#	commuteTest: коммутируемые обратимые двоичные матрицы порядка 2.
 *******************************************************************************
 */
 
@@ -125,6 +126,32 @@ bool bashTest()
 	return i.Size() == 14;
 }
 
+bool commuteTest()
+{
+	typedef OrderGrevlex<8> O;
+	// система
+	stringstream ss;
+	ss << 
+		"{ x0 x3 + x1 x2 + 1,"				/* обратимость первой матрицы */
+		"  x1 x6 + x2 x5,"					/* коммутируемость */
+		"  x1 x7 + x3 x5 + x0 x5 + x1 x4,"	/* коммутируемость */
+		"  x2 x7 + x3 x6 + x0 x6 + x2 x4,"	/* коммутируемость */
+		"  x4 x7 + x5 x6 + 1}";				/* обратимость второй матрицы */
+	Ideal<8, O> i;
+	ss >> i;
+	// базис Гребнера
+	Buchb<8, O> bb;
+	bb.Init();
+	bb.Update(i);
+	bb.Process();
+	bb.Done(i);
+	// базис Гребнера?
+	if (!i.IsGB())
+		return false;
+	// количество матриц
+	return i.QuotientBasisDim() == 18u;
+}
+
 /*
 *******************************************************************************
 main
@@ -143,6 +170,8 @@ int main()
 	Env::Print("sboxTest: %s\n", (code = sboxTest()) ? "OK" : "Err"), 
 		ret |= !code;
 	Env::Print("bashTest: %s\n", (code = bashTest()) ? "OK" : "Err"), 
+		ret |= !code;
+	Env::Print("commuteTest: %s\n", (code = commuteTest()) ? "OK" : "Err"), 
 		ret |= !code;
 	return ret;
 }
