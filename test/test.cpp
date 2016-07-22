@@ -149,7 +149,7 @@ bool commuteTest()
 	if (!i.IsGB())
 		return false;
 	// количество матриц
-	return i.QuotientBasisDim() == 18u;
+	return i.QuotientBasisDim() == (word)18;
 }
 
 /*
