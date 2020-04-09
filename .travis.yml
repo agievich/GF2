@@ -13,12 +13,27 @@ env:
 
 matrix:
   include:
-    - os: linux
-      compiler: clang
-      env: BUILD_TYPE=Release
-    - os: osx
-      compiler: clang
-      env: BUILD_TYPE=Debug
+  - os: linux
+    compiler: gcc
+    env: BUILD_TYPE=Release
+  - os: linux
+    compiler: gcc
+    env: BUILD_TYPE=Memsan
+  - os: osx
+    compiler: clang
+    env: BUILD_TYPE=Check
+  - os: linux
+    compiler: gcc
+    sudo: required
+    env: BUILD_TYPE=Coverage
+    install:
+    - sudo apt-get install -y lcov
+    after_success:
+    - lcov -c -i -d src -o coverage_base.info
+    - test/testgf2
+    - lcov -c -d src -o coverage_test.info
+    - lcov -a coverage_base.info -a coverage_test.info -o coverage.info
+    - bash <(curl -s https://codecov.io/bash) -f coverage.info
 
 addons:
   coverity_scan:

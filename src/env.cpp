@@ -2,10 +2,9 @@
 *******************************************************************************
 \file env.cpp
 \brief The runtime environment
-\project GF2 [GF(2) algebra library]
-\author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
+\project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.08
+\version 2020.04.08
 \license This program is released under the MIT License. See Copyright Notices
 in GF2/info.h.
 *******************************************************************************
@@ -47,12 +46,7 @@ using namespace GF2;
 // Статическая проверка среды
 int Env::Assert()
 {
-#ifdef OS_WIN
-	// проверка версии Windows
-	assert((::GetVersion() & 0x8000) == 0);
-	// проверка размерностей
 	assert(sizeof(size_t) % sizeof(word) == 0);
-#endif
 	return 0;
 }
 

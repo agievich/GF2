@@ -2,8 +2,7 @@
 *******************************************************************************
 \file mpoly.h
 \brief Multivariate polynomials in GF(2)[x0,x1,...]
-\project GF2 [GF(2) algebra library]
-\author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
+\project GF2 [algebra over GF(2)]
 \created 2004.01.01
 \version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
@@ -34,7 +33,7 @@ in GF2/info.h.
 #include <functional>
 #include <iostream>
 
-namespace GF2{
+namespace GF2 {
 
 template<size_t _n, class _O = OrderLex<_n> > class MPoly;
 template<size_t _n, class _O = OrderLex<_n> > class Ideal;
@@ -43,7 +42,7 @@ template<size_t _n, class _O = OrderLex<_n> > class Ideal;
 
 #include "ideal.h"
 
-namespace GF2{
+namespace GF2 {
 
 /*!
 *******************************************************************************

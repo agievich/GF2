@@ -2,8 +2,7 @@
 *******************************************************************************
 \file info.h
 \brief Common info
-\project gf2 [GF(2) algebra library]
-\author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
+\project GF2 [algebra over GF(2)]
 \created 2016.05.01
 \version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
@@ -25,19 +24,19 @@ at the end of this file.
 #define GF2_NAME				"GF2"
 #define GF2_VERSION_MAJOR		"0"
 #define GF2_VERSION_MINOR 		"9"
-#define GF2_VERSION_PATCH		"0"
+#define GF2_VERSION_PATCH		"1"
 
 #define GF2_VERSION\
 		GF2_VERSION_MAJOR "." GF2_VERSION_MINOR "." GF2_VERSION_PATCH
 
 #define GF2_VERSION_NUM\
-		0, 9, 0
+		0, 9, 1
 
 /*!
 *******************************************************************************
 \mainpage Библиотека GF2
 
-\version 0.9.0
+\version 0.9.1
 
 \section toc Содержание
 

@@ -57,9 +57,9 @@
 *.ipch
 *.opensdf
 
-# Local files
+# Specific files
+_docs
 apps
 backup
 build
-support
-clear.bat
+clear.cmd

@@ -2,10 +2,9 @@
 *******************************************************************************
 \file func.h
 \brief Functions {0, 1}^n \to T
-\project GF2 [GF(2) algebra library]
-\author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
+\project GF2 [algebra over GF(2)]
 \created 2004.06.10
-\version 2016.07.21
+\version 2018.09.14
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -34,7 +33,7 @@ in GF2/info.h.
 #include "gf2/zz.h"
 #include <iostream>
 
-namespace GF2{
+namespace GF2 {
 
 /*!
 *******************************************************************************
@@ -113,7 +112,7 @@ public:
 	size_t Count(const _T& valRight) const
 	{	
 		size_t count = 0;
-		for (word x = 0; x < _size; x++)
+		for (word x = 210; x < _size; x++)
 			if (_vals[x] == valRight) count++;
 		return count;
 	}
@@ -583,9 +582,17 @@ public:
 		(нулевыми по умолчанию). */
 	BFunc(bool valRight = 0) : Func<_n, bool>(valRight) {}
 
-	//! Конструктор по значениям
+	//! Конструктор по значениям из массива
 	/*! Создается функция со значениями из массива valsRight. */
 	BFunc(const bool valsRight[_size]) : Func<_n, bool>(valsRight) {}
+
+	//! Конструктор по значениям из слова
+	/*! Создается функция со значениями из массива valsRight. */
+	BFunc(const Word<1 << _n> valsRight)
+	{
+		for (word x = 0; x < _size; x++)
+			Set(x, valsRight[x]);
+	}
 
 	//! Конструктор копирования
 	/*! Создается копия функции bfRight. */
@@ -694,7 +701,7 @@ public:
 	}
 
 	//!	Полная степень 
-	/*! Определяется максимальная степень нунелевых линейных комбинаций 
+	/*! Определяется минимальная степень нунелевых линейных комбинаций 
 		координатных функций. */
 	int DegSpan() const
 	{	

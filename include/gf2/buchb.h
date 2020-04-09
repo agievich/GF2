@@ -2,8 +2,7 @@
 *******************************************************************************
 \file buch.h
 \brief Buchberger's algorithm
-\project GF2 [GF(2) algebra library]
-\author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
+\project GF2 [algebra over GF(2)]
 \created 2006.01.01
 \version 2016.07.21
 \license This program is released under the MIT License. See Copyright Notices 
@@ -31,7 +30,7 @@ in GF2/info.h.
 #include "gf2/ideal.h"
 #include <map>
 
-namespace GF2{
+namespace GF2 {
 
 /*!
 ***************************************************************************

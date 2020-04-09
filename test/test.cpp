@@ -2,10 +2,9 @@
 *******************************************************************************
 \file test.cpp
 \brief Tests
-\project GF2 [GF(2) algebra library]
-\author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
+\project GF2 [algebra over GF(2)]
 \created 2016.07.06
-\version 2017.06.02
+\version 2020.04.08
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -51,6 +50,8 @@ template class Func<5, int>;
 #	beltTest: проверка криптографических характеристик 8-битового S-блока belt
 	(СТБ 34.101.31);
 #	bashTest: базис Гребнера идеала, описывающего S-блок Bash;
+#	bash2Test: формульное расширение размерности S-блока Bash, 
+	проверка биективности, обращение и проверка степеней;
 #	commuteTest: коммутируемые обратимые двоичные матрицы порядка 2.
 *******************************************************************************
 */
@@ -168,6 +169,27 @@ bool bashTest()
 	return i.Size() == 14;
 }
 
+bool bashTest2()
+{
+	const size_t n = 3;
+	Word<3 * n> v;
+	VSubst<3 * n> s;
+	do
+	{
+		Word<n> x0 = v.GetLeft<n>();
+		Word<n> x1 = v.GetLeft<2 * n>().GetRight<n>();
+		Word<n> x2 = v.GetRight<n>();
+		Word<n> y0 = (x1 | ~x2) ^ x0.Rotl(1) ^ x1;
+		Word<n> y1 = (x0 | x1) ^ x0 ^ x1 ^ x2;
+		Word<n> y2 = (x0 & x1) ^ x1 ^ x2;
+		s[x0 || x1 || x2] = y0 || y1 || y2;
+	}
+	while (v.Next());
+	if (!s.IsBijection())
+		return false;
+	return (s.Deg() == 2 && s.Inverse().Deg() == 2);
+}
+
 bool commuteTest()
 {
 	typedef OrderGrevlex<8> O;
@@ -214,6 +236,8 @@ int main()
 	Env::Print("beltTest: %s\n", (code = beltTest()) ? "OK" : "Err"), 
 		ret |= !code;
 	Env::Print("bashTest: %s\n", (code = bashTest()) ? "OK" : "Err"), 
+		ret |= !code;
+	Env::Print("bashTest2: %s\n", (code = bashTest2()) ? "OK" : "Err"), 
 		ret |= !code;
 	Env::Print("commuteTest: %s\n", (code = commuteTest()) ? "OK" : "Err"), 
 		ret |= !code;

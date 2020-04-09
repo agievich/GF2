@@ -2,8 +2,7 @@
 *******************************************************************************
 \file monom.h
 \brief Monomials in GF(2)[x0,x1,...]
-\project GF2 [GF(2) algebra library]
-\author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
+\project GF2 [algebra over GF(2)]
 \created 2004.01.01
 \version 2016.07.07
 \license This program is released under the MIT License. See Copyright Notices 
@@ -29,7 +28,7 @@ in GF2/info.h.
 
 #include <iostream>
 
-namespace GF2{
+namespace GF2 {
 
 /*!
 *******************************************************************************

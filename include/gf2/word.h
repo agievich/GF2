@@ -2,10 +2,9 @@
 *******************************************************************************
 \file word.h
 \brief Words in GF(2)
-\project GF2 [GF(2) algebra library]
-\author (С) Sergey Agievich [agievich@{bsu.by|gmail.com}]
+\project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.13
+\version 2020.04.10
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -29,7 +28,7 @@ in GF2/info.h.
 #include <cassert>
 #include <iostream>
 
-namespace GF2{
+namespace GF2 {
 
 /*!
 *******************************************************************************
@@ -482,16 +481,26 @@ public:
 	}
 
 	//! Выбор левой части
-	/*! Левые (первые) _m символов слова записываются в w. 
+	/*! Левые (первые) _m символов слова записываются в w.
 		\pre this != &w.
-		\return Ссылка на w.	*/
-	template<size_t _m> 
-	Word<_m>& GetLeft(Word<_m>& w) const
+		\return Ссылка на w. */
+	template<size_t _m>
+	Word<_m>& GetLeft(Word<_m>&& w) const
 	{
 		assert(_m <= _n && this != (void*)&w);
 		for (size_t pos = 0; pos < w.WordSize(); pos++)
 			w.SetWord(pos, _words[pos]);
 		return w;
+	}
+
+	//! Выбор левой части
+	/*! Левые (первые) _m символов слова записываются в w.
+		\pre this != &w.
+		\return Ссылка на w. */
+	template<size_t _m>
+	Word<_m>& GetLeft(Word<_m>& w) const
+	{
+		return GetLeft(std::move(w));
 	}
 
 	//! Выбор левой части
@@ -530,7 +539,7 @@ public:
 		\pre this != &w.
 		\return Ссылка на w.	*/
 	template<size_t _m>
-	Word<_m>& GetRight(Word<_m>& w) const
+	Word<_m>& GetRight(Word<_m>&& w) const
 	{
 		assert(_m <= _n && this != (void*)&w);
 		// первое слово, в котором начинается правая часть
@@ -553,6 +562,16 @@ public:
 		return w;
 	}
 
+	//! Выбор правой части
+	/*! Правые (последние) _m символов слова записываются в w.
+		\pre this != &w.
+		\return Ссылка на w.	*/
+	template<size_t _m>
+	Word<_m>& GetRight(Word<_m>& w) const
+	{
+		GetRight(std::move(w));
+	}
+		
 	//! Выбор правой части
 	/*! Возвращаются правые (последние) _m символов слова. */
 	template<size_t _m>
@@ -595,7 +614,6 @@ public:
 		Trim();
 		return *this;
 	}
-
 
 	//! Упаковка
 	/*! В слове *this удаляются (со сдвигом влево) символы с индексами pos 
