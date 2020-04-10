@@ -19,19 +19,20 @@ matrix:
     - COVERITY_SCAN_PROJECT_NAME="$TRAVIS_REPO_SLUG"
     - COVERITY_SCAN_BRANCH_PATTERN="master"
     - COVERITY_SCAN_NOTIFICATION_EMAIL="agievich@gmail.com"
-    - COVERITY_SCAN_BUILD_COMMAND_PREPEND="cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_FAST=ON"
+    - COVERITY_SCAN_BUILD_COMMAND_PREPEND="cmake -DCMAKE_BUILD_TYPE=Debug"
     - COVERITY_SCAN_BUILD_COMMAND="make"
     script:
     - curl -s 'https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh' | bash || true
   - os: linux
-    compiler: gcc
     dist: bionic
+    compiler: gcc
     env: BUILD_TYPE=Memsan
   - os: osx
     compiler: clang
     env: BUILD_TYPE=Check
   - os: linux
-    compiler: bionic
+    dist: bionic
+    compiler: gcc
     sudo: required
     env: BUILD_TYPE=Coverage
     install:

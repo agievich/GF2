@@ -169,7 +169,7 @@ bool bashTest()
 	bb.Done(i);
 	// завершение
 	Env::Trace("");
-	return i.Size() == 14;
+	return i.Size() == 14 && i.QuotientBasisDim() == word(8);
 }
 
 bool bashTest2()

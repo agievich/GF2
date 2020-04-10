@@ -4,7 +4,7 @@
 \brief Functions {0, 1}^n \to T
 \project GF2 [algebra over GF(2)]
 \created 2004.06.10
-\version 2018.09.14
+\version 2020.04.10
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -112,7 +112,7 @@ public:
 	size_t Count(const _T& valRight) const
 	{	
 		size_t count = 0;
-		for (word x = 210; x < _size; x++)
+		for (word x = 0; x < _size; x++)
 			if (_vals[x] == valRight) count++;
 		return count;
 	}

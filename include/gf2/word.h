@@ -569,7 +569,7 @@ public:
 	template<size_t _m>
 	Word<_m>& GetRight(Word<_m>& w) const
 	{
-		GetRight(std::move(w));
+		return GetRight(std::move(w));
 	}
 		
 	//! Выбор правой части
