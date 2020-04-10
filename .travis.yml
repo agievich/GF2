@@ -14,16 +14,24 @@ env:
 matrix:
   include:
   - os: linux
-    compiler: gcc
-    env: BUILD_TYPE=Release
+    compiler: clang
+    env:
+    - COVERITY_SCAN_PROJECT_NAME="$TRAVIS_REPO_SLUG"
+    - COVERITY_SCAN_BRANCH_PATTERN="master"
+    - COVERITY_SCAN_NOTIFICATION_EMAIL="agievich@gmail.com"
+    - COVERITY_SCAN_BUILD_COMMAND_PREPEND="cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_FAST=ON"
+    - COVERITY_SCAN_BUILD_COMMAND="make"
+    script:
+    - curl -s 'https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh' | bash || true
   - os: linux
     compiler: gcc
+    dist: bionic
     env: BUILD_TYPE=Memsan
   - os: osx
     compiler: clang
     env: BUILD_TYPE=Check
   - os: linux
-    compiler: gcc
+    compiler: bionic
     sudo: required
     env: BUILD_TYPE=Coverage
     install:
@@ -35,18 +43,8 @@ matrix:
     - lcov -a coverage_base.info -a coverage_test.info -o coverage.info
     - bash <(curl -s https://codecov.io/bash) -f coverage.info
 
-addons:
-  coverity_scan:
-    project:
-      name: "agievich/GF2"
-      description: "Build submitted via Travis CI"
-    notification_email: agievich@gmail.com
-    build_command_prepend: mkdir coverity && cd coverity && cmake -DCMAKE_BUILD_TYPE=Debug ..
-    build_command: make
-    branch_pattern: master
-
 script: 
   - mkdir build && cd build 
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
   - make
-  - make test
+  - ctest --verbose

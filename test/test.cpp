@@ -4,7 +4,7 @@
 \brief Tests
 \project GF2 [algebra over GF(2)]
 \created 2016.07.06
-\version 2020.04.08
+\version 2020.04.10
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -21,24 +21,27 @@ using namespace std;
 /*
 *******************************************************************************
 Явное проверочное инстанциирование
+
+\remark DR275 (https://wg21.cmeerw.net/cwg/issue275), которому следует Clang, 
+требует явно указывать namespace при инстанциировании.
 *******************************************************************************
 */
 
-template class Word<127>;
-	template class Monom<129>;
-	template class ZZ<130>;
+template class GF2::Word<127>;
+	template class GF2::Monom<129>;
+	template class GF2::ZZ<130>;
 
-template struct OrderGr<OrderLR<OrderLex<65>, OrderGrlex<66> > >;
-template struct OrderRL<OrderRev<OrderGrevlex<68> >, OrderLex<67> >;
+template struct GF2::OrderGr<OrderLR<OrderLex<65>, OrderGrlex<66> > >;
+template struct GF2::OrderRL<OrderRev<OrderGrevlex<68> >, OrderLex<67> >;
 
-template class MPoly<135, OrderLex<135> >;
-template class Ideal<136, OrderGrevlex<136> >;
-template class Buchb<137, OrderGrlex<137> >;
+template class GF2::MPoly<135, OrderLex<135> >;
+template class GF2::Ideal<136, OrderGrevlex<136> >;
+template class GF2::Buchb<137, OrderGrlex<137> >;
 
-template class Func<5, int>;
-	template class BFunc<6>;
-	template class VFunc<7, 8>;
-		template class VSubst<8>;
+template class GF2::Func<5, int>;
+	template class GF2::BFunc<6>;
+	template class GF2::VFunc<7, 8>;
+		template class GF2::VSubst<8>;
 /*
 *******************************************************************************
 Тесты 
