@@ -38,9 +38,9 @@ matrix:
     install:
     - sudo apt-get install -y lcov
     after_success:
-    - lcov -c -i -d src -o coverage_base.info
+    - lcov -c -i -d . -o coverage_base.info
     - test/testgf2
-    - lcov -c -d src -o coverage_test.info
+    - lcov -c -d . -o coverage_test.info
     - lcov -a coverage_base.info -a coverage_test.info -o coverage.info
     - bash <(curl -s https://codecov.io/bash) -f coverage.info
 
