@@ -26,7 +26,7 @@ matrix:
   - os: linux
     dist: bionic
     compiler: gcc
-    env: BUILD_TYPE=Memsan
+    env: BUILD_TYPE=ASan
   - os: osx
     compiler: clang
     env: BUILD_TYPE=Check
