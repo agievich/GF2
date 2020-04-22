@@ -196,7 +196,7 @@ protected:
 	/*! Очищаются неиспользуемые биты в последнем слове представления. */
 	void Trim()
 	{	
-		if constexpr (_tcount)
+		if constexpr (_tcount != 0)
 			(_words[_wcount - 1] <<= _tcount) >>= _tcount;
 	}
 	
@@ -545,7 +545,7 @@ public:
 		for (; pos + 1 < w._wcount; ++pos)
 			_words[pos] = w._words[pos];
 		// неполное последнее слово w?
-		if constexpr (w._tcount)
+		if constexpr (w._tcount != 0)
 			_words[pos] = w._words[pos] | 
 				(_words[pos] & ~((WORD_HI >> (w._tcount - 1)) - WORD_1));
 		else

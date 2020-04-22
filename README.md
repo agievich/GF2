@@ -11,10 +11,10 @@ What is GF2?
 GF2 is a C++ library which maintains the following algebraic structures 
 over GF(2): 
 
-- `Word` — words in GF(2) of arbitrary finite length;
+- `WW` — words in GF(2) of arbitrary finite length;
 - `ZZ` — words in GF(2) as unsigned integers;
-- `MPoly` — multivariate polynomials over GF(2);
-- `Ideal` — ideals in multivariate polynomials rings over GF(2);
+- `MP` — multivariate polynomials over GF(2);
+- `MI` — ideals in multivariate polynomials rings over GF(2);
 - `Func` — various functions on binary words (including Boolean and vectorial Boolean).
 
 GF2 extensively uses C++ templates.

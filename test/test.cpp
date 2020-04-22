@@ -64,8 +64,14 @@ bool wwTest()
 {
 	// 1
 	WW<127> w1;
+	w1[12] = 1, w1.Flip(12), w1.Flip(12);
+	if (w1.Weight() != 1)
+		return false;
+	w1.Set(14, 23, 1);
+	if (w1.Reverse().Weight() != 1 + 23 - 14)
+		return false;
 	w1.SetAll(1);
-	if (w1.Weight() != 127)
+	if (!w1.IsAll(1) || w1.Weight() != w1.Size())
 		return false;
 	// 2
 	WW<126> w2;
