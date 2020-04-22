@@ -181,7 +181,7 @@ public:
 	{
 		std::cout << '[';
 		if (var1 != SIZE_MAX)
-			Env::Print("x_%d^2-x_%d", var1, var1);
+			Env::Print("x_%zu^2-x_%zu", var1, var1);
 		else
 			std::cout << lm1;
 		Env::Print(", ");
@@ -543,7 +543,7 @@ public:
 				_Update(pos);
 			}
 			// трассировка
-			Env::Trace("Buchb::Update: %d polys remained", polys.Size());
+			Env::Trace("Buchb::Update: %zu polys left", polys.Size());
 		}
 	}
 
@@ -585,8 +585,9 @@ public:
 				_stat.max_deg = std::max(_stat.max_deg, spoly.Deg());
 			}
 			// трассировка
-			Env::Trace("Buchb: %d cp / %d poly / %d cp remained", 
-				_stat.pairs_processed, _basis.Size(), _pairs.size());
+			if (_stat.pairs_processed % 23 == 0)
+				Env::Trace("Buchb: %zu cp / %zu poly / %zu cp left", 
+					_stat.pairs_processed, _basis.Size(), _pairs.size());
 		}
 	}
 
@@ -596,6 +597,7 @@ public:
 	void Done(_I& ideal) const
 	{
 		ideal = _basis;
+		Env::Trace("");
 	}
 
 	//! Печать статистики 
@@ -603,14 +605,14 @@ public:
 	void PrintStat() const
 	{
 		Env::Print(
-			"Buchb: %d polynomials in the Groebner basis\n"
+			"Buchb: %zu polynomials in the Groebner basis\n"
 			"       %d/%d - min/max degree of the basis polynomials\n"
-			"       %d - critical pairs processed\n"
-			"       %d S-polynomials were reduced to 0\n"
+			"       %zu - critical pairs processed\n"
+			"       %zu S-polynomials were reduced to 0\n"
 			"       %d - max degree of S-polynomials\n"
-			"       %d/%d/%d times the A/B/C criteria were applied\n"
-			"       %d applications of the 1st Buchberger criterion\n"
-			"       %d polynomials were moved to the reserve\n",
+			"       %zu/%zu/%zu times the A/B/C criteria were applied\n"
+			"       %zu applications of the 1st Buchberger criterion\n"
+			"       %zu polynomials were moved to the reserve\n",
 			_basis.Size(), _basis.MinDeg(), _basis.MaxDeg(),
 			_stat.pairs_processed, _stat.reduction_to_zero,
 			_stat.max_deg,

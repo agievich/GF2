@@ -961,7 +961,7 @@ public:
 				if (Reduce(--pos))
 				{
 					changed = true;
-					Env::Trace("SelfReduce: %d polys (%d mons)", 
+					Env::Trace("SelfReduce: %zu polys (%zu mons)", 
 						Size(), pos->Size());
 					// нулевая форма? исключаем
 					if (*pos == 0)
@@ -994,7 +994,7 @@ public:
 				if (Minimize(--pos))
 				{
 					changed = true;
-					Env::Trace("SelfMinimize: %d polys (%d mons)", 
+					Env::Trace("SelfMinimize: %zu polys (%zu mons)", 
 						Size(), pos->Size());
 					// нулевая форма? исключаем
 					if (*pos == 0)
@@ -1058,7 +1058,7 @@ public:
 	{
 		MP<_n, _O> poly(_order);
 		// цикл по многочленам
-		word trace = 0;
+		size_t trace = 0;
         for (const_reverse_iterator iter = rbegin(); iter != rend(); ++iter)
 		{
 			// цикл по парам (многочлен, уравнение поля)
@@ -1079,7 +1079,7 @@ public:
 						return false;
 				}
 			// трассировка
-			Env::Trace("IsGB: %d polys", ++trace);
+			Env::Trace("IsGB: %zu polys", ++trace);
 		}
 		return true;
 	}
@@ -1138,7 +1138,7 @@ public:
 			}
 			// отладочная печать
 			if ((tosee.size() % 23) == 0)
-				Env::Trace("QuotientBasis: %d elems (%d tosee)", 
+				Env::Trace("QuotientBasis: %zu elems (%zu tosee)", 
 					polyQB.size(), tosee.size());
 		}
 		return polyQB.Size();
@@ -1218,9 +1218,9 @@ public:
 			pairs.erase(posPair);
 			// отладочная печать
 			if ((pairs.size() % 23) == 0)
-				Env::Trace("QuotientBasisDim: %d pairs remained", 
-					pairs.size());
+				Env::Trace("QuotientBasisDim: %zu pairs left", pairs.size());
 		}
+		Env::Trace("");
 		return dim;
 	}
 

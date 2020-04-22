@@ -4,7 +4,7 @@
 \brief The runtime environment
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.07
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices
 in GF2/info.h.
 *******************************************************************************
@@ -80,7 +80,12 @@ namespace Env
 	void Seed(u32 seed);
 
 	//! Заполнить буфер псевдослучайными байтами
-	void RandMem(void* pMem, word size);
+	void RandMem(void* pMem, size_t size);
+
+	//! Выполнить тест
+	bool RunTest(const char* name, bool (*test)());
+	bool RunTest(const char* name, bool(*test)(bool), bool verbose = false);
+
 }; // namespace Env
 
 }; // namespace GF2

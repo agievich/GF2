@@ -4,7 +4,7 @@
 \brief The runtime environment
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.04.08
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices
 in GF2/info.h.
 *******************************************************************************
@@ -32,7 +32,7 @@ using namespace GF2;
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
-#ifdef OS_WIN
+#if defined OS_WIN
 	#include <windows.h>
 #elif defined OS_LINUX
 	#include <sys/types.h>
@@ -62,7 +62,7 @@ static char _name[128]; //< имя среды
 int Env::Init()
 {	
 	// получить имя
-#ifdef OS_WIN
+#if defined OS_WIN
 	::STARTUPINFOA si;
 	::GetStartupInfoA(&si);
 	if (::strlen(si.lpTitle) >= sizeof(_name))
@@ -124,38 +124,52 @@ void Env::Print(const wchar_t* format,...)
 // Отладочная печать
 void Env::Trace(const char* format,...)
 {	
+	static char prevbuf[1024];
+	static char buf[1024];
 	// пустая форматная строка?
 	if (::strlen(format) == 0)
 	{
+		prevbuf[0] = '\0';
 #ifdef OS_WIN
 		::SetConsoleTitleA(Name());
+#elif defined OS_UNIX
+		// clear line from cursor right
+		// (http://www.climagic.org/mirrors/VT100_Escape_Codes.html)
+		printf("\033[0K");
 #endif
 		return;
 	}
 	// сообщение
-	static char buffer[1024];
 	va_list args;
 	va_start(args, format);
-	::vsnprintf(buffer, sizeof(buffer), format, args);
+	::vsnprintf(buf, sizeof(buf), format, args);
 	va_end(args);
-#ifdef OS_WIN
-	// меняем кодировку
-	::CharToOemA(buffer, (char*)buffer);
-	// сравниваем с предыдущим названием
-	static char prevbuffer[sizeof(buffer)];
-	::GetConsoleTitleA(prevbuffer, sizeof(prevbuffer));
-	if (::strcmp(prevbuffer, buffer) == 0)
-		return;
-	::SetConsoleTitleA(buffer);
-#else
-	fprintf(stderr, "%s\n", buffer);
+#if defined OS_WIN
+	::CharToOemA(buf, (char*)buf);
 #endif
+	if (::strcmp(prevbuf, buf))
+	{
+#if defined OS_WIN
+		::SetConsoleTitleA(buf);
+#elif defined OS_UNIX
+		// clear line from cursor right
+		printf("\033[0K");
+		// print in green 
+		// [ANSI_COLOR_GREEN = "\x1b[32m", ANSI_COLOR_RESET = "\x1b[0m"]
+		printf("\x1b[32m%s\x1b[0m", buf);
+		// move cursor backward
+		printf("\033[%dD", (int)strlen(buf));
+#else
+		fprintf(stderr, "%s\n", buf);
+#endif
+		::strcpy(prevbuf, buf);
+	}
 }
 
 // Время (в ms) с отправного момента в прошлом
 u32 Env::Ticks()
 {	
-#ifdef OS_WIN
+#if defined OS_WIN
 	return (u32)::GetTickCount();
 #elif defined OS_LINUX
 	timespec ts;
@@ -211,16 +225,32 @@ void Env::Seed(u32 seed)
 }
 
 // Заполнить буфер псевдослучайными байтами
-void Env::RandMem(void* pMem, word size)
+void Env::RandMem(void* pMem, size_t size)
 {
 	if (size == 0) return;
 	u32* pMem32 = (u32*)pMem;
 	// заполняем все слова, кроме последнего (возможно неполного)
-	for (word i = 0; i + 1 < size / 4; *(pMem32++) = Rand(), i++);
+	for (size_t i = 0; i + 1 < size / 4; *(pMem32++) = Rand(), ++i);
 	// заполняем последнее слово
 	u32 rnd = Rand();
 	if (size %= 4)
 		::memcpy(pMem32, &rnd, size);
 	else
 		*pMem32 = rnd;
+}
+
+bool Env::RunTest(const char* name, bool(*test)())
+{
+	Print("%s: ", name);
+	bool success = test();
+	Print("%s\n", success ? "OK" : "Err");
+	return success;
+}
+
+bool Env::RunTest(const char* name, bool(*test)(bool), bool verbose)
+{
+	Print("%s: ", name);
+	bool success = test(verbose);
+	Print("%s\n", success ? "OK" : "Err");
+	return success;
 }

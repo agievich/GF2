@@ -193,7 +193,9 @@ bool beltTest(bool verbose = false)
 			t[x] = s[(x + a) % 256];
 		if (t.Nl() < 96 || t.Deg() != 7 || t.Dc(0) > 10 || t.Dc(1) > 8)
 			return false;
+		Env::Trace("%d", (int)a);
 	}
+	Env::Trace("");
 	return true;
 }
 
@@ -224,7 +226,6 @@ bool bashTest()
 	bb.Process();
 	bb.Done(i);
 	// завершение
-	Env::Trace("");
 	return i.Size() == 14 && i.QuotientBasisDim() == word(8);
 }
 
@@ -283,25 +284,15 @@ main
 
 int main()
 {
-	bool code;
-	int ret = 0;
+	int ret;
 	Env::Print("gf2/test [gf2 version %s]\n", Env::Version());
-	Env::Print("wwTest: %s\n", (code = wwTest()) ? "OK" : "Err"),
-		ret |= !code;
-	Env::Print("orderTest: %s\n", (code = orderTest()) ? "OK" : "Err"),
-		ret |= !code;
-	Env::Print("bentTest: %s\n", (code = bentTest()) ? "OK" : "Err"), 
-		ret |= !code;
-	Env::Print("sboxTest: %s\n", (code = sboxTest()) ? "OK" : "Err"), 
-		ret |= !code;
-	Env::Print("beltTest: %s\n", (code = beltTest()) ? "OK" : "Err"), 
-		ret |= !code;
-	Env::Print("bashTest: %s\n", (code = bashTest()) ? "OK" : "Err"), 
-		ret |= !code;
-	Env::Print("bashTest2: %s\n", (code = bashTest2()) ? "OK" : "Err"), 
-		ret |= !code;
-	Env::Print("commuteTest: %s\n", (code = commuteTest()) ? "OK" : "Err"), 
-		ret |= !code;
-
+	ret |= !Env::RunTest("wwTest", wwTest);
+	ret |= !Env::RunTest("orderTest", orderTest);
+	ret |= !Env::RunTest("bentTest", bentTest);
+	ret |= !Env::RunTest("sboxTest", sboxTest);
+	ret |= !Env::RunTest("beltTest", beltTest, true);
+	ret |= !Env::RunTest("bashTest", bashTest);
+	ret |= !Env::RunTest("bashTest2", bashTest2);
+	ret |= !Env::RunTest("commuteTest", commuteTest);
 	return ret;
 }
