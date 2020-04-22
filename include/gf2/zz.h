@@ -1,10 +1,10 @@
 /*
 *******************************************************************************
 \file zz.h
-\brief Words in GF(2) as integers
+\brief Binary words as integers
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.13
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -23,11 +23,10 @@ in GF2/info.h.
 #ifndef __GF2_ZZ
 #define __GF2_ZZ
 
-#include "gf2/word.h"
-#include <vector>
-#include <iostream>
+#include "gf2/defs.h"
+#include "gf2/ww.h"
 #include <cstring>
-#include <stdio.h>
+#include <vector>
 
 namespace GF2 {
 
@@ -35,75 +34,74 @@ namespace GF2 {
 *******************************************************************************
 Класс ZZ
 
--#	Поддерживает операции с элементами кольца 
-	ZZ/2^n ZZ ={0,1,\ldots,2^n-1}, n > 0.
--#	Арифметические операции (сложение, умножение, вычитание) 
-	выполняются также как для обычных целых с обязательным приведением 
-	результата по модулю 2^n.
--#	Некоторые методы базового класса Word, которые возвращают ссылку на Word,
-	переопределяются так, что возвращают ссылку на ZZ.
--#	Снова обращаем внимание, что сдвиг вправо (влево) эквивалентен умножению 
-	(делению) на степень 2, а не наоборот.
--#	В следующем фрагменте
-	\code
+Поддерживает операции с элементами кольца ZZ/2^n ZZ ={0,1,\ldots,2^n-1}, n > 0.
+
+Арифметические операции (сложение, умножение, вычитание) выполняются также как
+для обычных целых с обязательным приведением результата по модулю 2^n.
+
+Некоторые методы базового класса WW, которые возвращают ссылку на WW,
+переопределяются так, чтобы возвращать ссылку на ZZ.
+
+В следующем фрагменте
+\code
 	ZZ<2> w1(3);
 	ZZ<3> w2(7);
 	ZZ<5> w3(w1 * w2);
-	\endcode
-	переменная w3 примет значение 5, а не 21, как можно было расчитывать.
-	Дело в том, что результатом выполнения w1 * w2 является экземпляр 
-	класса ZZ<3>, который затем расширяется до экземпляра ZZ<5>.
+\endcode
+переменная w3 примет значение 5, а не 21, как можно было расчитывать.
+Дело в том, что результатом выполнения w1 * w2 является экземпляр 
+класса ZZ<3>, который затем расширяется до экземпляра ZZ<5>.
 
 \todo Посмотреть внимательно умножение чисел разных длин в ZZ 
 (не обрабатывается последний carry).
 *******************************************************************************
 */
 
-template<size_t _n> class ZZ : public Word<_n>
+template<size_t _n> class ZZ : public WW<_n>
 {
 protected:
-	using Word<_n>::_wcount;
-	using Word<_n>::_words;
+	using WW<_n>::_wcount;
+	using WW<_n>::_words;
 public:
-	using Word<_n>::Next;
-	using Word<_n>::SetAllZero;
-	using Word<_n>::SetWord;
-	using Word<_n>::Test;
-	using Word<_n>::Trim;
-	using Word<_n>::Prev;
+	using WW<_n>::Next;
+	using WW<_n>::SetAllZero;
+	using WW<_n>::SetWord;
+	using WW<_n>::Test;
+	using WW<_n>::Trim;
+	using WW<_n>::Prev;
 // базовые операции
 public:
 	//! Сдвиг в сторону младших разрядов
 	/*! Сдвиг символов слова в сторону младших разрядов
 		(деление на степень 2). */
-	ZZ& Shl(size_t shift)
+	ZZ& ShLo(size_t shift)
 	{	
-		Word<_n>::Shl(shift);
+		WW<_n>::ShLo(shift);
 		return *this;
 	}
 
 	//! Сдвиг в сторону старших разрядов
 	/*! Сдвиг символов слова в сторону старших разрядов
 		(умножение на степень 2). */
-	ZZ& Shr(size_t shift)
+	ZZ& ShHi(size_t shift)
 	{	
-		Word<_n>::Shr(shift);
+		WW<_n>::ShHi(shift);
 		return *this;
 	}
 
 	//! Циклический сдвиг в сторону младших разрядов
 	/*! Циклический сдвиг символов слова в сторону младших разрядов. */
-	ZZ& Rotl(size_t shift)
+	ZZ& RotLo(size_t shift)
 	{	
-		Word<_n>::Rotl(shift);
+		WW<_n>::RotLo(shift);
 		return *this;
 	}
 
 	//! Циклический сдвиг в сторону старших разрядов
 	/*! Циклический сдвиг символов слова в сторону старших разрядов. */
-	ZZ& Rotr(size_t shift)
+	ZZ& RotHi(size_t shift)
 	{	
-		Word<_n>::Rotr(shift);
+		WW<_n>::RotHi(shift);
 		return *this;
 	}
 
@@ -127,8 +125,10 @@ public:
 	{
 		size_t k = _n;
 		while (k)
-            if (Test(k - 1)) return k;
-			else --k;
+            if (Test(k - 1)) 
+				return k;
+			else 
+				--k;
 		return k;		
 	}
 
@@ -191,7 +191,7 @@ public:
 		if ((_words[0] += wRight) < wRight)
 		{
 			size_t pos = 1;
-			while (pos < _wcount && ++_words[pos] == 0) pos++;
+			for (; pos < _wcount && ++_words[pos] == 0; ++pos);
 		}
 		Trim();
 		return *this;
@@ -202,7 +202,7 @@ public:
 	ZZ& operator+=(const ZZ& zRight)
 	{	
 		word carry = 0;
-		for (size_t pos = 0; pos < _wcount; pos++)
+		for (size_t pos = 0; pos < _wcount; ++pos)
 			if ((_words[pos] += carry) < carry) 
 				_words[pos] = zRight.GetWord(pos);
             else 
@@ -219,14 +219,14 @@ public:
 	{	
 		word carry = 0;
 		size_t pos;
-		for (pos = 0; pos < min(_wcount, zRight.WordSize()); pos++)
+		for (pos = 0; pos < min(_wcount, zRight.WordSize()); ++pos)
 			if ((_words[pos] += carry) < carry) 
 				_words[pos] = zRight.GetWord(pos);
             else 
 				carry = (_words[pos] += zRight.GetWord(pos)) < 
 					zRight.GetWord(pos);
 		if (carry)
-			while (pos < _wcount && ++_words[pos] == 0) pos++;
+			for (; pos < _wcount && ++_words[pos] == 0; ++pos);
 		Trim();
 		return *this;
 	}
@@ -238,7 +238,7 @@ public:
  		if ((_words[0] -= wRight) > WORD_MAX - wRight)
 		{
 			size_t pos = 1;
-			while (pos < _wcount && --_words[pos] == WORD_MAX) pos++;
+			for (; pos < _wcount && --_words[pos] == WORD_MAX; ++pos);
 		}
 		Trim();
 		return *this;
@@ -265,15 +265,15 @@ public:
 	ZZ& operator-=(const ZZ<_m>& zRight)
 	{	
 		word borrow = 0;
-		size_t pos;
-		for (pos = 0; pos < min(_wcount, zRight.WordSize()); pos++)
+		size_t pos = 0;
+		for (; pos < min(_wcount, zRight.WordSize()); ++pos)
 			if ((_words[pos] -= borrow) > WORD_MAX - borrow) 
 				_words[pos] -= zRight.GetWord(pos);
             else 
 				borrow = (_words[pos] -= zRight.GetWord(pos)) > 
 					WORD_MAX - zRight.GetWord(pos);
 		if (borrow)
-			while (pos < _wcount && --_words[pos] == WORD_MAX) pos++;
+			for (; pos < _wcount && --_words[pos] == WORD_MAX; ++pos);
 		Trim();
 		return *this;
 	}
@@ -289,7 +289,7 @@ public:
 		{
 			// цикл по словам
 			word carry = 0;
-			for (size_t pos = 0; pos < _wcount; pos++)
+			for (size_t pos = 0; pos < _wcount; ++pos)
 			{
 				dword mul(wRight);
 				mul *= save.GetWord(pos);
@@ -311,17 +311,17 @@ public:
 	{	
 		ZZ res;
 		// цикл по словам zRight
-		for (size_t posRight = 0; posRight < zRight.WordSize(); posRight++)
+		for (size_t posRight = 0; posRight < zRight.WordSize(); ++posRight)
 		{
 			// цикл по словам this
 			word carry = 0;
-			for (size_t pos = 0; pos + posRight < _wcount; pos++)
+			for (size_t pos = 0; pos + posRight < _wcount; ++pos)
 			{
 				dword mul(zRight.GetWord(posRight));
 				mul *= _words[pos];
 				mul += carry;
 				mul += res.GetWord(pos + posRight);
-				res.SetWord(pos + posRight, (word)mul);
+				res.SetWord(pos + posRight, word(mul));
 				carry = word(mul >> B_PER_W);
 			}
 		}
@@ -337,9 +337,9 @@ public:
 		{	
 			assert(IsOdd());
 			ZZ mul(*this), inv(1);
-			for (size_t t = 1; t < _n; t++)
+			for (size_t t = 1; t < _n; ++t)
 			{
-				Shr(1);
+				ShHi(1);
 				if (mul[t])
 					inv[t] = 1, mul += *this;
 			}
@@ -362,7 +362,7 @@ public:
 			return *this;
 		}
 		dword divisor;
-		for (size_t pos = _wcount - 1; pos != SIZE_MAX; pos--)
+		for (size_t pos = _wcount - 1; pos != SIZE_MAX; --pos)
 		{
 			// делим (предыдущий_остаток, текущий_разряд) на wRight
 			divisor = rem;
@@ -417,33 +417,32 @@ public:
 		}
 		// число значащих разрядов делителя
 		size_t digits = zRight.WordSize() - 1;
-		while (zRight.GetWord(digits) == 0) digits--;
+		for (; zRight.GetWord(digits) == 0; --digits);
 		// определить сдвиг нормализации
 		word shift = 0;
-		while ((zRight.GetWord(digits) << shift) < (WORD_1 << (B_PER_W - 1))) 
-			shift++;
+		for (;(zRight.GetWord(digits) << shift) < WORD_HI; ++shift);
 		// делимое, в которое поместится результат нормализации
-		ZZ<_n + B_PER_W - 1 > divident(*this);
+		ZZ<_n + B_PER_W - 1> divident(*this);
 		// делитель, длина которого кратна длине машинного слова
-		ZZ<(_m + B_PER_W - 1) / B_PER_W * B_PER_W> 
-			divisor(zRight);
+		ZZ<(_m + B_PER_W - 1) / B_PER_W * B_PER_W> divisor(zRight);
 		// выполнить нормализацию
-		divident.Shr(shift);
-		divisor.Shr(shift);
+		divident.ShHi(shift);
+		divisor.ShHi(shift);
 		// сохранить старшие разряды делителя
 		ZZ<3 * B_PER_W> divisorHi;
 		divisorHi.SetWord(0, divisor.GetWord(digits - 1));
 		divisorHi.SetWord(1, divisor.GetWord(digits));
 		// цикл по разрядам делимого
 		// сохраняем частное в *this, а остаток -- в divident
-		for (size_t pos = divident.WordSize(); pos > digits; pos--)
+		for (size_t pos = divident.WordSize(); pos > digits; --pos)
 		{
 			// вычисление пробного частного
 			dword q = (pos == divident.WordSize()) ? 0 : divident.GetWord(pos);
 			q <<= B_PER_W;
 			q |= divident.GetWord(pos - 1);
 			q /= divisor.GetWord(digits);
-			if (q > WORD_MAX) q = WORD_MAX;
+			if (q > WORD_MAX) 
+				q = WORD_MAX;
 			// определить старшие разряды делимого
 			ZZ<3 * B_PER_W> dividentHi;
 			dividentHi.SetWord(0, divident.GetWord(pos - 2));
@@ -451,18 +450,18 @@ public:
 			dividentHi.SetWord(2, pos == divident.WordSize() ? 
 				0 : divident.GetWord(pos));
 			// уточнить пробное частное
-			while (divisorHi * word(q) > dividentHi) q--;
+			for (; divisorHi * word(q) > dividentHi; --q);
 			// умножить делитель на пробное_частное и степень основания
 			ZZ<_n + B_PER_W - 1> mul(divisor);
-			mul.Shr(B_PER_W * (pos - digits - 1));
+			mul.ShHi(B_PER_W * (pos - digits - 1));
 			mul *= word(q);
 			if (divident < mul)
 			{
 				// корректировка пробного частного
-				q--;
+				--q;
 				// и результата умножения
 				mul -= ZZ<_n + B_PER_W - 1>(divisor).
-					Shr(B_PER_W * (pos - digits - 1));
+					ShHi(B_PER_W * (pos - digits - 1));
 			}
 			// вычесть
 			assert(divident >= mul);
@@ -472,7 +471,7 @@ public:
 				SetWord(pos - digits - 1, word(q));
 		}
 		// денормализация
-		divident.Shl(shift);
+		divident.ShLo(shift);
 		// переписываем остаток
 		zRight = divident;
 		return *this;
@@ -503,7 +502,7 @@ public:
 	template<size_t _m>
 	ZZ& operator=(const ZZ<_m>& zRight)
 	{	
-		Word<_n>::operator=(zRight);
+		WW<_n>::operator=(zRight);
 		return *this;
 	}
 
@@ -511,7 +510,7 @@ public:
 	/*! Присваивание числу значения-машинного слова wRight. */
 	ZZ& operator=(word wRight)
 	{	
-		Word<_n>::operator=(wRight);
+		WW<_n>::operator=(wRight);
 		return *this;
 	}
 
@@ -523,140 +522,170 @@ public:
 	
 	//! Конструктор по машинному слову
 	/*! Создается число со значением wRight mod 2^n. */
-	ZZ(word wRight) : Word<_n>(wRight) {}
+	ZZ(word wRight) : WW<_n>(wRight) {}
 
 	//! Конструктор копирования
 	/*! Создается копия числа zRight. */
-	ZZ(const ZZ& zRight) : Word<_n>(zRight) {}
+	ZZ(const ZZ& zRight) : WW<_n>(zRight) {}
 
 	//! Конструктор копирования
 	/*! Создается копия числа zRight другой размерности. */
 	template<size_t _m> 
-	ZZ(const ZZ<_m>& zRight) : Word<_n>(zRight) {}
+	ZZ(const ZZ<_m>& zRight) : WW<_n>(zRight) {}
 };
 
 //! Сложение
 /*! Определяется сумма чисел zLeft и zRight. */
-template<size_t _n, size_t _m> inline ZZ<MAX2(_n, _m)> 
+template<size_t _n, size_t _m> inline decltype(auto)
 operator+(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
-	return ZZ<MAX2(_n, _m)>(zLeft) += zRight;
+	ZZ<std::max(_n, _m)> z(zLeft);
+	z += zRight;
+	return z;
 }
 
 //! Сложение
 /*! Определяется сумма машинного слова wLeft и числа zRight. */
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator+(word wLeft, const ZZ<_n>& zRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(zRight) += wLeft;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(zRight);
+	z += wLeft;
+	return z;
 }
 
 //! Сложение
 /*! Определяется сумма числа zLeft и машинного слова wRight. */
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator+(const ZZ<_n>& zLeft, word wRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(zLeft) += wRight;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
+	z += wRight;
+	return z;
 }
 
 //! Вычитание
 /*! Определяется разность чисел zLeft и zRight. */
-template<size_t _n, size_t _m> inline ZZ<MAX2(_n, _m)> 
+template<size_t _n, size_t _m> inline decltype(auto)
 operator-(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
-	return ZZ<MAX2(_n, _m)>(zLeft) -= zRight;
+	ZZ<std::max(_n, _m)> z(zLeft);
+	z -= zRight;
+	return z;
 }
 
 //! Вычитание
 /*! Определяется разность машинного слова wLeft и числа zRight. */
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator-(word wLeft, const ZZ<_n>& zRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(zRight) -= wLeft;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(zRight);
+	z -= wLeft;
+	return z;
 }
 
 //! Вычитание
 /*! Определяется разность числа zLeft и машинного слова wRight. */
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator-(const ZZ<_n>& zLeft, word wRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(zLeft) -= wRight;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
+	z -= wRight;
+	return z;
 }
 
 //! Умножение
 /*! Определяется произведение чисел zLeft и zRight. */
-template<size_t _n, size_t _m> inline ZZ<MAX2(_n, _m)> 
+template<size_t _n, size_t _m> inline decltype(auto)
 operator*(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
-	return ZZ<MAX2(_n, _m)>(zLeft) *= zRight;
+	ZZ<std::max(_n, _m)> z(zLeft);
+	z *= zRight;
+	return z;
 }
 
 //! Умножение
 /*! Определяется произведение машинного слова wLeft и числа zRight.*/
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator*(word wLeft, const ZZ<_n>& zRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(zRight) *= wLeft;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(zRight);
+	z *= wLeft;
+	return z;
 }
 
 //! Умножение
 /*! Определяется произведение числа zLeft и машинного слова wRight. */
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator*(const ZZ<_n>& zLeft, word wRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(zLeft) *= wRight;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
+	z *= wRight;
+	return z;
 }
 
 //! Частное
 /*! Определяется частное от деления числа zLeft на zRight. */
-template<size_t _n, size_t _m> inline ZZ<MAX2(_n, _m)> 
+template<size_t _n, size_t _m> inline decltype(auto)
 operator/(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
-	return ZZ<MAX2(_n, _m)>(zLeft) /= zRight;
+	ZZ<std::max(_n, _m)> z(zLeft);
+	z /= zRight;
+	return z;
 }
 
 //! Частное
 /*! Определяется частное от деления числа zLeft 
 на машинное слово wRight.*/
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator/(const ZZ<_n>& zLeft, word wRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(zLeft) /= wRight;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
+	z /= wRight;
+	return z;
 }
 
 //! Частное
 /*! Определяется частное от деления машинного слова wLeft 
 на число zRight.*/
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator/(word wLeft, const ZZ<_n>& zRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(wLeft) /= zRight;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(wLeft);
+	z /= zRight;
+	return z;
 }
 
 //! Остаток
 /*! Определяется остаток от деления числа zLeft на zRight. */
-template<size_t _n, size_t _m> inline ZZ<MAX2(_n, _m)> 
+template<size_t _n, size_t _m> inline decltype(auto)
 operator%(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
-	return ZZ<MAX2(_n, _m)>(zLeft) %= zRight;
+	ZZ<std::max(_n, _m)> z(zLeft);
+	z %= zRight;
+	return z;
 }
 
 //! Остаток
 /*! Определяется остаток от деления числа zLeft 
 на машинное слово wRight.*/
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator%(const ZZ<_n>& zLeft, word wRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(zLeft) %= wRight;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
+	z %= wRight;
+	return z;
 }
 
 //! Остаток
 /*! Определяется остаток от деления машинного слова wLeft 
 на число zRight.*/
-template<size_t _n> inline ZZ<MAX2(_n, sizeof(word) * 8)> 
+template<size_t _n> inline decltype(auto)
 operator%(word wLeft, const ZZ<_n>& zRight)
 {
-	return ZZ<MAX2(_n, sizeof(word) * 8)>(wLeft) %= zRight;
+	ZZ<std::max(_n, sizeof(word) * 8)> z(wLeft);
+	z %= zRight;
+	return z;
 }
 
 //! Вывод в поток
@@ -765,7 +794,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, ZZ<_n>& zRight)
 		while (true)
 		{
 			// читаем символ из потока
-			typename _Traits::int_type c1 = is.rdbuf()->sbumpc();
+			auto c1 = is.rdbuf()->sbumpc();
 			// конец файла?
 			if (_Traits::eq_int_type(c1, _Traits::eof()))
 			{
@@ -791,7 +820,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, ZZ<_n>& zRight)
 			}
 			// ожидаем цифру
 			static char digits[] = "0123456789ABCDEF";
-			char* hit =  ::strchr(digits, toupper(c));
+			char* hit =  std::strchr(digits, toupper(c));
 			// подходящая цифра?
 			if (hit && word(hit - digits) < base)
 			{
@@ -799,7 +828,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, ZZ<_n>& zRight)
 				ZZ<_n + 4> tmp(zRight);
 				(tmp *= base) += word(hit - digits);
 				// нет переполнения?
-				if (tmp < ZZ<_n + 4>(1).Shr(_n))
+				if (tmp < ZZ<_n + 4>(1).ShHi(_n))
 				{
 					changed = true;
 					zRight = tmp;
@@ -814,8 +843,8 @@ operator>>(std::basic_istream<_Char, _Traits>& is, ZZ<_n>& zRight)
 		}
 	}
 	// чтение требовалось, но не удалось?
-	else if (_n > 0) 
-			is.setstate(std::ios_base::failbit);
+	else
+		is.setstate(std::ios_base::failbit);
 	return is;
 }
 

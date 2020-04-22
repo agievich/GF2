@@ -11,12 +11,11 @@ What is GF2?
 GF2 is a C++ library which maintains the following algebraic structures 
 over GF(2): 
 
-1. Word: words in GF(2) of arbitrary finite length.
-2. ZZ: words in GF(2) as unsigned integers.
-3. Monom: monomials in GF(2)[x0,x1,...].
-4. MPoly: polynomials in GF(2)[x0,x1,...].
-5. Ideal: ideals in GF(2)[x0,x1,...].
-6. Func: functions on words (including Boolean and vectorial Boolean).
+- `Word` — words in GF(2) of arbitrary finite length;
+- `ZZ` — words in GF(2) as unsigned integers;
+- `MPoly` — multivariate polynomials over GF(2);
+- `Ideal` — ideals in multivariate polynomials rings over GF(2);
+- `Func` — various functions on binary words (including Boolean and vectorial Boolean).
 
 GF2 extensively uses C++ templates.
 
@@ -30,12 +29,13 @@ Build
     [make test]
     [make install]
 
-Build types (Release by default):
+Build types (`Release` by default):
    
-*  Coverage -- test coverage,
-*  ASan, ASanDbg -- [address sanitizer](http://en.wikipedia.org/wiki/AddressSanitizer),
-*  MemSan, MemSanDbg -- [memory sanitizer](http://code.google.com/p/memory-sanitizer/),
-*  Check -- strict compile rules.
+-  `Debug` — for debugging;
+-  `Coverage` — test coverage;
+-  `ASan`, `ASanDbg` — [address sanitizer](http://en.wikipedia.org/wiki/AddressSanitizer);
+-  `MemSan`, `MemSanDbg` — [memory sanitizer](http://code.google.com/p/memory-sanitizer/);
+*  `Check` — strict compile rules.
 
 License
 -------

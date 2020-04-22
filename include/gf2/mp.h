@@ -1,10 +1,10 @@
 /*
 *******************************************************************************
-\file mpoly.h
+\file mp.h
 \brief Multivariate polynomials in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.07
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -12,21 +12,20 @@ in GF2/info.h.
 
 /*!
 *******************************************************************************
-\file mpoly.h
+\file mp.h
 \brief Многочлены от нескольких переменных
 
-Модуль содержит описание и реализацию класса MPoly, поддерживающего 
-манипуляции с многочленами от нескольких переменных над полем из двух 
-элементов.
+Модуль содержит описание и реализацию класса MP, поддерживающего манипуляции 
+с многочленами от нескольких переменных над полем GF(2).
 *******************************************************************************
 */
 
-#ifndef __GF2_MPOLY
-#define __GF2_MPOLY
+#ifndef __GF2_MP
+#define __GF2_MP
 
 #include "gf2/env.h"
-#include "gf2/monom.h"
-#include "gf2/order.h"
+#include "gf2/mm.h"
+#include "gf2/mo.h"
 #include <list>
 #include <vector>
 #include <algorithm>
@@ -35,108 +34,113 @@ in GF2/info.h.
 
 namespace GF2 {
 
-template<size_t _n, class _O = OrderLex<_n> > class MPoly;
-template<size_t _n, class _O = OrderLex<_n> > class Ideal;
+template<size_t _n, class _O = MOLex<_n>> class MP;
+template<size_t _n, class _O = MOLex<_n>> class Ideal;
 
 } // namespace GF2
 
-#include "ideal.h"
+#include "gf2/mi.h"
 
 namespace GF2 {
 
 /*!
 *******************************************************************************
-Класс MPoly
+Класс MP
 
--#	Поддерживает операции с многочленами от нескольких переменных. 
-	Многочлен является суммой мономов -- экземпляров класса Monom. 
-	Многочлен параметризуется числом переменных _n и классом мономиального 
-	порядка _O, порожденным от Order<_n>. По умолчанию используется 
-	лексикографический порядок: _O = OrderLex<_n>.
--#	Класс порожден от списка std::list. Элементами списка являются различные 
-	мономы многочлена. При управлении списками предполагается,
-	что мономы не повторяются и упорядочены по убыванию в порядке _O.
-	Указанные ограничения на список поддерживает метод Normalize().
--#	При переходе от списков к многочленам некоторые действия над списками 
-	получают определенный смысл. Например, слияние списков с удалением 
-	повторяющихся элементов соответствует сложению многочленов. 
-	Осмысленные операции над списками вынесены в отдельные методы 
-	класса MPoly либо в перегруженные операторы. 
-	Названия новых методов даются с заглавных букв. 
-	Не рекомендуется использовать generic методы списка std::list, 
-	которые начинаются со строчных букв.
--#	Если все-таки требуется реализовать некоторые особые операции над мономами
-	многочленов, то следует прибегнуть к итераторам (подробнее см. STL):
-	\code
-		MPoly<_n> poly;
-		MPoly<_n>::iterator iter;
-		word i;
-		for (iter = poly.begin(), i = 1; iter != poly.end(); ++iter, ++i)
-			(*iter) *= Monom<_n>((5 * i) % _n, (7 * i) % _n);
-	\endcode
-	Обратим внимание, что в данном примере мы можем разрушить установленный
-	порядок мономов многочлена poly. Поэтому после цикла for следует вызвать
-	метод нормализации (поддержания порядка) Normalize().
--#	При выполнении арифметических операций poly1 op poly2 возможны 
-	три ситуации:
-	-	порядки poly1 и poly2 совпадают по типу и параметрам
-		(согласованные многочлены);
-	-	порядки poly1 и poly2 совпадают по типу, но не по параметрам
-		(однотипные несогласованные многочлены);
-	-	порядки poly1 и poly2 различаются по типу
-		(разнотипные несогласованные многочлены).
-	Данные ситуации по-возможности разбираются явно для повышения 
-	эффективности библиотеки (см., напр., реализацию operator+=()). 
-	Методы управления несогласованными списками снабжаются суффиксом NC 
-	(non-consistent). Возможно и неявное разрешение конфликтов порядков, 
-	которое поддерживается конструктором копирования и оператором 
-	присваивания.
--#	Если poly1 и poly2 -- несогласованные многочлены,
-	то при присваивании poly1 = poly2 в poly1 копируются только
-	мономы poly2, а порядок не меняется. Если не ввести такое правило,
-	то порядок poly1 будет разрушаться при присваивании однотипного 
-	несогласованного многочлена poly2, что оказывается не всегда удобным.
-	С другой стороны, при создании poly1 разрушать нечего, поэтому
-	при конструировании poly1 по однотипному многочлену poly2	порядок 
-	poly2 копируется в poly1. Таким образом, следующие две строчки
-	\code
-		MPoly<n, O> poly1(poly2);
-		MPoly<n, O> poly1; poly1 = poly2;
-	\endcode
-	приведут, вообще говоря, к созданию разных poly1.
--#	При сравнениях poly1 ><= poly2 сравниваются сначала старшие 
-	мономы многочленов, затем вторые по старшинству и так далее, до нахождения
-	первого различия или исчерпания мономов. Обязательно используется порядок
-	poly1.
--#	Определены операторы присваивания и конструкторы копирования, в которых 
-	в качестве параметров используются мономы и многочлены от другого числа 
-	переменных. Если в арифметических выражениях используются мономы и 
-	многочлены от разного числа переменных, то для разрешения неоднозначностей
-	может потребоваться явное приведение типов.
+Поддерживает операции с многочленами от нескольких переменных. Многочлен 
+является суммой мономов -- экземпляров класса MM. Многочлен параметризуется 
+числом переменных _n и классом мономиального порядка _O, порожденным 
+от MO<_n>. По умолчанию используется лексикографический порядок: 
+_O = MOLex<_n>.
+
+Класс порожден от списка std::list. Элементами списка являются различные 
+мономы многочлена. При управлении списками предполагается, что мономы не 
+повторяются и упорядочены по убыванию в порядке _O. Указанные ограничения 
+на список поддерживает метод Normalize().
+
+При переходе от списков к многочленам некоторые действия над списками 
+получают определенный смысл. Например, слияние списков с удалением 
+повторяющихся элементов соответствует сложению многочленов. 
+Осмысленные операции над списками вынесены в отдельные методы класса MP 
+либо в перегруженные операторы. Названия новых методов даются 
+с заглавных букв. Не рекомендуется использовать generic методы 
+списка std::list, которые начинаются со строчных букв.
+
+Если все-таки требуется реализовать некоторые особые операции над мономами
+многочленов, то следует прибегнуть к итераторам (подробнее см. STL):
+\code
+	MP<_n> poly;
+	MP<_n>::iterator iter;
+	word i;
+	for (iter = poly.begin(), i = 1; iter != poly.end(); ++iter, ++i)
+		(*iter) *= MM<_n>((5 * i) % _n, (7 * i) % _n);
+\endcode
+Обратим внимание, что в данном примере мы можем разрушить установленный
+порядок мономов многочлена poly. Поэтому после цикла for следует вызвать
+метод нормализации (поддержания порядка) Normalize().
+
+При выполнении арифметических операций poly1 op poly2 возможны три ситуации:
+-	порядки poly1 и poly2 совпадают по типу и параметрам
+	(согласованные многочлены);
+-	порядки poly1 и poly2 совпадают по типу, но не по параметрам
+	(однотипные несогласованные многочлены);
+-	порядки poly1 и poly2 различаются по типу
+	(разнотипные несогласованные многочлены).
+Данные ситуации по-возможности разбираются явно для повышения 
+эффективности библиотеки (см., напр., реализацию operator+=()). 
+Методы управления несогласованными списками снабжаются суффиксом NC 
+(non-consistent). Возможно и неявное разрешение конфликтов порядков, 
+которое поддерживается конструктором копирования и оператором 
+присваивания.
+
+Если poly1 и poly2 -- несогласованные многочлены, то при присваивании 
+poly1 = poly2 в poly1 копируются только мономы poly2, а порядок не меняется. 
+Если не ввести такое правило, то порядок poly1 будет разрушаться при 
+присваивании однотипного несогласованного многочлена poly2, что оказывается 
+не всегда удобным. С другой стороны, при создании poly1 разрушать нечего, 
+поэтому	при конструировании poly1 по однотипному многочлену poly2 порядок 
+poly2 копируется в poly1. Таким образом, следующие две строчки
+\code
+	MP<n, O> poly1(poly2);
+	MP<n, O> poly1; poly1 = poly2;
+\endcode
+приведут, вообще говоря, к созданию разных poly1.
+
+При сравнениях poly1 ><= poly2 сравниваются сначала старшие мономы многочленов,
+затем вторые по старшинству и так далее, до нахождения первого различия или 
+исчерпания мономов. Обязательно используется порядок poly1.
+
+Определены операторы присваивания и конструкторы копирования, в которых 
+в качестве параметров используются мономы и многочлены от другого числа 
+переменных. Если в арифметических выражениях используются мономы и 
+многочлены от разного числа переменных, то для разрешения неоднозначностей
+может потребоваться явное приведение типов.
+
+\todo Нужна ли перегрузка операторов с rvalue references?
 *******************************************************************************
 */
 
-template<size_t _n, class _O> class MPoly : public std::list<Monom<_n> >
+template<size_t _n, class _O> class MP : public std::list<MM<_n>>
 {
 public:
-	using typename std::list<Monom<_n> >::iterator;
-	using typename std::list<Monom<_n> >::const_iterator;
-	using std::list<Monom<_n> >::assign;
-	using std::list<Monom<_n> >::begin;
-	using std::list<Monom<_n> >::clear;
-	using std::list<Monom<_n> >::end;
-	using std::list<Monom<_n> >::erase;
-	using std::list<Monom<_n> >::insert;
-	using std::list<Monom<_n> >::pop_front;
-	using std::list<Monom<_n> >::push_back;
-	using std::list<Monom<_n> >::size;
-	using std::list<Monom<_n> >::sort;
-	using std::list<Monom<_n> >::splice;
-	using std::list<Monom<_n> >::swap;
+	using typename std::list<MM<_n>>::iterator;
+	using typename std::list<MM<_n>>::const_iterator;
+	using std::list<MM<_n>>::assign;
+	using std::list<MM<_n>>::begin;
+	using std::list<MM<_n>>::clear;
+	using std::list<MM<_n>>::end;
+	using std::list<MM<_n>>::erase;
+	using std::list<MM<_n>>::insert;
+	using std::list<MM<_n>>::pop_front;
+	using std::list<MM<_n>>::push_back;
+	using std::list<MM<_n>>::size;
+	using std::list<MM<_n>>::sort;
+	using std::list<MM<_n>>::splice;
+	using std::list<MM<_n>>::swap;
 // число переменных
 public:
-	//! раскрытие числа переменных _n
-	enum {n = _n};
+	//! раскрытие числа переменных
+	static constexpr size_t n = _n;
 
 // мономиальный порядок
 public:
@@ -165,7 +169,7 @@ public:
 	//! Согласованность
 	/*! Проверяется, что мономиальный порядок совпадает с порядком
 		polyRight. */
-	bool IsConsistent(const MPoly<_n, _O>& polyRight) const
+	bool IsConsistent(const MP<_n, _O>& polyRight) const
 	{
 		return _order == polyRight.GetOrder();
 	}
@@ -201,7 +205,7 @@ public:
 	//! Позиция монома
 	/*! Определяется позиция, по которой моном mRight входит в многочлен
 		(end(), если многочлен не содержит mRight). */
-	const_iterator Find(const Monom<_n>& mRight) const
+	const_iterator Find(const MM<_n>& mRight) const
 	{	 
 		// находим первую позицию в списке, вставка в которую mRight 
 		// не нарушит порядок
@@ -215,7 +219,7 @@ public:
 	//! Позиция монома
 	/*! Определяется позиция, по которой моном mRight входит в многочлен
 		(end(), если многочлен не содержит mRight). */
-	iterator Find(const Monom<_n>& mRight)
+	iterator Find(const MM<_n>& mRight)
 	{	 
 		// находим первую позицию в списке, вставка в которую mRight 
 		// не нарушит порядок
@@ -229,7 +233,7 @@ public:
 	//! Обмен
 	/*! Производится обмен списком мономов с согласованным многочленом 
 		polyRight. */
-	void Swap(MPoly& polyRight)
+	void Swap(MP& polyRight)
 	{
 		assert(IsConsistent(polyRight));
 		swap(polyRight);
@@ -237,7 +241,7 @@ public:
 
 	//! Добавление монома
 	/*! Если моном mRight не входит в многочлен, то он добавляется к нему.*/
-	void Union(const Monom<_n>& mRight)
+	void Union(const MM<_n>& mRight)
 	{	
 		// находим первую позицию в списке, вставка в которую mRight 
 		// не нарушит порядок
@@ -250,7 +254,7 @@ public:
 	//! Добавление мономов
 	/*! Добавляются мономы согласованного многочлена polyRight, 
 		которые не входят в данный многочлен. */
-	void Union(const MPoly& polyRight)
+	void Union(const MP& polyRight)
 	{
 		assert(IsConsistent(polyRight));
 		// к самому себе?
@@ -280,7 +284,7 @@ public:
 		которые не входят в данный многочлен. 
 		\remark после выполнения метода polyRight содержит 
 		только те мономы, которые входят в *this. */
-	void UnionSplice(MPoly& polyRight)
+	void UnionSplice(MP& polyRight)
 	{
 		assert(IsConsistent(polyRight));
 		// к самому себе?
@@ -318,10 +322,10 @@ public:
 	/*! Добавляются мономы несогласованного многочлена polyRight, 
 		которые не входят в данный многочлен. */
 	template<class _O1>
-	void UnionNC(const MPoly<_n, _O1>& polyRight)
+	void UnionNC(const MP<_n, _O1>& polyRight)
 	{
 		iterator iter = begin();
-		typename MPoly<_n, _O1>::const_iterator iterRight = polyRight.begin();
+		typename MP<_n, _O1>::const_iterator iterRight = polyRight.begin();
 		while (iterRight != polyRight.end())
 		{
 			// сравнить текущие элементы списков
@@ -354,7 +358,7 @@ public:
 
 	//! Исключение монома
 	/*! Если моном mRight входит в многочлен, то он удаляется из него. */
-	void Diff(const Monom<_n>& mRight)
+	void Diff(const MM<_n>& mRight)
 	{	
 		// находим первую позицию в списке, вставка в которую mRight 
 		// не нарушит порядок
@@ -367,7 +371,7 @@ public:
 	//! Исключение мономов
 	/*! Исключаются мономы согласованного многочлена polyRight, 
 		которые входят в многочлен. */
-	void Diff(const MPoly& polyRight)
+	void Diff(const MP& polyRight)
 	{	
 		assert(IsConsistent(polyRight));
 		// к самому себе?
@@ -396,10 +400,10 @@ public:
 	/*! Исключаются мономы несогласованного многочлена polyRight, 
 		которые входят в данный многочлен. */
 	template<class _O1>
-	void DiffNC(const MPoly<_n, _O1>& polyRight)
+	void DiffNC(const MP<_n, _O1>& polyRight)
 	{
 		iterator iter = begin();
-		typename MPoly<_n, _O1>::const_iterator iterRight = polyRight.begin();
+		typename MP<_n, _O1>::const_iterator iterRight = polyRight.begin();
 		while (iterRight != polyRight.end())
 		{
 			// сравнить текущие элементы списков
@@ -423,7 +427,7 @@ public:
 	//! Исключающее добавление монома
 	/*! Моном mRight исключается при вхождении в многочлен 
 		и добавляется при отсутствии. */
-	void SymDiff(const Monom<_n>& mRight)
+	void SymDiff(const MM<_n>& mRight)
 	{	
 		// находим первую позицию в списке, вставка в которую mRight 
 		// не нарушит порядок
@@ -439,7 +443,7 @@ public:
 	/*! Добавляются мономы согласованного многочлена polyRight, 
 		которые не входят в многочлен и исключаются мономы, которые 
 		входят в многочлен. */
-	void SymDiff(const MPoly& polyRight)
+	void SymDiff(const MP& polyRight)
 	{	
 		assert(IsConsistent(polyRight));
 		// к самому себе?
@@ -475,7 +479,7 @@ public:
 		входят в многочлен. 
 		\remark после переноса polyRight содержит только те мономы,
 		которые входят в *this. */
-	void SymDiffSplice(MPoly& polyRight)
+	void SymDiffSplice(MP& polyRight)
 	{	
 		assert(IsConsistent(polyRight));
 		// к самому себе?
@@ -515,10 +519,10 @@ public:
 		которые не входят в данный многочлен, 
 		и исключаются мономы, которые входят в данный многочлен. */
 	template<class _O1>
-	void SymDiffNC(const MPoly<_n, _O1>& polyRight)
+	void SymDiffNC(const MP<_n, _O1>& polyRight)
 	{
 		iterator iter = begin();
-		typename MPoly<_n, _O1>::const_iterator iterRight = polyRight.begin();
+		typename MP<_n, _O1>::const_iterator iterRight = polyRight.begin();
 		while (iterRight != polyRight.end())
 		{
 			// сравнить текущие элементы списков
@@ -550,7 +554,7 @@ public:
 	//! Сравнение с многочленом
 	/*! Выполняется сравнение с согласованным многочленом polyRight. 
 		\return -1 (<), 0 (=), 1(>). */
-	int Compare(const MPoly& polyRight) const
+	int Compare(const MP& polyRight) const
 	{
 		assert(IsConsistent(polyRight));
 		// цикл по мономам
@@ -568,10 +572,10 @@ public:
 	/*! Выполняется сравнение с несогласованным многочленом polyRight. 
 		\return -1 (<), 0 (=), 1(>). */
 	template<class _O1>
-	int CompareNC(const MPoly<_n, _O1>& polyRight) const
+	int CompareNC(const MP<_n, _O1>& polyRight) const
 	{
 		// меняем порядок
-		MPoly poly(polyRight);
+		MP poly(polyRight);
 		poly.SetOrder(_order);
 		// сравниваем
 		return Compare(poly);
@@ -580,7 +584,7 @@ public:
 	//! Упаковка
 	/*! Переменные, которые входят в mMask, заменяются на переменные x0, \с x1,... 
 		Остальные переменные исключаются. */
-	void Pack(const Monom<_n>& mMask)
+	void Pack(const MM<_n>& mMask)
 	{
 		for (iterator iter = begin(); iter != end(); ++iter)
 			iter->Pack(mMask);
@@ -589,7 +593,7 @@ public:
 
 	//! Распаковка
 	/*! Переменные \с x0, x1,... заменяются на переменные, которые входят в mMask. */
-	void Unpack(const Monom<_n>& mMask)
+	void Unpack(const MM<_n>& mMask)
 	{
 		for (iterator iter = begin(); iter != end(); ++iter)
 			iter->Unpack(mMask);
@@ -621,7 +625,7 @@ public:
 
 	//! Содержит моном?
 	/*! Выполняется признак вхождения в многочлен монома mRight. */
-	bool IsContain(const Monom<_n>& mRight) const
+	bool IsContain(const MM<_n>& mRight) const
 	{	
 		return Find(mRight) != end();
 	}
@@ -642,7 +646,7 @@ public:
 	//! Старший моном
 	/*! Определяется старший (в установленном порядке) моном многочлена. 
 		\pre !IsEmpty(). */
-	const Monom<_n>& LM() const
+	const MM<_n>& LM() const
 	{	
 		assert(!IsEmpty());
 		return *begin();
@@ -660,7 +664,7 @@ public:
 	//! Значение
 	/*! Определяется значение многочлена при подстановке на места переменных
 		символов слова val. */
-	bool Calc(const Word<_n>& val) const
+	bool Calc(const WW<_n>& val) const
 	{
 		bool ret = 0;
 		for (const_iterator iter = begin(); iter != end(); ++iter)
@@ -671,9 +675,9 @@ public:
 	//! Несущественные переменные?
 	/*! Проверяется, что переменные, заданые ненулевыми символами vars,
 		являются несущественными. */
-	bool IsInsufficient(const Word<_n>& vars) const
+	bool IsInsufficient(const WW<_n>& vars) const
 	{
-		Word<_n> mask;
+		WW<_n> mask;
 		for (const_iterator iter = begin(); iter != end(); ++iter)
 			if (!((mask = vars) &= *iter).IsAllZero())
 				return false;
@@ -682,10 +686,10 @@ public:
 
 	//! Задать наудачу
 	/*! Генерация случайного многочлена. */
-	MPoly& Rand()
+	MP& Rand()
 	{
 		SetEmpty();
-		Monom<_n> m;
+		MM<_n> m;
 		do if (Env::Rand() & 1)
 			insert(begin(), m);
 		while (_order.Next(m));
@@ -696,7 +700,7 @@ public:
 public:
 	//! Присваивание
 	/*! Присваивание многочлену значения-монома mRight. */
-	MPoly& operator=(const Monom<_n>& mRight)
+	MP& operator=(const MM<_n>& mRight)
 	{
 		clear();
 		push_back(mRight);
@@ -706,19 +710,19 @@ public:
 	//! Присваивание
 	/*! Присваивание многочлену значения-монома mRight с другим число переменных. */
 	template<size_t _m>
-	MPoly& operator=(const Monom<_m>& mRight)
+	MP& operator=(const MM<_m>& mRight)
 	{
 		clear();
-		push_back(Monom<_n>(mRight));
+		push_back(MM<_n>(mRight));
 		return *this;
 	}
 
 	//! Присваивание
 	/*! Присваивание многочлену значения-константы cRight. */
-	MPoly& operator=(bool cRight)
+	MP& operator=(bool cRight)
 	{	
 		clear();
-		if (cRight) push_back(Monom<_n>());
+		if (cRight) push_back(MM<_n>());
 		return *this;
 	}
 
@@ -726,11 +730,27 @@ public:
 	/*! Присваивание многочлену однотипного значения-многочлена polyRight. 
 		\remark присваиваются только мономы многочлена polyRight, но не
 		(возможно отличающиеся) параметры порядка polyRight. */
-	MPoly& operator=(const MPoly& polyRight)
+	MP& operator=(const MP& polyRight)
 	{	
 		if (&polyRight != this)
 		{
-			assign(polyRight.begin(), polyRight.end());
+			std::list<MM<_n>>::operator=(polyRight);
+			// нормализация без присваивания порядка!
+			if (!IsConsistent(polyRight))
+				Normalize();
+		}
+		return *this;
+	}
+
+	//! Захват
+	/*! Захватывается временный многочлен polyRight.
+		\remark присваиваются только мономы многочлена polyRight, но не
+		(возможно отличающиеся) параметры порядка polyRight. */
+	MP& operator=(MP&& polyRight)
+	{
+		if (&polyRight != this)
+		{
+			std::list<MM<_n>>::operator=(std::move(polyRight)); 
 			// нормализация без присваивания порядка!
 			if (!IsConsistent(polyRight))
 				Normalize();
@@ -742,7 +762,7 @@ public:
 	/*! Присваивание многочлену значения-многочлена polyRight с произвольным
 		мономиальным порядком. */
 	template<class _O1>
-	MPoly& operator=(const MPoly<_n, _O1>& polyRight)
+	MP& operator=(const MP<_n, _O1>& polyRight)
 	{	
 		assign(polyRight.begin(), polyRight.end());
 		Normalize();
@@ -753,18 +773,18 @@ public:
 	/*! Присваивание многочлену значения-многочлена polyRight с другим
 		числом переменных. */
 	template<size_t _m, class _O1>
-	MPoly& operator=(const MPoly<_m, _O1>& polyRight)
+	MP& operator=(const MP<_m, _O1>& polyRight)
 	{	
-		typename MPoly<_m, _O1>::const_iterator iter;
+		typename MP<_m, _O1>::const_iterator iter;
 		for (iter = polyRight.begin(); iter != polyRight.end(); ++iter)
-			SymDiff(Monom<_n>(*iter));
+			SymDiff(MM<_n>(*iter));
 		return *this;
 	}
 
 	//! Значение
 	/*! Определяется значение многочлена при подстановке на места переменных
 		символов слова val. */
-	bool operator()(const Word<_n>& val) const
+	bool operator()(const WW<_n>& val) const
 	{
 		return Calc(val);
 	}
@@ -773,14 +793,14 @@ public:
 public:
 	//! Плюс
 	/*! Унарный плюс (пустой оператор). */
-	MPoly& operator+()
+	MP& operator+()
 	{	
 		return *this;
 	}
 
 	//! Прибавление монома
 	/*! К многочлену прибавляется моном mRight. */
-	MPoly& operator+=(const Monom<_n>& mRight)
+	MP& operator+=(const MM<_n>& mRight)
 	{	
 		SymDiff(mRight);
 		return *this;
@@ -788,16 +808,16 @@ public:
 
 	//! Прибавление константы
 	/*! К многочлену прибавляется константа cRight. */
-	MPoly& operator+=(bool cRight)
+	MP& operator+=(bool cRight)
 	{	
-		if (cRight) operator+=(Monom<_n>());
+		if (cRight) operator+=(MM<_n>());
 		return *this;
 	}
 
 	//! Прибавление однотипного многочлена
 	/*! К многочлену прибавляется многочлен polyRight с тем же типом
 		мономиального порядка (но, возможно, с другими параметрами). */
-	MPoly& operator+=(const MPoly& polyRight)
+	MP& operator+=(const MP& polyRight)
 	{	
 		// многгочлены согласованы?
 		if (IsConsistent(polyRight))
@@ -813,7 +833,7 @@ public:
 	/*! К многочлену прибавляется многочлен polyRight с другим типом 
 		мономиального порядка. */
 	template<class _O1>
-	MPoly& operator+=(const MPoly<_n, _O1>& polyRight)
+	MP& operator+=(const MP<_n, _O1>& polyRight)
 	{	
 		SymDiffNC(polyRight);
 		return *this;
@@ -858,7 +878,7 @@ public:
 	{
 	// корзины
 	protected:
-		std::vector<MPoly> _buckets; // корзины
+		std::vector<MP> _buckets; // корзины
 		std::vector<size_t> _maxsizes; // максимальные размеры корзин
 
 		//! Добавление корзины
@@ -885,7 +905,7 @@ public:
 		//! Конструктор
 		/*! Конструктор по многочлену polyRight.
 			\remark \с polyRight меняется! */
-		Geobucket(MPoly& polyRight)
+		Geobucket(MP& polyRight)
 		{
 			_buckets.resize(1);
 			_buckets[0].SetOrder(polyRight.GetOrder());
@@ -898,7 +918,7 @@ public:
 		//! Исключающее добавление монома
 		/*! Добавляется моном mRight, если он остутствует в \b geobucket,
 			либо добавляется, если присутствует. */
-		void SymDiff(const Monom<_n>& mRight)
+		void SymDiff(const MM<_n>& mRight)
 		{
 			size_t i = 0;
 			// добавляем мономы в первую корзину
@@ -919,7 +939,7 @@ public:
 		/*! Добавляются мономы согласованного многочлена polyRight, 
 			которые отсутствуют в \b geobucket, и исключаются присутствующие 
 			мономы. */
-		void SymDiffSplice(MPoly& polyRight)
+		void SymDiffSplice(MP& polyRight)
 		{
 			// поиск подходящей корзины 
 			size_t i = 0, j;
@@ -945,7 +965,7 @@ public:
 			размещенного в корзинах.
 			\return \b false, если многочлен нулевой, и \b true, 
 			если многочлен ненулевой и старший моном занесен в lm. */
-		bool PopLM(Monom<_n>& lm)
+		bool PopLM(MM<_n>& lm)
 		{
 			int cmp;
 			size_t i = SIZE_MAX, j = (size_t)_buckets.size();
@@ -975,7 +995,7 @@ public:
 		//! Сборка многочлена
 		/*! Все мономы корзин суммируются в согласованном многочлене 
 			polyRight. */
-		void Mount(MPoly& polyRight)
+		void Mount(MP& polyRight)
 		{
 			polyRight.SetEmpty();
 			for (size_t i = 0; i < _buckets.size();)
@@ -988,10 +1008,10 @@ public:
 	//! Умножение на многочлен
 	/*! Выполняется стандартное умножение на многочлен polyRight. */
 	template<class _O1>
-	void MultClassic(const MPoly<_n, _O1>& polyRight)
+	void MultClassic(const MP<_n, _O1>& polyRight)
 	{
-		MPoly polySave(*this), poly(_order);
-		typename MPoly<_n, _O1>::const_iterator iter;
+		MP polySave(*this), poly(_order);
+		typename MP<_n, _O1>::const_iterator iter;
 		for (clear(), iter = polyRight.end(); iter != polyRight.begin();)
 			SymDiffSplice((poly = polySave) *= *--iter);
 	}
@@ -1000,14 +1020,14 @@ public:
 	/*! Выполняется умножение на многочлен polyRight с использованием
 		\b geobucket. */
 	template<class _O1>
-	void Mult(const MPoly<_n, _O1>& polyRight)
+	void Mult(const MP<_n, _O1>& polyRight)
 	{
 		// поскольку операция выбора старшего монома не задействована,
 		// коэффициент роста geobucket выберем равным 3
 		Geobucket<3> gb(_order);
-		MPoly poly;
+		MP poly;
 		// цикл по мономам polyRight
-		typename MPoly<_n, _O1>::const_iterator iterRight;
+		typename MP<_n, _O1>::const_iterator iterRight;
 		for (iterRight = polyRight.end(); iterRight != polyRight.begin();)
 			gb.SymDiffSplice((poly = *this) *= *--iterRight);
 		// сборка
@@ -1018,10 +1038,10 @@ public:
 	/*! Определяется остаток от деления на ненулевой многочлен polyRight.
 		\return \b true, если остаток отличается от делимого. */
 	template<class _O1>
-	bool ModClassic(const MPoly<_n, _O1>& polyRight)
+	bool ModClassic(const MP<_n, _O1>& polyRight)
 	{	
 		bool changed = false;
-		MPoly poly(_order);
+		MP poly(_order);
 		iterator iter = begin();
 		do
 			if (iter->IsDivisibleBy(polyRight.LM()))
@@ -1040,7 +1060,7 @@ public:
 		Используется структура geobucket. 
 		\return \b true, если остаток отличается от делимого. */
 	template<class _O1>
-	bool Mod(const MPoly<_n, _O1>& polyRight)
+	bool Mod(const MP<_n, _O1>& polyRight)
 	{	
 		// поскольку операция выбора старшего монома задействована,
 		// коэффициент роста geobucket выберем равным 4
@@ -1049,8 +1069,8 @@ public:
 		SetEmpty();
 		// цикл деления
 		bool changed = false;
-		Monom<_n> lm;
-		MPoly poly(_order);
+		MM<_n> lm;
+		MP poly(_order);
 		while (gb.PopLM(lm))
 			// делимость старших мономов?
 			if (lm.IsDivisibleBy(polyRight.LM()))
@@ -1070,14 +1090,14 @@ public:
 	//! Частное от деления на многочлен
 	/*! Определяются частное от деления на ненулевой многочлен polyRight.*/
 	template<class _O1>
-	void DivClassic(const MPoly<_n, _O1>& polyRight)
+	void DivClassic(const MP<_n, _O1>& polyRight)
 	{	
 		// готовим временный многочлен и многочлен для остатка
-		MPoly poly(_order), polyMod(_order);
+		MP poly(_order), polyMod(_order);
 		polyMod.Swap(*this);
 		// цикл деления
 		iterator iter = polyMod.begin();
-		Monom<_n> m;
+		MM<_n> m;
 		do
 			if (iter->IsDivisibleBy(polyRight.LM()))
 			{
@@ -1097,7 +1117,7 @@ public:
 	/*! Находится частное от деления на ненулевой многочлен polyRight.
 		Используется структура \b geobucket */
 	template<class _O1>
-	void Div(const MPoly<_n, _O1>& polyRight)
+	void Div(const MP<_n, _O1>& polyRight)
 	{	
 		// поскольку операция выбора старшего монома задействована,
 		// коэффициент роста geobucket выберем равным 4
@@ -1105,8 +1125,8 @@ public:
 		// будем сохранять в this частное
 		SetEmpty();
 		// цикл деления
-		Monom<_n> lm;
-		MPoly poly(_order);
+		MM<_n> lm;
+		MP poly(_order);
 		while (gb.PopLM(lm))
 			// делимость старших мономов?
 			if (lm.IsDivisibleBy(polyRight.LM()))
@@ -1122,7 +1142,7 @@ public:
 
 	//! Признак делимости
 	/*! Проверяется, что все мономы многочлена делятся на mRight. */
-	bool IsDivisibleBy(const Monom<_n>& mRight) const
+	bool IsDivisibleBy(const MM<_n>& mRight) const
 	{
 		for (const_iterator iter = begin(); iter != end(); ++iter)
 			if (!iter->IsDivisibleBy(mRight))
@@ -1134,10 +1154,10 @@ public:
 	/*! Выполняется замена вхождений переменной с номером pos 
 		на многочлен polyReplace. */
 	template<class _O1>
-	void ReplaceClassic(size_t pos, const MPoly<_n, _O1>& polyReplace)
+	void ReplaceClassic(size_t pos, const MP<_n, _O1>& polyReplace)
 	{	
-		Monom<_n> m;
-		MPoly polyResult(_order), poly(_order);
+		MM<_n> m;
+		MP polyResult(_order), poly(_order);
 		for (iterator iter = begin(); iter != end(); ++iter)
 			// переменная pos входит в моном *iter?
 			if (iter->Test(pos))
@@ -1153,10 +1173,10 @@ public:
 	/*! Выполняется замена вхождений переменной с номером pos 
 		на многочлен polyReplace. Используется структура \b geobucket. */
 	template<class _O1>
-	void Replace(size_t pos, const MPoly<_n, _O1>& polyReplace)
+	void Replace(size_t pos, const MP<_n, _O1>& polyReplace)
 	{	
-		Monom<_n> m;
-		MPoly poly(_order);
+		MM<_n> m;
+		MP poly(_order);
 		Geobucket<3> gb(_order);
 		for (iterator iter = begin(); iter != end(); ++iter)
 			// переменная pos входит в моном *iter?
@@ -1214,13 +1234,13 @@ public:
 	/*! Определяется S-многочлен согласованной пары (poly1, poly2)
 		ненулевых многочленов. 
 		\pre многочлены пары должны отличаться от *this. */
-	MPoly& SPoly(const MPoly& poly1, const MPoly& poly2)
+	MP& SPoly(const MP& poly1, const MP& poly2)
 	{
 		// предусловия
 		assert(IsConsistent(poly1) && IsConsistent(poly2));
 		assert(this != &poly1 && this != &poly2);
 		// сбор мономов
-		Monom<_n> lm, m;
+		MM<_n> lm, m;
 		const_iterator iter;
 		SetEmpty();
 		lm.LCM(poly1.LM(), poly2.LM()) /= poly1.LM();
@@ -1238,12 +1258,12 @@ public:
 	/*! Определяется S-многочлен пары (x_i^2-x_i, poly),
 		где poly -- согласованный ненулевой многочлен, 
 		отличный от *this. */
-	MPoly& SPoly(size_t i, const MPoly& poly)
+	MP& SPoly(size_t i, const MP& poly)
 	{
 		// предусловия
 		assert(this != &poly && IsConsistent(poly));
 		// сбор мономов
-		Monom<_n> m;
+		MM<_n> m;
 		SetEmpty();
 		for (const_iterator iter = poly.begin(); iter != poly.end(); ++iter)
 			(m = *iter).Set(i, 1), push_back(m);
@@ -1255,12 +1275,12 @@ public:
 	//! S-многочлен
 	/*! Определяется S-многочлен согласованной пары (*this, poly)
 		различных ненулевых многочленов. */
-	MPoly& SPoly(const MPoly& poly)
+	MP& SPoly(const MP& poly)
 	{
 		// предусловия
 		assert(IsConsistent(poly) && this != &poly);
 		// сбор мономов
-		Monom<_n> lm, m;
+		MM<_n> lm, m;
 		(m = lm.LCM(LM(), poly.LM())) /= LM();
 		PopLM();
 		for (iterator iter = begin(); iter != end(); ++iter)
@@ -1275,7 +1295,7 @@ public:
 
 	//! S-многочлен
 	/*! Определяется S-многочлен пары (x_i^2-x_i, *this). */
-	MPoly& SPoly(size_t i)
+	MP& SPoly(size_t i)
 	{
 		for (iterator iter = begin(); iter != end(); ++iter)
 			iter->Set(i, 1);
@@ -1287,7 +1307,7 @@ public:
 public:
 	//! Умножение на моном
 	/*! Выполняется умножение на моном mRight. */
-	MPoly& operator*=(const Monom<_n>& mRight)
+	MP& operator*=(const MM<_n>& mRight)
 	{	
 		for (iterator iter = begin(); iter != end(); ++iter)
 			(*iter) *= mRight;
@@ -1300,7 +1320,7 @@ public:
 	//! Умножение на многочлен
 	/*! Выполняется умножение на многочлен polyRight. */
 	template<class _O1>
-	MPoly& operator*=(const MPoly<_n, _O1>& polyRight)
+	MP& operator*=(const MP<_n, _O1>& polyRight)
 	{
 		Mult(polyRight);
 		return *this;
@@ -1309,7 +1329,7 @@ public:
 	//! Остаток от деления на моном
 	/*! Определяется остаток от деления на моном mRight, т.е. 
 		исключаются мономы, которые делятся на mRight. */
-	MPoly& operator%=(const Monom<_n>& mRight)
+	MP& operator%=(const MM<_n>& mRight)
 	{	
 		for (iterator iter = begin(); iter != end();)
 			if (iter->IsDivisibleBy(mRight)) 
@@ -1321,7 +1341,7 @@ public:
 	//! Остаток от деления на многочлен
 	/*! Определяется остаток от деления на ненулевой многочлен polyRight.*/
 	template<class _O1>
-	MPoly& operator%=(const MPoly<_n, _O1>& polyRight)
+	MP& operator%=(const MP<_n, _O1>& polyRight)
 	{	
 		Mod(polyRight);
 		return *this;
@@ -1329,7 +1349,7 @@ public:
 
 	//! Частное от деления на моном
 	/*! Определяется частное от деления на моном mRight. */
-	MPoly& operator/=(const Monom<_n>& mRight)
+	MP& operator/=(const MM<_n>& mRight)
 	{	
 		for (iterator iter = begin(); iter != end();)
 			if (iter->IsDivisibleBy(mRight)) 
@@ -1341,7 +1361,7 @@ public:
 	//! Частное от деления на многочлен
 	/*! Определяется частное от деления на ненулевой многочлен polyRight.*/
 	template<class _O1>
-	MPoly& operator/=(const MPoly<_n, _O1>& polyRight)
+	MP& operator/=(const MP<_n, _O1>& polyRight)
 	{	
 		Div(polyRight);
 		return *this;
@@ -1351,7 +1371,7 @@ public:
 public:
 	//! Равенство моному
 	/*! Проверяется равенство моному mRight. */
-	bool operator==(const Monom<_n>& mRight) const
+	bool operator==(const MM<_n>& mRight) const
 	{	
 		return Size() == 1 && *begin() == mRight;
 	}
@@ -1366,7 +1386,7 @@ public:
 	//! Равенство однотипному многочлену
 	/*! Проверяется равенство многочлену polyRight с тем же типом
 		мономиального порядка (но, возможно, с другими параметрами). */
-	bool operator==(const MPoly<_n, _O>& polyRight) const
+	bool operator==(const MP<_n, _O>& polyRight) const
 	{	
 		// немного упростим сравнение
 		if (Size() != polyRight.Size()) return false;
@@ -1383,7 +1403,7 @@ public:
 	/*! Проверяется равенство многочлену polyRight с другим типом
 		мономиального порядка. */
 	template<class _O1>
-	bool operator==(const MPoly<_n, _O1>& polyRight) const
+	bool operator==(const MP<_n, _O1>& polyRight) const
 	{	
 		if (Size() != polyRight.Size()) return false;
 		return CompareNC(polyRight) == 0;
@@ -1391,7 +1411,7 @@ public:
 
 	//! Неравенство моному
 	/*! Проверяется неравенство моному mRight. */
-	bool operator!=(const Monom<_n>& mRight) const
+	bool operator!=(const MM<_n>& mRight) const
 	{	
 		return Size() != 1 || *begin() != mRight;
 	}
@@ -1406,7 +1426,7 @@ public:
 	//! Неравенство многочлену
 	/*! Проверяется неравенство многочлену polyRight с тем же типом
 		мономиального порядка. */
-	bool operator!=(const MPoly& polyRight) const
+	bool operator!=(const MP& polyRight) const
 	{	
 		// немного упростим сравнение
 		if (Size() != polyRight.Size()) return true;
@@ -1423,7 +1443,7 @@ public:
 	/*! Проверяется неравенство многочлену polyRight с другим типом
 		мономиального порядка. */
 	template<class _O1>
-	bool operator!=(const MPoly<_n, _O1>& polyRight) const
+	bool operator!=(const MP<_n, _O1>& polyRight) const
 	{	
 		if (Size() != polyRight.Size()) return true;
 		return CompareNC(polyRight) != 0;
@@ -1431,7 +1451,7 @@ public:
 
 	//! Меньше монома?
 	/*! Проверяется, что данный многочлен меньше многочлена-монома mRight.*/
-	bool operator<(const Monom<_n>& mRight) const
+	bool operator<(const MM<_n>& mRight) const
 	{	
 		return IsEmpty() || _order.Compare(*begin(), mRight) < 0;
 	}
@@ -1446,7 +1466,7 @@ public:
 	//! Меньше многочлена?
 	/*! Проверяется, что данный многочлен меньше многочлена polyRight 
 		с тем же типом мономиального порядка. */
-	bool operator<(const MPoly& polyRight) const
+	bool operator<(const MP& polyRight) const
 	{	
 		// порядки совпадают по параметрам?
 		if (_order == polyRight.GetOrder())
@@ -1461,14 +1481,14 @@ public:
 	/*! Проверяется, что данный многочлен меньше многочлена polyRight 
 		с другим типом мономиального порядка. */
 	template<class _O1>
-	bool operator<(const MPoly<_n, _O1>& polyRight) const
+	bool operator<(const MP<_n, _O1>& polyRight) const
 	{	
 		return CompareNC(polyRight) < 0;
 	}
 
 	//! Не больше монома?
 	/*! Проверяется, что данный многочлен не больше многочлена-монома mRight.*/
-	bool operator<=(const Monom<_n>& mRight) const
+	bool operator<=(const MM<_n>& mRight) const
 	{	
 		return IsEmpty() || begin()->IsAllZero();
 	}
@@ -1484,7 +1504,7 @@ public:
 	//! Не больше многочлена?
 	/*! Проверяется, что данный многочлен не больше многочлена polyRight 
 		с тем же типом мономиального порядка. */
-	bool operator<=(const MPoly& polyRight) const
+	bool operator<=(const MP& polyRight) const
 	{	
 		// порядки совпадают по параметрам?
 		if (_order == polyRight.GetOrder())
@@ -1499,14 +1519,14 @@ public:
 	/*! Проверяется, что данный многочлен не больше многочлена polyRight 
 		с другим типом мономиального порядка. */
 	template<class _O1>
-	bool operator<=(const MPoly<_n, _O1>& polyRight) const
+	bool operator<=(const MP<_n, _O1>& polyRight) const
 	{	
 		return Compare(polyRight) <= 0;
 	}
 
 	//! Больше монома?
 	/*! Проверяется, что данный многочлен больше многочлена-монома mRight.*/
-	bool operator>(const Monom<_n>& mRight) const
+	bool operator>(const MM<_n>& mRight) const
 	{	
 		return !IsEmpty() && _order.Compare(*begin(), mRight) > 0;
 	}
@@ -1522,7 +1542,7 @@ public:
 	//! Больше многочлена?
 	/*! Проверяется, что данный многочлен больше многочлена polyRight 
 		с тем же типом мономиального порядка. */
-	bool operator>(const MPoly& polyRight) const
+	bool operator>(const MP& polyRight) const
 	{	
 		// порядки совпадают по параметрам?
 		if (_order == polyRight.GetOrder())
@@ -1537,7 +1557,7 @@ public:
 	/*! Проверяется, что данный многочлен больше многочлена polyRight 
 		с другим типом мономиального порядка. */
 	template<class _O1>
-	bool operator>(const MPoly<_n, _O1>& polyRight) const
+	bool operator>(const MP<_n, _O1>& polyRight) const
 	{	
 		return CompareNC(polyRight) > 0;
 	}
@@ -1545,7 +1565,7 @@ public:
 	//! Не меньше монома?
 	/*! Проверяется, что данный многочлен не меньше 
 		многочлена-монома mRight.*/
-	bool operator>=(const Monom<_n>& mRight) const
+	bool operator>=(const MM<_n>& mRight) const
 	{	
 		return !IsEmpty() && _order.Compare(*begin(), mRight) >= 0;
 	}
@@ -1561,7 +1581,7 @@ public:
 	//! Не меньше многочлена?
 	/*! Проверяется, что данный многочлен не меньше многочлена polyRight 
 		с тем же мономиальным порядком. */
-	bool operator>=(const MPoly& polyRight) const
+	bool operator>=(const MP& polyRight) const
 	{	
 		// порядки совпадают по параметрам?
 		if (_order == polyRight.GetOrder())
@@ -1576,7 +1596,7 @@ public:
 	/*! Проверяется, что данный многочлен не меньше многочлена polyRight 
 		с другим мономиальным порядком. */
 	template<class _O1>
-	bool operator>=(const MPoly<_n, _O1>& polyRight) const
+	bool operator>=(const MP<_n, _O1>& polyRight) const
 	{	
 		return CompareNC(polyRight) >= 0;
 	}
@@ -1585,37 +1605,45 @@ public:
 public:
 	//! Конструктор константы
 	/*! Создается константный многочлен (нулевой по умолчанию). */
-	MPoly(bool cRight = 0)
+	MP(bool cRight = 0)
 	{
-		if (cRight) push_back(Monom<_n>());
+		if (cRight) push_back(MM<_n>());
 	}
 	
 	//! Конструктор монома
 	/*! Создается многочлен из одного монома mRight. */
 	template<size_t _m>
-	MPoly(const Monom<_m>& mRight)
+	MP(const MM<_m>& mRight)
 	{	
 		push_back(mRight);
 	}
 
 	//! Конструктор порядка
 	/*! Создается нулевой многочлен с порядком oRight. */
-	MPoly(const _O& oRight) : _order(oRight) {}
+	MP(const _O& oRight) : _order(oRight) {}
 
 	//! Конструктор копирования
 	/*! Создается копия многочлена polyRight. */
-	MPoly(const MPoly& polyRight)
+	MP(const MP& polyRight) : 
+		std::list<MM<_n>>(polyRight)
 	{
 		SetOrder(polyRight.GetOrder());
-		assign(polyRight.begin(), polyRight.end());
+	}
+
+	//! Конструктор перемещения
+	/*! Выполняется захват временного многочлена polyRight. */
+	MP(MP&& polyRight) : 
+		std::list<MM<_n>>(std::move(polyRight))
+	{
+		SetOrder(polyRight.GetOrder());
 	}
 
 	//! Конструктор копирования
 	/*! Создается копия многочлена polyRight с другим мономиальным
 		порядком. */
 	template<class _O1>
-	MPoly(const MPoly<_n, _O1>& polyRight) : 
-		std::list<Monom<_n> >(polyRight)
+	MP(const MP<_n, _O1>& polyRight) : 
+		std::list<MM<_n>>(polyRight)
 	{	
 		Normalize();
 	}
@@ -1623,135 +1651,160 @@ public:
 	//! Конструктор копирования
 	/*! Создается копия многочлена polyRight с другим числом переменных. */
 	template<size_t _m, class _O1> 
-	MPoly(const MPoly<_m, _O1>& polyRight) 
+	MP(const MP<_m, _O1>& polyRight) 
 	{	
-		typename MPoly<_m, _O1>::const_iterator iter;
+		typename MP<_m, _O1>::const_iterator iter;
 		for (iter = polyRight.begin(); iter != polyRight.end(); ++iter)
-			SymDiff(Monom<_n>(*iter));
+			SymDiff(MM<_n>(*iter));
 	}
 };
 
 //! Сложение
 /*! Складываются константа cLeft и моном mRight. */
-template<size_t _n> inline MPoly<_n> 
-operator+(bool cLeft, const Monom<_n>& mRight)
+template<size_t _n> inline MP<_n> 
+operator+(bool cLeft, const MM<_n>& mRight)
 {
-	return MPoly<_n>(cLeft) += mRight;
+	MP<_n> poly(cLeft);
+	poly += mRight;
+	return poly;
 }
 
 //! Сложение
 /*! Складываются моном mLeft и константа cRight. */
-template<size_t _n> inline MPoly<_n> 
-operator+(const Monom<_n>& mLeft, bool cRight)
+template<size_t _n> inline MP<_n> 
+operator+(const MM<_n>& mLeft, bool cRight)
 {
-	return MPoly<_n>(mLeft) += cRight;
+	MP<_n> p(mLeft);
+	p += cRight;
+	return p;
 }
 
 //! Сложение
 /*! Складываются мономы mLeft и mRight. */
-template<size_t _n, size_t _m> inline MPoly<MAX2(_n, _m)> 
-operator+(const Monom<_n>& mLeft, const Monom<_m>& mRight)
+template<size_t _n, size_t _m> inline decltype(auto)
+operator+(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
-	return MPoly<MAX2(_n, _m)>(mLeft) += Monom<MAX2(_n, _m)>(mRight);
+	MP<std::max(_n, _m)> poly(mLeft);
+	poly += MM<std::max(_n, _m)>(mRight);
+	return poly;
 }
 
 //! Сложение
 /*! Складываются многочлен polyLeft и константа сRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator+(const MPoly<_n, _O>& polyLeft, bool cRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator+(const MP<_n, _O>& polyLeft, bool cRight)
 {
-	return MPoly<_n, _O>(polyLeft) += cRight;
+	MP<_n, _O> poly(polyLeft);
+	poly += cRight;
+	return poly;
 }
 
 //! Сложение
 /*! Складываются константа cLeft и многочлен polyRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator+(bool cLeft, const MPoly<_n, _O>& polyRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator+(bool cLeft, const MP<_n, _O>& polyRight)
 {
-	return MPoly<_n, _O>(polyRight) += cLeft;
+	MP<_n, _O> poly(polyRight);
+	poly += cLeft;
+	return poly;
 }
 
 //! Сложение
 /*! Складываются многочлен polyLeft и моном mRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator+(const MPoly<_n, _O>& polyLeft, const Monom<_n>& mRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator+(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 {
-	return MPoly<_n, _O>(polyLeft) += mRight;
+	MP<_n, _O> poly(polyLeft);
+	poly += mRight;
+	return poly;
 }
 
 //! Сложение
 /*! Складываются моном mLeft и многочлен polyRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator+(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator+(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
-	return MPoly<_n, _O>(polyRight) += mLeft;
+	MP<_n, _O> poly(polyRight);
+	poly += mLeft;
+	return poly;
 }
 
 //! Сложение
 /*! Складываются многочлены polyLeft и polyRight. */
-template<size_t _n, class _O1, class _O2> inline MPoly<_n, _O1> 
-operator+(const MPoly<_n, _O1>& polyLeft,
-		  const MPoly<_n, _O2>& polyRight)
+template<size_t _n, class _O1, class _O2> inline MP<_n, _O1> 
+operator+(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 {
-	return MPoly<_n, _O1>(polyLeft) += polyRight;
+	MP<_n, _O1> poly(polyLeft);
+	poly += polyRight;
+	return poly;
 }
 
 //! Умножение
 /*! Умножаются многочлен polyLeft и моном mRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator*(const MPoly<_n, _O>& polyLeft, const Monom<_n>& mRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator*(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 {
-	return MPoly<_n, _O>(polyLeft) *= mRight;
+	MP<_n, _O> poly(polyLeft);
+	poly *= mRight;
+	return poly;
 }
 
 //! Умножение
 /*! Умножаются моном mLeft и многочлен polyRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator*(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator*(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
-	return MPoly<_n, _O>(polyRight) *= mLeft;
+	MP<_n, _O> poly(polyRight);
+	poly *= mLeft;
+	return poly;
 }
 
 //! Умножение
 /*! Умножаются многочлены polyLeft и polyRight. */
-template<size_t _n, class _O1, class _O2> inline MPoly<_n, _O1> 
-operator*(const MPoly<_n, _O1>& polyLeft, 
-		  const MPoly<_n, _O2>& polyRight)
+template<size_t _n, class _O1, class _O2> inline MP<_n, _O1> 
+operator*(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 {
-	return MPoly<_n, _O1>(polyLeft) *= polyRight;
+	MP<_n, _O1> poly(polyLeft);
+	poly *= polyRight;
+	return poly;
 }
 
 //! Частное от деления
 /*! Определяется частное от деления многочлена polyLeft 
 	на моном mRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator/(const MPoly<_n, _O>& polyLeft, const Monom<_n>& mRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator/(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 {
-	return MPoly<_n, _O>(polyLeft) /= mRight;
+	MP<_n, _O> poly(polyLeft);
+	poly /= mRight;
+	return poly;
 }
 
 //! Частное от деления
 /*! Определяется частное от деления монома mLeft 
 	на многочлен polyRight.*/
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator/(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator/(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
-	return MPoly<_n, _O>(polyRight) /= mLeft;
+	MP<_n, _O> poly(polyRight);
+	poly /= mLeft;
+	return poly;
 }
 
 //! Частное от деления
 /*! Определяется частное от деления многочлена polyLeft на polyRight. */
-template<size_t _n, class _O1, class _O2> inline MPoly<_n, _O1> 
-operator/(const MPoly<_n, _O1>& polyLeft, 
-		  const MPoly<_n, _O2>& polyRight)
+template<size_t _n, class _O1, class _O2> inline MP<_n, _O1> 
+operator/(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 {
-	return MPoly<_n, _O1>(polyLeft) /= polyRight;
+	MP<_n, _O1> poly(polyLeft);
+	poly /= polyRight;
+	return poly;
 }
 
 //! Признак делимости
 /*! Проверяется, что mLeft делит все мономы polyRight. */
 template<size_t _n, class _O> inline bool
-operator|(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+operator|(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight.IsDivisibleBy(mLeft);
 }
@@ -1759,43 +1812,50 @@ operator|(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
 //! Остаток от деления
 /*! Определяется остаток от деления многочлена polyLeft 
 	на моном mRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator%(const MPoly<_n, _O>& polyLeft, const Monom<_n>& mRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator%(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 {
-	return MPoly<_n, _O>(polyLeft) %= mRight;
+	MP<_n, _O> poly(polyLeft);
+	poly %= mRight;
+	return poly;
 }
 
 //! Остаток от деления
 /*! Определяется остаток от деления монома mLeft 
 	на многочлен polyRight.*/
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator%(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator%(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
-	return MPoly<_n, _O>(polyRight) %= mLeft;
+	MP<_n, _O> poly(polyRight);
+	poly %= mLeft;
+	return poly;
 }
 
 //! Остаток от деления
 /*! Определяется остаток от деления многочлена polyLeft на polyRight. */
-template<size_t _n, class _O1, class _O2> inline MPoly<_n, _O1> 
-operator%(const MPoly<_n, _O1>& polyLeft, 
-		  const MPoly<_n, _O2>& polyRight)
+template<size_t _n, class _O1, class _O2> inline MP<_n, _O1> 
+operator%(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 {
-	return MPoly<_n, _O1>(polyLeft) %= polyRight;
+	MP<_n, _O1> poly(polyLeft);
+	poly %= polyRight;
+	return poly;
 }
 
 //! Остаток от деления
 /*! Определяется остаток от деления многочлена polyLeft на согласованную 
 	систему iRight. */
-template<size_t _n, class _O> inline MPoly<_n, _O> 
-operator%(const MPoly<_n, _O>& polyLeft, const Ideal<_n, _O>& iRight)
+template<size_t _n, class _O> inline MP<_n, _O> 
+operator%(const MP<_n, _O>& polyLeft, const Ideal<_n, _O>& iRight)
 {
-	return MPoly<_n, _O>(polyLeft) %= iRight;
+	MP<_n, _O> poly(polyLeft);
+	poly %= iRight;
+	return poly;
 }
 
 //! Равенство
 /*! Проверяется равенство монома mLeft и многочлена polyRight. */
 template<size_t _n, class _O> inline bool 
-operator==(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+operator==(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight == mLeft;
 }
@@ -1803,7 +1863,7 @@ operator==(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
 //! Равенство
 /*! Проверяется равенство константы cLeft и многочлена polyRight. */
 template<size_t _n, class _O> inline bool 
-operator==(bool cLeft, const MPoly<_n, _O>& polyRight)
+operator==(bool cLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight == cLeft;
 }
@@ -1811,7 +1871,7 @@ operator==(bool cLeft, const MPoly<_n, _O>& polyRight)
 //! Неравенство
 /*! Проверяется неравенство монома mLeft и многочлена polyRight. */
 template<size_t _n, class _O> inline bool 
-operator!=(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+operator!=(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight != mLeft;
 }
@@ -1819,7 +1879,7 @@ operator!=(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
 //! Неравенство
 /*! Проверяется неравенство константы cLeft и многочлена polyRight. */
 template<size_t _n> inline bool 
-operator!=(bool cLeft, const MPoly<_n>& polyRight)
+operator!=(bool cLeft, const MP<_n>& polyRight)
 {
 	return polyRight != cLeft;
 }
@@ -1827,7 +1887,7 @@ operator!=(bool cLeft, const MPoly<_n>& polyRight)
 //! Меньше
 /*! Проверяется, что многочлен-моном mLeft меньше многочлена polyRight.*/
 template<size_t _n, class _O> inline bool 
-operator<(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+operator<(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight > mLeft;
 }
@@ -1836,7 +1896,7 @@ operator<(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
 /*! Проверяется, что многочлен-константа mLeft меньше 
 	многочлена polyRight.*/
 template<size_t _n, class _O> inline bool 
-operator<(bool cLeft, const MPoly<_n, _O>& polyRight)
+operator<(bool cLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight > cLeft;
 }
@@ -1845,7 +1905,7 @@ operator<(bool cLeft, const MPoly<_n, _O>& polyRight)
 /*! Проверяется, что многочлен-моном mLeft не больше 
 	многочлена polyRight.*/
 template<size_t _n, class _O> inline bool 
-operator<=(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+operator<=(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight >= mLeft;
 }
@@ -1854,7 +1914,7 @@ operator<=(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
 /*! Проверяется, что многочлен-константа mLeft не больше
 	многочлена polyRight.*/
 template<size_t _n, class _O> inline bool 
-operator<=(bool cLeft, const MPoly<_n, _O>& polyRight)
+operator<=(bool cLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight >= cLeft;
 }
@@ -1863,7 +1923,7 @@ operator<=(bool cLeft, const MPoly<_n, _O>& polyRight)
 /*! Проверяется, что многочлен-моном mLeft больше 
 	многочлена polyRight.*/
 template<size_t _n, class _O> inline bool 
-operator>(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+operator>(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight < mLeft;
 }
@@ -1872,7 +1932,7 @@ operator>(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
 /*! Проверяется, что многочлен-константа mLeft больше
 	многочлена polyRight.*/
 template<size_t _n, class _O> inline bool 
-operator>(bool cLeft, const MPoly<_n, _O>& polyRight)
+operator>(bool cLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight < cLeft;
 }
@@ -1881,7 +1941,7 @@ operator>(bool cLeft, const MPoly<_n, _O>& polyRight)
 /*! Проверяется, что многочлен-моном mLeft не меньше 
 	многочлена polyRight.*/
 template<size_t _n, class _O> inline bool 
-operator>=(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
+operator>=(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight <= mLeft;
 }
@@ -1890,7 +1950,7 @@ operator>=(const Monom<_n>& mLeft, const MPoly<_n, _O>& polyRight)
 /*! Проверяется, что многочлен-константа mLeft не меньше
 	многочлена polyRight.*/
 template<size_t _n, class _O> inline bool 
-operator>=(bool cLeft, const MPoly<_n, _O>& polyRight)
+operator>=(bool cLeft, const MP<_n, _O>& polyRight)
 {
 	return polyRight <= cLeft;
 }
@@ -1899,11 +1959,10 @@ operator>=(bool cLeft, const MPoly<_n, _O>& polyRight)
 /*! Многочлен polyRight выводится в поток os. */
 template<class _Char, class _Traits, size_t _n, class _O> inline 
 std::basic_ostream<_Char, _Traits>& 
-operator<<(std::basic_ostream<_Char, _Traits>& os, 
-		   const MPoly<_n, _O>& polyRight)
+operator<<(std::basic_ostream<_Char, _Traits>& os, const MP<_n, _O>& polyRight)
 {
 	bool waitfirst = true;
-	typename MPoly<_n, _O>::const_iterator iter = polyRight.begin();
+	typename MP<_n, _O>::const_iterator iter = polyRight.begin();
 	for (; iter != polyRight.end(); ++iter)
 	{
 		if (!waitfirst) os << " + ";
@@ -1931,7 +1990,7 @@ operator<<(std::basic_ostream<_Char, _Traits>& os,
 	упрощенную сумму прочитанных мономов. */
 template<class _Char, class _Traits, size_t _n, class _O> inline
 std::basic_istream<_Char, _Traits>& 
-operator>>(std::basic_istream<_Char, _Traits>& is, MPoly<_n, _O>& polyRight)
+operator>>(std::basic_istream<_Char, _Traits>& is, MP<_n, _O>& polyRight)
 {	
 	// предварительно обнуляем многочлен
 	polyRight = 0;
@@ -1948,7 +2007,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, MPoly<_n, _O>& polyRight)
 		while (true)
 		{
 			// читаем символ из потока
-			typename _Traits::int_type c1 = is.rdbuf()->sbumpc();
+			auto c1 = is.rdbuf()->sbumpc();
 			// конец файла?
 			if (_Traits::eq_int_type(c1, _Traits::eof()))
 			{
@@ -1982,7 +2041,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, MPoly<_n, _O>& polyRight)
 			}
 			// возвращаем символ обратно и читаем моном
 			is.rdbuf()->sputbackc(_Traits::to_char_type(c1));
-			Monom<_n> m;
+			MM<_n> m;
 			is >> m;
 			// ошибка чтения?
 			if (!is.good())
@@ -1996,11 +2055,11 @@ operator>>(std::basic_istream<_Char, _Traits>& is, MPoly<_n, _O>& polyRight)
 		}
 	}
 	// чтение требовалось, но не удалось?
-	else if (_n > 0) 
-			is.setstate(std::ios_base::failbit);
+	else
+		is.setstate(std::ios_base::failbit);
 	return is;
 }
 
 } // namespace GF2
 
-#endif // __GF2_MPOLY
+#endif // __GF2_MP

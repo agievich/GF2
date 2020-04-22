@@ -97,6 +97,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -118,6 +119,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -137,6 +139,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -161,6 +164,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -180,12 +184,12 @@
     <ClInclude Include="..\..\include\gf2\defs.h" />
     <ClInclude Include="..\..\include\gf2\env.h" />
     <ClInclude Include="..\..\include\gf2\func.h" />
-    <ClInclude Include="..\..\include\gf2\ideal.h" />
+    <ClInclude Include="..\..\include\gf2\mi.h" />
     <ClInclude Include="..\..\include\gf2\info.h" />
-    <ClInclude Include="..\..\include\gf2\monom.h" />
-    <ClInclude Include="..\..\include\gf2\mpoly.h" />
-    <ClInclude Include="..\..\include\gf2\order.h" />
-    <ClInclude Include="..\..\include\gf2\word.h" />
+    <ClInclude Include="..\..\include\gf2\mm.h" />
+    <ClInclude Include="..\..\include\gf2\mp.h" />
+    <ClInclude Include="..\..\include\gf2\mo.h" />
+    <ClInclude Include="..\..\include\gf2\ww.h" />
     <ClInclude Include="..\..\include\gf2\zz.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

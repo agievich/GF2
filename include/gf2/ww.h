@@ -1,10 +1,10 @@
 /*
 *******************************************************************************
-\file word.h
-\brief Words in GF(2)
+\file ww.h
+\brief Binary words of arbitrary length
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.04.10
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -12,16 +12,16 @@ in GF2/info.h.
 
 /*!
 *******************************************************************************
-\file word.h
+\file ww.h
 \brief Двоичные слова
 
-Модуль содержит описание и реализацию класса Word, поддерживающего манипуляции 
+Модуль содержит описание и реализацию класса WW, поддерживающего манипуляции 
 с двоичными словами произвольной конечной длины.
 *******************************************************************************
 */
 
-#ifndef __GF2_WORD
-#define __GF2_WORD
+#ifndef __GF2_WW
+#define __GF2_WW
 
 #include "gf2/defs.h"
 #include "gf2/env.h"
@@ -32,131 +32,163 @@ namespace GF2 {
 
 /*!
 *******************************************************************************
-Класс Word
+Класс WW
 
--#  Поддерживает операции с двоичными словами заданной длины n. 
-	Символы слов нумеруются от 0 до n - 1. 
-	Длина слова указывается при его создании: 
-	\code
-	Word<n> w;
-	\endcode
--#  Слово w разбивается на машинные слова типа word, которые хранятся во 
-	внутреннем массиве данных. Символы word нумеруются справа 
-	(от младших разрядов) налево (к старшим). 
-	Биты дополнения в последнем слове представления всегда являются нулевыми.
-	Например, при n = 13 и байтовых машинных словах символы 
-	\code
+Поддерживает операции с двоичными словами заданной длины n > 0. 
+Символы слов нумеруются от 0 до n - 1. 
+
+Длина слова указывается при его создании: 
+\code
+	WW<n> w;
+\endcode
+
+Слово w разбивается на машинные слова типа word, которые хранятся во 
+внутреннем массиве данных. Биты word нумеруются справа (от младших разрядов)
+налево (к старшим). Биты дополнения в последнем слове представления всегда 
+являются нулевыми. Например, при n = 13 и байтовых машинных словах символы 
+\code
 	w = w[0]w[1]...w[12] 
-	\endcode 
-	будут расположены в памяти следующим образом:
-	\code
+\endcode 
+будут расположены в памяти следующим образом:
+\code
 	w[7]w[6]w[5]w[4]w[3]w[2]w[1]w[0] 000w[12]w[11]w[10]w[9]w[8].
-	\endcode
--#  Внутренний класс Reference поддерживает ссылки на отдельные
-    символы слова. Экземпляры класса Reference возвращаются в методе
-    operator[]() и могут быть использованы в обеих частях оператора 
-	присваивания. При реализации класса Reference использован 
-    код STL std::bitset.
--#	При проектировании была принята концепция Word как машинного 
-	слова заданной (какой угодно) длины. При этом для слов различных длин 
-	разрешено выполнять операции присваивания, сравнения, &=, |=, ^= и др.
-	В таких операциях короткое rvalue дополняется нулями до длины lvalue,
-	либо, наоборот, длинное rvalue обрезается до длины lvalue.
-	В качестве rvalue кроме экземпляра Word может использоваться 
-	машинное слово типа word. Длина машинного слова полагается равной 
-	sizeof(word) * 8.
-	Такая концепция проектирования максимально близка к концепции 
-	связей между стандартными типами char, short, int, long.
-	С другой стороны, мы немного отступаем от концепции слова как 
-	математического объекта.
--#	Результатом двоичных операций w1 & w2, w1 | w2, w1 ^ w2 
-	является слово, длина которого определяется как максимум длин w1 и w2. 
--#	При лексикографическом сравнении слова a и b считаются векторами
-	с неотрицательными целочисленными координатами и a > b, если самая правая
-	ненулевая координата a - b положительна. Например,
+\endcode
+
+Внутренний класс Reference поддерживает ссылки на отдельные символы слова. 
+Экземпляры класса Reference возвращаются в методе operator[]() и могут быть 
+использованы в обеих частях оператора присваивания. Например,
+\code
+	WW<10> w;
+	w[1] = 1; w[2] = w[1];
+\endcode
+При реализации класса Reference использован код STL std::bitset.
+
+При проектировании была принята концепция WW как машинного слова заданной 
+(какой угодно) длины. При этом для слов различных длин разрешено выполнять 
+операции присваивания, сравнения, &=, |=, ^= и др. 
+В этих операциях короткое rvalue дополняется нулями до длины lvalue,
+либо, наоборот, длинное rvalue обрезается до длины lvalue.
+В качестве rvalue кроме экземпляра WW может использоваться машинное слово 
+типа word. Длина машинного слова полагается равной sizeof(word) * 8.
+Такая концепция проектирования максимально близка к концепции связей между 
+стандартными типами char, short, int, long. С другой стороны, мы немного 
+отступаем от концепции слова как математического объекта.
+
+Результатом двоичных операций w1 & w2, w1 | w2, w1 ^ w2 
+является слово, длина которого определяется как максимум длин w1 и w2. 
+
+При интерпретации w = w[0]w[1]... как машинного слова удобно считать,
+что символ w[0] загружается в крайний справа разряд гипотетического
+n-битового регистра, символ w[1] -- во второй справа разряд и так далее.
+При такой загрузке стандартные обозначения для сдвигов << (влево)
+и >> (вправо) трактуются корректно. Мы избегаем несколько
+двусмысленной дихотомии вправо/влево и говорим о сдвигах в сторону
+старших (с большими номерами) разрядов и в сторону младших
+(с меньшими номерами). Перегруженные операторы-сдвиги operator<<() 
+и operator>>() не являются рекомендуемыми: следует отдавать предпочтение 
+методам ShHi() и ShLo().
+
+При лексикографическом сравнении слова a и b считаются векторами
+с неотрицательными целочисленными координатами и a > b, если самая 
+правая ненулевая координата a - b положительна. Например,
+\code
 	111 > 011 > 101 > 001 > 110 > 010 > 100 > 000.
-	Перед сравнением слов разной длины слово меньшей длины 
-	дополняется справа нулями. Может оказаться так, что слова разной длины 
-	будут признаны равными. Например, 100 == 10 == 1.
--#	Большинство методов, выполняющих манипуляции над словом, возвращают ссылку
-	на само слово. Это позволяет использовать следующие синтаксические
-	конструкции: 
-	\code
-	Word<7>().Shl(4).Flip(1).Rotl(6) ^= w1;
-	\endcode
-	Ссылки не возвращают методы, критически влияющие на производительность:
-	Set(), SetWord() и др.
--#	В машинных словах справа находятся младшие символы, а слева -- старшие.
-	В Word все наоборот: "младшие" в начале (слева), "старшие" в конце 
-	(справа). Данное различие не следует забывать при использовании
-	методов-сдвигов Shl(), Shr(), Rotl(), Rotr() и др.
--#	Для математической завершенности разрешается определять объекты типа 
-	Word<0> (пустые слова). Однако, операции по их изменению (напр., сдвиги)
-	в большинстве случаев приведут к исключениям.
--#	Неудачное поведение. В следующем фрагменте
-	\code
-	Word<n> w;
+\endcode
+
+Перед сравнением слов разной длины слово меньшей длины дополняется справа 
+нулями. Может оказаться так, что слова разной длины будут признаны равными. 
+Например, 100 == 10 == 1.
+
+Большинство методов, выполняющих манипуляции над словом, возвращают ссылку
+на само слово. Это позволяет использовать следующие синтаксические 
+конструкции:
+\code
+	WW<7>().ShLo(4).Flip(1).RotHi(6) ^= w1;
+\endcode
+
+Ссылки не возвращают методы, критически влияющие на производительность:
+Set(), SetWord() и др.
+
+В машинных словах справа находятся младшие символы, а слева -- старшие.
+В WW все наоборот: "младшие" в начале (слева), "старшие" в конце 
+(справа). Данное различие не следует забывать при использовании
+методов-сдвигов ShLo(), ShHi(), RotLo(), RotHi() и др.
+
+\warning Неудачное поведение. В следующем фрагменте
+\code
+	WW<n> w;
 	...
 	std::cout << (w ^ 1);
-	\endcode
-	оператор w ^ 1 может быть интерпретирован двояко: 
-	как (word)w ^ 1 и как w ^ WORD_1. Дело в том, что 1 
-	является константой типа int, а не word. Явно указать на второй тип 
-	можно, написав 1u вместо 1.
+\endcode
+оператор w ^ 1 может быть интерпретирован двояко: как (word)w ^ 3 
+и как w ^ WORD_1. Дело в том, что 1 является константой типа int, а не word. 
+Явно указать на второй тип можно, написав (word)1 вместо 1.
+
+\warning Реализация 
+\code
+	template<size_t _n, size_t _m> inline decltype(auto)
+	operator^(const WW<_n>& wLeft, const WW<_m>& wRight)
+	{
+		return WW<std::max(_n, _m)>(wLeft) ^= wRight;
+	}
+\endcode
+некорректна: decltype(auto) будет раскрываться как ссылка.
 *******************************************************************************
 */
 
-template<size_t _n> class Word
+template<size_t _n> class WW
 {
 // длина
 public:
-	//! раскрытие длины _n
-	enum {n = _n};
+	//! раскрытие длины
+	static constexpr size_t n = _n;
+	// запрет нулевой длины
+	static_assert(_n > 0, "");
 
 // поддержка ссылок на отдельные (!) биты слов
 public:
 	class Reference
 	{
-		friend class Word;
+		friend class WW;
 	private:
-		Word* _pWord;
+		WW* _ptr;
 		size_t _pos;
 
 	public:
 		Reference& operator=(bool bVal)
 		{
-			_pWord->Set(_pos, bVal);
+			_ptr->Set(_pos, bVal);
 			return *this;
 		}
 
 		Reference& operator=(const Reference& ref)
 		{
-			_pWord->Set(_pos, bool(ref));
+			_ptr->Set(_pos, bool(ref));
 			return *this;
 		}
 
 		operator bool() const
 		{
-			return _pWord->Test(_pos);
+			return _ptr->Test(_pos);
 		}
 
 	private:
-		Reference(Word& w, size_t pos)
+		Reference(WW& w, size_t pos)
 		{
 			assert(pos < _n);
-			_pWord = &w;
+			_ptr = &w;
 			_pos = pos;
 		}
 	};
 
 // данные
 protected:
-	enum 
-	{	// число машинных слов для хранения данных
-		_wcount = (_n + B_PER_W - 1) / B_PER_W,
-		// число неиспользуемых битов в последнем машинном слове
-		_trimbits = _n % B_PER_W ? B_PER_W - _n % B_PER_W : 0,
-	};
+	// число машинных слов для хранения данных
+	static constexpr size_t _wcount = (_n + B_PER_W - 1) / B_PER_W;	
+	// число октетов для хранения данных
+	static constexpr size_t _ocount = (_n + 7) / 8;
+	// число неиспользуемых битов в последнем машинном слове
+	static constexpr size_t _tcount = (B_PER_W - _n % B_PER_W) % B_PER_W;
 	// машинные слова
 	word _words[_wcount];
 
@@ -164,8 +196,12 @@ protected:
 	/*! Очищаются неиспользуемые биты в последнем слове представления. */
 	void Trim()
 	{	
-		if (_trimbits) (_words[_wcount - 1] <<= _trimbits) >>= _trimbits;
+		if constexpr (_tcount)
+			(_words[_wcount - 1] <<= _tcount) >>= _tcount;
 	}
+	
+	// открыть для WW<_m>
+	template<size_t _m> friend class WW;
 
 // базовые операции
 public:
@@ -188,8 +224,10 @@ public:
 	void Set(size_t pos, bool val)
 	{
 		assert(pos < _n);
-		if (val) _words[pos / B_PER_W] |= WORD_1 << pos % B_PER_W;
-		else _words[pos / B_PER_W] &= ~(WORD_1 << pos % B_PER_W);
+		if (val) 
+			_words[pos / B_PER_W] |= WORD_1 << pos % B_PER_W;
+		else 
+			_words[pos / B_PER_W] &= ~(WORD_1 << pos % B_PER_W);
 	}
 
 	//! Установка символов
@@ -208,14 +246,16 @@ public:
 		if (pos = pos1 % B_PER_W)
 		{
 			(_words[wpos1] <<= (B_PER_W - pos)) >>= B_PER_W - pos;
-			if (val) _words[wpos1] |= WORD_MAX << pos;
+			if (val) 
+				_words[wpos1] |= WORD_MAX << pos;
 			wpos1++;
 		}
 		// заканчиваем посередине слова представления?
 		if (pos = pos2 % B_PER_W)
 		{
 			(_words[wpos2] >>= pos) <<= pos;
-			if (val) _words[wpos2] |= WORD_MAX >> (B_PER_W - pos);
+			if (val) 
+				_words[wpos2] |= WORD_MAX >> (B_PER_W - pos);
 		}
 		// заполняем полные слова
 		for (pos = wpos1; pos < wpos2; _words[pos++] = (val ? WORD_MAX : 0));
@@ -227,14 +267,15 @@ public:
 	{	
 		for (size_t pos = 0; pos < _wcount; pos++)
 			_words[pos] = val ? WORD_MAX : 0;
-		if (val) Trim();
+		Trim();
 	}
 
 	//! Заполнение нулями
 	/*! Слово обнуляется. */
 	void SetAllZero()
 	{	
-		for (size_t pos = 0; pos < _wcount; ++pos) _words[pos] = 0;
+		for (size_t pos = 0; pos < _wcount; ++pos) 
+			_words[pos] = 0;
 	}
 
 	//! Значение символа
@@ -253,12 +294,7 @@ public:
 	}
 
 	//! Значение символа
-	/*! Возвращается ссылка на символ с номером pos.
-        Ссылку можно использовать в обеих частях оператора присваивания. 
-        \par Пример:
-		\code	 
-        Word<10> w;\n w[1] = 0; w[2] = w[1];...
-		\endcode */
+	/*! Возвращается ссылка на символ с номером pos. */
 	Reference operator[](size_t pos)
 	{
 		return Reference(*this, pos);
@@ -266,7 +302,7 @@ public:
 
 	//! Инверсия символа
 	/*! Инвертировать символ с номером pos. */
-	Word& Flip(size_t pos)
+	WW& Flip(size_t pos)
 	{	
 		assert(pos < _n);
 		_words[pos / B_PER_W] ^= WORD_1 << pos % B_PER_W;
@@ -275,7 +311,7 @@ public:
 
 	//! Инверсия слова
 	/*! Инвертировать все символы слова. */
-	Word& FlipAll()
+	WW& FlipAll()
 	{	
 		for (size_t pos = 0; pos < _wcount; _words[pos++] ^= WORD_MAX);
 		Trim();
@@ -286,21 +322,21 @@ public:
 	/*! Проверяется, что слово состоит из символов val. */
 	bool IsAll(bool val) const
 	{
-		// пустое слово?
-		if (_wcount == 0)
-			return false;
 		// проверить все слова представления, кроме последнего
+		word w = val ? WORD_MAX : 0;
 		size_t pos = 0;
         for (; pos + 1 < _wcount; pos++)
-			if (_words[pos] != (val ? WORD_MAX : 0)) return false;
+			if (_words[pos] != w) 
+				return false;
 		// проверить последнее слово представления
-		return _words[pos] == (val ? WORD_MAX << _trimbits >> _trimbits : 0);
+		return _words[pos] == (w << _tcount >> _tcount);
 	}
 
 	//! Нулевое слово?
 	/*! Проверяется, что все символы слова нулевые. */
 	bool IsAllZero() const
 	{
+		assert(_n > 0);
 		for (size_t pos = 0; pos < _wcount; pos++)
 			if (_words[pos] != 0)
 				return false;
@@ -309,9 +345,9 @@ public:
 
 	//! Обратный порядок символов
 	/*! Символы слова перезаписываются в обратном порядке. */
-	Word& Reverse()
+	WW& Reverse()
 	{	
-		for (size_t start = 0, end = _n; start + 1 < end; start++, end--)
+		for (size_t start = 0, end = _n; start + 1 < end; ++start, --end)
 		{
 			bool save = Test(start);
 			Set(start, Test(end - 1));
@@ -332,7 +368,7 @@ public:
 	/*! Определяется октет представления с номером pos. */ 
 	octet GetOctet(size_t pos) const
 	{	
-		assert(pos < _wcount * O_PER_W);
+		assert(pos < _ocount);
 		return octet(_words[pos / O_PER_W] >> pos % O_PER_W * 8);
 	}
 
@@ -342,26 +378,27 @@ public:
 	{	
 		assert(pos < _wcount);
 		_words[pos] = val;
-		if (pos == _wcount - 1) Trim();
+		if (pos == _wcount - 1) 
+			Trim();
 	}
 
 	//! Установка октета представления
-	/*! Октет представления с номером pos устанавливается равным val.*/
+	/*! Октет представления с номером pos устанавливается равным val. */
 	void SetOctet(size_t pos, octet val)
 	{	
-		assert(pos < _wcount * O_PER_W);
+		assert(pos < _ocount);
 		_words[pos / O_PER_W] &= ~(word(255) << pos % O_PER_W * 8);
 		_words[pos / O_PER_W] |= word(val) << pos % O_PER_W * 8;
 	}
 
 	//! Обмен
 	/*! Производится обмен символами со словом wRight. */
-	void Swap(Word& wRight)
+	void Swap(WW& wRight)
 	{
-		for (size_t pos = 0; pos < _wcount; pos++)
+		for (size_t pos = 0; pos < _wcount; ++pos)
 		{
-			word w = wRight.GetWord(pos);
-			wRight.SetWord(pos, _words[pos]);
+			word w = wRight._words[pos];
+			wRight._words[pos] = _words[pos];
 			_words[pos] = w;
 		}
 	}
@@ -370,7 +407,7 @@ public:
 	/*! Определяется вес (число ненулевых символов) слова. */
 	size_t Weight() const
 	{	
-		static char _bitsperoctet[256] = 
+		static unsigned char _bitsperoctet[256] = 
 		{
 			0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
 			1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
@@ -382,8 +419,8 @@ public:
 			3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
 		};
 		size_t weight = 0;
-		for (size_t pos = 0; pos < _wcount * O_PER_W; pos++)
-				weight += _bitsperoctet[GetOctet(pos)];
+		for (size_t pos = 0; pos < _ocount; pos++)
+			weight += _bitsperoctet[GetOctet(pos)];
 		return weight;
 	}
 
@@ -391,17 +428,17 @@ public:
 	/*! Определяется бит четности (сумма символов mod 2). */
 	bool Parity() const
 	{	
-		return bool(Weight() & 1);
+		return bool(Weight() & 1u);
 	}
 
 // манипуляции с наборами символов
 public:
-	//! Сдвиг влево
-	/*! Сдвиг символов слова влево с записью нулей в правую часть:
+	//! Сдвиг в младшую сторону
+	/*! Сдвиг символов слова в младшую сторону с записью нулей в старшую часть:
 		\code
-		w[0]w[1]...w[n-1] -> w[shift]w[shift + 1]...w[n-1]00...0.
+			w[0]w[1]...w[n-1] -> w[shift]w[shift + 1]...w[n-1]00...0.
 		\endcode */
-	Word& Shl(size_t shift)
+	WW& ShLo(size_t shift)
 	{	
 		if (shift < _n)
 		{
@@ -417,21 +454,22 @@ public:
 				_words[pos] = _words[pos + wshift] >> shift, ++pos;
 			}
 			// величина сдвига кратна длине слова
-			else for (pos = 0; pos + wshift < _wcount; pos++)
+			else for (pos = 0; pos + wshift < _wcount; ++pos)
 				_words[pos] = _words[pos + wshift];
 			// обнуление правых слов
 			for (; pos < _wcount; _words[pos++] = 0);
 		}
-		else SetAllZero();
+		else 
+			SetAllZero();
 		return *this;
 	}
 
-	//! Сдвиг вправо
-	/*! Сдвиг символов слова вправо с записью нулей в левую часть:
+	//! Сдвиг в старшую сторону
+	/*! Сдвиг символов слова в старшую сторону с записью нулей в младшую часть:
 		\code
-		w[0]w[1]...w[n-1] -> 00...0w[0]w[1]...w[n-1-shift].
+			w[0]w[1]...w[n-1] -> 00...0w[0]w[1]...w[n-1-shift].
 		\endcode */
-	Word& Shr(size_t shift)
+	WW& ShHi(size_t shift)
 	{	
 		if (shift < _n)
 		{
@@ -440,14 +478,14 @@ public:
 			if (shift %= B_PER_W)
 			{
 				// сдвиг всех слов, кроме первого
-				for (pos = _wcount - 1; pos > wshift; pos--)
+				for (pos = _wcount - 1; pos > wshift; --pos)
 					_words[pos] = (_words[pos - wshift] << shift) |
 						(_words[pos - wshift - 1] >> (B_PER_W - shift));
 				// первое слово
 				_words[pos] = _words[pos - wshift] << shift, --pos;
 			}
 			// величина сдвига кратна длине слова
-			else for (pos = _wcount - 1; pos + 1 > wshift; pos--)
+			else for (pos = _wcount - 1; pos + 1 > wshift; --pos)
 					_words[pos] = _words[pos - wshift];
 			// очистка последнего слова
 			Trim();
@@ -458,90 +496,70 @@ public:
 		return *this;
 	}
 
-	//! Циклический сдвиг влево
-	/*! Циклический сдвиг символов слова влево. 
-		\pre _n != 0. */
-	Word& Rotl(size_t shift)
+	//! Циклический сдвиг в младшую сторону
+	/*! Циклический сдвиг символов слова в младшую сторону. */
+	WW& RotLo(size_t shift)
 	{	
-		assert(_n != 0);
 		shift %= _n;
-		Word w(*this);
-		return Shl(shift) |= w.Shr(_n - shift);
+		return ShLo(shift) |= WW(*this).ShHi(_n - shift);
 	}
 
-	//! Циклический сдвиг вправо
-	/*! Циклический сдвиг символов слова вправо.
-		\pre _n != 0. */
-	Word& Rotr(size_t shift)
+	//! Циклический сдвиг в старшую сторону
+	/*! Циклический сдвиг символов слова в старшую сторону. */
+	WW& RotHi(size_t shift)
 	{	
-		assert(_n != 0);
 		shift %= _n;
-		Word w(*this);
-		return Shl(_n - shift) |= w.Shr(shift);
+		return ShHi(shift) |= WW(*this).ShLo(_n - shift);
 	}
 
-	//! Выбор левой части
-	/*! Левые (первые) _m символов слова записываются в w.
-		\pre this != &w.
+	//! Выбор младшей части
+	/*! Младшие _m <= _n символов слова записываются в w.
 		\return Ссылка на w. */
 	template<size_t _m>
-	Word<_m>& GetLeft(Word<_m>&& w) const
+	WW<_m>& GetLo(WW<_m>& w) const
 	{
-		assert(_m <= _n && this != (void*)&w);
-		for (size_t pos = 0; pos < w.WordSize(); pos++)
-			w.SetWord(pos, _words[pos]);
+		static_assert(_m <= _n, "");
+		for (size_t pos = 0; pos < w._wcount; ++pos)
+			w._words[pos] = _words[pos];
+		w.Trim();
 		return w;
 	}
 
-	//! Выбор левой части
-	/*! Левые (первые) _m символов слова записываются в w.
-		\pre this != &w.
-		\return Ссылка на w. */
+	//! Выбор младшей части
+	/*! Возвращаются младшие _m <= _n символов слова. */
 	template<size_t _m>
-	Word<_m>& GetLeft(Word<_m>& w) const
+	WW<_m> GetLo() const
 	{
-		return GetLeft(std::move(w));
+		WW<_m> w;
+		return GetLo(w);
 	}
 
-	//! Выбор левой части
-	/*! Возвращаются левые (первые) _m символов слова. */
-	template<size_t _m>
-	Word<_m> GetLeft() const
-	{
-		return GetLeft(Word<_m>());
-	}
-
-	//! Установка левой части
-	/*! Левые (первые) _m символов слова устанавливаются по w. 
-		\pre this != &w.
+	//! Установка младшей части
+	/*! Младшие _m символов слова устанавливаются по w. 
 		\return Ссылка на само слово. */
 	template<size_t _m>
-	Word& SetLeft(const Word<_m>& w)
+	WW& SetLo(const WW<_m>& w)
 	{
-		assert(_m <= _n && this != (void*)&w);
+		static_assert(_m <= _n, "");
 		size_t pos = 0;
-		for (; pos + 1 < w.WordSize(); ++pos)
-			_words[pos] = w.GetWord(pos);
-		// неполное последнее слово mon?
-		if (size_t trim = _m % B_PER_W)
-		{
-			// очищаем младшие trim битов
-			(_words[pos] >>= trim) <<= trim;
-			// устанавливаем младшие trim битов
-			_words[pos] |= w.GetWord(pos);
-		}
-		else _words[pos] = w.GetWord(pos);
+		for (; pos + 1 < w._wcount; ++pos)
+			_words[pos] = w._words[pos];
+		// неполное последнее слово w?
+		if constexpr (w._tcount)
+			_words[pos] = w._words[pos] | 
+				(_words[pos] & ~((WORD_HI >> (w._tcount - 1)) - WORD_1));
+		else
+			_words[pos] = w._words[pos];
 		return *this;
 	}
 
-	//! Выбор правой части
-	/*! Правые (последние) _m символов слова записываются в w.
-		\pre this != &w.
-		\return Ссылка на w.	*/
+	//! Выбор старшей части
+	/*! Старшие _m <= _n символов слова записываются в w.
+		\return Ссылка на w. */
 	template<size_t _m>
-	Word<_m>& GetRight(Word<_m>&& w) const
+	WW<_m>& GetHi(WW<_m>& w) const
 	{
-		assert(_m <= _n && this != (void*)&w);
+		static_assert(_m <= _n, "");
 		// первое слово, в котором начинается правая часть
 		size_t start = (_n - _m) / B_PER_W;
 		// правая часть начинается посередине слова (со смещением offset)?
@@ -550,92 +568,82 @@ public:
 		{
 			// объединять биты двух последовательных слов
 			for (pos = 0; pos + start + 1 < _wcount; pos++)
-				w.SetWord(pos, (_words[pos + start] >> offset) | 
-					(_words[pos + start + 1] << (B_PER_W - offset)));
+				w._words[pos] = (_words[pos + start] >> offset) | 
+					(_words[pos + start + 1] << (B_PER_W - offset));
 			// использовать биты последнего слова
-			if (pos < w.WordSize())
-				w.SetWord(pos, _words[pos + start] >> offset);
+			if (pos < w._wcount)
+				w._words[pos] = _words[pos + start] >> offset;
+			w.Trim();
 		}
 		else
-			for (pos = 0; pos < w.WordSize(); pos++)
-				w.SetWord(pos, _words[pos + start]);
+			for (pos = 0; pos < w._wcount; ++pos)
+				w._words[pos] = _words[pos + start];
 		return w;
 	}
 
-	//! Выбор правой части
-	/*! Правые (последние) _m символов слова записываются в w.
-		\pre this != &w.
-		\return Ссылка на w.	*/
+	//! Выбор старшей части
+	/*! Возвращаются старшие _m <= _n символов слова. */
 	template<size_t _m>
-	Word<_m>& GetRight(Word<_m>& w) const
+	WW<_m> GetHi() const
 	{
-		return GetRight(std::move(w));
-	}
-		
-	//! Выбор правой части
-	/*! Возвращаются правые (последние) _m символов слова. */
-	template<size_t _m>
-	Word<_m> GetRight() const
-	{
-		return GetRight(Word<_m>());
+		WW<_m> w;
+		return GetHi(w);
 	}
 
-	//! Установка правой части
-	/*! Правые (последние) _m символов слова устанавливаются по w.
-		\pre this != &w.
+	//! Установка старшей части
+	/*! Старшие _m <= _n символов слова устанавливаются по w.
 		\return ссылка на само слово. */
 	template<size_t _m>
-	Word& SetRight(const Word<_m>& w)
+	WW& SetHi(const WW<_m>& w)
 	{
-		assert(_m <= _n && this != (void*)&w);
+		static_assert(_m <= _n, "");
 		// первое слово, в котором начинается правая часть
 		size_t start = (_n - _m) / B_PER_W;
 		// правая часть начинается посередине слова (со смещением offset)?
 		if (size_t offset = (_n - _m) % B_PER_W)
 		{
 			// очистить старшие B_PER_W - offset битов _words[start]
-			(_words[start] <<= B_PER_W - offset) >>= 
-				B_PER_W - offset;
+			(_words[start] <<= B_PER_W - offset) >>= B_PER_W - offset;
 			// и записать в них младшие биты первого слова w
-			_words[start] |= w.GetWord(0) << offset;
+			_words[start] |= w._words[0] << offset;
 			// далее объединять биты двух последовательных слов w
 			size_t pos;
-			for (pos = 1; pos < w.WordSize(); pos++)
-				_words[pos + start] = (w.GetWord(pos) << offset) |
-					(w.GetWord(pos - 1) >> (B_PER_W - offset));
+			for (pos = 1; pos < w._wcount; ++pos)
+				_words[pos + start] = (w._words[pos] << offset) |
+					(w._words[pos - 1] >> (B_PER_W - offset));
 			// обработать остатки
 			if (pos + start < _wcount)
-				_words[pos + start] = 
-					w.GetWord(pos - 1) >> (B_PER_W - offset);
+				_words[pos + start] = w._words[pos - 1] >> (B_PER_W - offset);
 		}
-		else for (size_t pos = 0; pos < w.WordSize(); pos++)
-				_words[pos + start] = w.GetWord(pos);
-		// подчистить
+		else 
+			for (size_t pos = 0; pos < w._wcount; ++pos)
+				_words[pos + start] = w._words[pos];
 		Trim();
 		return *this;
 	}
 
 	//! Упаковка
-	/*! В слове *this удаляются (со сдвигом влево) символы с индексами pos 
+	/*! Удаляются (со сдвигом в младшую часть) символы с индексами pos 
 		такими,	что wMask[pos] == 0. */
-	Word& Pack(const Word& wMask)
+	WW& Pack(const WW& wMask)
 	{
+		assert(this != &wMask);
 		size_t pos = 0, posMask = 0;
-		for (posMask = 0; posMask < _n; posMask++)
+		for (posMask = 0; posMask < _n; ++posMask)
 			if (wMask.Test(posMask))
 				Set(pos++, Test(posMask));
 		// добиваем нулями
 		for (; pos < _n && pos % B_PER_W; Set(pos++, 0));
-		for ((pos += B_PER_W - 1) /= B_PER_W; pos < _wcount; 
-			_words[pos++] = 0);
+		for (; pos < _wcount; _words[pos++] = 0);
 		return *this;
 	}
 
 	//! Распаковка
-	/*! В слово *this вставляются нулевые символы с индексами pos такими,
+	/*! В слово вставляются нулевые символы с индексами pos такими,
 		что wMask[pos] == 0. */
-	Word& Unpack(const Word& wMask)
+	WW& Unpack(const WW& wMask)
 	{
+		assert(this != &wMask);
 		size_t pos = wMask.Weight(), posMask = _n;
 		while (posMask--)
 			Set(posMask, wMask.Test(posMask) ? Test(--pos) : 0);
@@ -646,9 +654,9 @@ public:
 	/*! Слово w[0]w[1]...w[n-1]	заменяется на слово u[0]u[1]...u[n-1],
 		в котором u[i] == w[pi[i]], если pi[i] != -1 и u[i] == 0 
 		в противном случае. */
-	Word& Permute(const size_t pi[_n])
+	WW& Permute(const size_t pi[_n])
 	{	
-		Word<_n> temp;
+		WW<_n> temp;
 		for (size_t pos = 0; pos < _n; ++pos)
 			temp.Set(pos, pi[pos] == SIZE_MAX ? 0 : Test(pi[pos]));
 		return operator=(temp);
@@ -659,11 +667,13 @@ public:
 	//! Сравнение
 	/*! Выполняется лексикографическое сравнение со словом wRight. 
 		\return -1 (<), 0 (=), 1 (>). */
-	int Compare(const Word& wRight) const
+	int Compare(const WW& wRight) const
 	{
-		for (size_t pos = _wcount - 1; pos != SIZE_MAX; pos--)
-			if (_words[pos] > wRight.GetWord(pos)) return 1;
-			else if (_words[pos] < wRight.GetWord(pos)) return -1;
+		for (size_t pos = _wcount - 1; pos != SIZE_MAX; --pos)
+			if (_words[pos] > wRight._words[pos]) 
+				return 1;
+			else if (_words[pos] < wRight._words[pos]) 
+				return -1;
 		return 0;
 	}
 
@@ -672,19 +682,23 @@ public:
 		другой длины. 
 		\return -1 (<), 0 (=), 1 (>). */
 	template<size_t _m>
-	int Compare(const Word<_m>& wRight) const
+	int Compare(const WW<_m>& wRight) const
 	{
 		size_t pos;
 		if (_n > _m) 
 		{
-			for (pos = _wcount - 1; pos != wRight.WordSize() - 1; pos--)
-				if (GetWord(pos) != 0) return 1;
+			for (pos = _wcount - 1; pos != wRight._wcount - 1; --pos)
+				if (_words[pos] != 0) 
+					return 1;
 		}
-		else for (pos = wRight.WordSize() - 1; pos != _wcount - 1; pos--)
-		if (wRight.GetWord(pos) != 0) return -1;
-		for (; pos != SIZE_MAX; pos--)
-			if (_words[pos] > wRight.GetWord(pos)) return 1;
-			else if (_words[pos] < wRight.GetWord(pos)) return -1;
+		else for (pos = wRight._wcount - 1; pos != _wcount - 1; --pos)
+			if (wRight._words[pos] != 0) 
+				return -1;
+		for (; pos != SIZE_MAX; --pos)
+			if (_words[pos] > wRight._words[pos]) 
+				return 1;
+			else if (_words[pos] < wRight._words[pos]) 
+				return -1;
 		return 0;
 	}
 
@@ -720,22 +734,25 @@ public:
 		if (!saveWeight)
 		{
 			// инкремент слова-как-числа
-			while (pos < _wcount && ++_words[pos] == 0) pos++;
+			for (; pos < _wcount && ++_words[pos] == 0; ++pos);
 			// перенос не попал в последнее слово представления?
-			if (pos + 1 < _wcount) return true;
+			if (pos + 1 < _wcount) 
+				return true;
 			// прошли последнее слово?
-			if (pos == _wcount) return false;
+			if (pos == _wcount) 
+				return false;
 			// остановились в последнем слове
 			Trim(); 
 			return _words[pos] != 0;
 		}
 		// ищем начало серии из единиц
-		while (pos < _n && !Test(pos)) pos++;
+		for (; pos < _n && !Test(pos); ++pos);
 		// единиц нет?
-		if (pos == _n) return false;
+		if (pos == _n) 
+			return false;
 		// ищем окончание серии
 		size_t end = pos + 1;
-		while (end < _n && Test(end)) end++;
+		for (; end < _n && Test(end); ++end);
 		// серия справа?
 		if (end == _n)
 		{
@@ -762,29 +779,30 @@ public:
 		if (!saveWeight)
 		{
 			// декремент слова-как-числа
-			while (pos < _wcount && --_words[pos] == SIZE_MAX) pos++;
+			for (; pos < _wcount && --_words[pos] == SIZE_MAX; ++pos);
 			// перенос не попал или остался в последнем слове представления?
-			if (pos < _wcount) return true;
+			if (pos < _wcount) 
+				return true;
 			Trim();
 			return false;
 		}
 		// ищем первую единицу
-		while (pos < _n && !Test(pos)) pos++;
+		for (; pos < _n && !Test(pos); ++pos);
 		// единиц нет?
-		if (pos == _n) return false;
+		if (pos == _n) 
+			return false;
 		// начинается с нулей?
 		if (pos > 0)
 		{
 			// передвигаем единицу влево
-			Set(pos - 1, 1); Set(pos, 0);
+			Set(pos - 1, 1), Set(pos, 0);
 			return true;
 		}
 		// ищем окончание серии из единиц
 		size_t end = 1;
-		while (end < _n && Test(end)) end++;
+		for (; end < _n && Test(end); ++end);
 		// ищем следующую единицу
-		pos = end;
-		while (pos < _n && !Test(pos)) pos++;
+		for (pos = end; pos < _n && !Test(pos); ++pos);
 		// серия слева: 1^end 00...0?
 		if (pos == _n)
 		{
@@ -799,9 +817,9 @@ public:
 
 	//! Задать наудачу
 	/*! Генерация случайного слова. */
-	Word& Rand()
+	WW& Rand()
 	{
-		Env::RandMem(_words, sizeof(_words));
+		Env::RandMem(_words, _ocount);
 		Trim();
 		return *this;
 	}
@@ -810,31 +828,31 @@ public:
 public:
 	//! Присваивание
 	/*! Присваивание слову значения-слова wRight. */
-	Word& operator=(const Word& wRight)
+	WW& operator=(const WW& wRight)
 	{
-		if (&wRight != this)
-			for (size_t pos = 0; pos < _wcount; pos++)
-				_words[pos] = wRight.GetWord(pos);
+		for (size_t pos = 0; pos < _wcount; ++pos)
+			_words[pos] = wRight._words[pos];
 		return *this;
 	}
 
 	//! Присваивание
 	/*! Присваивание слову значения-слова wRight другой размерности. */
 	template<size_t _m>
-	Word& operator=(const Word<_m>& wRight)
+	WW& operator=(const WW<_m>& wRight)
 	{
-		size_t pos;
-		for (pos = 0; pos < (_n < _m ? _wcount : wRight.WordSize()); pos++)
-			_words[pos] = wRight.GetWord(pos);
-		if (_n < _m) 
+		size_t pos = 0;
+		for (; pos < std::min(_wcount, wRight._wcount); ++pos)
+			_words[pos] = wRight._words[pos];
+		if constexpr (_n < _m) 
 			Trim();
-		else for (; pos < _wcount; _words[pos++] = 0);
+		else 
+			for (; pos < _wcount; _words[pos++] = 0);
 		return *this;
 	}
 
 	//! Присваивание
 	/*! Присваивание слову значения-машинного слова wRight. */
-	Word& operator=(word wRight)
+	WW& operator=(word wRight)
 	{	
 		_words[0] = wRight;
 		for (size_t pos = 1; pos < _wcount; pos++)
@@ -853,7 +871,7 @@ public:
 	//! Равенство
 	/*! Проверяется равенство слову wRight. */
 	template<size_t _m>
-	bool operator==(const Word<_m>& wRight) const
+	bool operator==(const WW<_m>& wRight) const
 	{	
 		return Compare(wRight) == 0;
 	}
@@ -864,7 +882,7 @@ public:
 	{	
 		if (_words[0] != wRight)
 			return false;
-		for (size_t pos = 1; pos < _wcount; pos++)
+		for (size_t pos = 1; pos < _wcount; ++pos)
 			if (_words[pos] != 0)
 				return false;
 		return true;
@@ -873,7 +891,7 @@ public:
 	//! Неравенство
 	/*! Проверяется неравенство слову wRight. */
 	template<size_t _m>
-	bool operator!=(const Word<_m>& wRight) const
+	bool operator!=(const WW<_m>& wRight) const
 	{	
 		return Compare(wRight) != 0;
 	}
@@ -888,7 +906,7 @@ public:
 	//! Меньше?
 	/*! Проверяется, что слово лексикографические меньше wRight. */
 	template<size_t _m>
-	bool operator<(const Word<_m>& wRight) const
+	bool operator<(const WW<_m>& wRight) const
 	{	
 		return Compare(wRight) < 0;
 	}
@@ -909,7 +927,7 @@ public:
 	//! Не больше?
 	/*! Проверяется, что слово лексикографические не больше wRight. */
 	template<size_t _m>
-	bool operator<=(const Word<_m>& wRight) const
+	bool operator<=(const WW<_m>& wRight) const
 	{	
 		return Compare(wRight) <= 0;
 	}
@@ -920,7 +938,7 @@ public:
 	{	
 		if (_words[0] > wRight)
 			return false;
-		for (size_t pos = 1; pos < _wcount; pos++)
+		for (size_t pos = 1; pos < _wcount; ++pos)
 			if (_words[pos] > 0)
 				return false;
 		return true;
@@ -929,7 +947,7 @@ public:
 	//! Больше?
 	/*! Проверяется, что слово лексикографические больше wRight. */
 	template<size_t _m>
-	bool operator>(const Word<_m>& wRight) const
+	bool operator>(const WW<_m>& wRight) const
 	{	
 		return Compare(wRight) > 0;
 	}
@@ -944,7 +962,7 @@ public:
 	//! Не меньше?
 	/*! Проверяется, что слово лексикографические не менььше wRight. */
 	template<size_t _m>
-	bool operator>=(const Word<_m>& wRight) const
+	bool operator>=(const WW<_m>& wRight) const
 	{	
 		return Compare(wRight) >= 0;
 	}
@@ -958,18 +976,18 @@ public:
 
 	//! Инверсия
 	/*! Символы слова инвертируются. */
-	Word operator~() const
+	WW operator~() const
 	{	
-		return Word(*this).FlipAll();
+		return WW(*this).FlipAll();
 	}
 
 	//! AND
 	/*! Выполняется логическое умножение символов на 
 		соответствующие символы слова wRight. */
-	Word& operator&=(const Word& wRight)
+	WW& operator&=(const WW& wRight)
 	{	
-		for (size_t pos = 0; pos < _wcount; pos++)
-			_words[pos] &= wRight.GetWord(pos);
+		for (size_t pos = 0; pos < _wcount; ++pos)
+			_words[pos] &= wRight._words[pos];
 		return *this;
 	}
 
@@ -977,30 +995,32 @@ public:
 	/*! Выполняется логическое умножение символов на 
 		соответствующие символы слова wRight другой длины. */
 	template<size_t _m>
-	Word& operator&=(const Word<_m>& wRight)
+	WW& operator&=(const WW<_m>& wRight)
 	{	
-		for (size_t pos = 0; pos < (_n < _m ? _wcount : wRight.WordSize());)
-			_words[pos++] &= wRight.GetWord(pos);
+		for (size_t pos = 0; pos < std::min(_wcount, wRight._wcount); ++pos)
+			_words[pos] &= wRight._words[pos];
+		if constexpr (_m < _n)
+			for (size_t pos = wRight._wcount; pos < _wcount; _words[pos++] = 0);
 		return *this;
 	}
 
 	//! AND
 	/*! Выполняется логическое умножение символов на 
 		соответствующие символы машинного слова wRight. */
-	Word& operator&=(word wRight)
+	WW& operator&=(word wRight)
 	{	
 		_words[0] &= wRight;
-		Trim();
+		for (size_t pos = 1; pos < _wcount; _words[pos++] = 0);
 		return *this;
 	}
 
 	//! OR
 	/*! Выполняется логическое сложение символов с 
 		соответствующими символами слова wRight. */
-	Word& operator|=(const Word& wRight)
+	WW& operator|=(const WW& wRight)
 	{	
-		for (size_t pos = 0; pos < _wcount; pos++)
-			_words[pos] |= wRight.GetWord(pos);
+		for (size_t pos = 0; pos < _wcount; ++pos)
+			_words[pos] |= wRight._words[pos];
 		return *this;
 	}
 
@@ -1008,31 +1028,33 @@ public:
 	/*! Выполняется логическое сложение символов с
 		соответствующими символами слова wRight другой длины. */
 	template<size_t _m>
-	Word& operator|=(const Word<_m>& wRight)
+	WW& operator|=(const WW<_m>& wRight)
 	{	
-		for (size_t pos = 0; pos < (_n < _m ? _wcount : wRight.WordSize());)
-			_words[pos++] |= wRight.GetWord(pos);
-		Trim();
+		for (size_t pos = 0; pos < std::min(_wcount, wRight._wcount); ++pos)
+			_words[pos] |= wRight._words[pos];
+		if constexpr (_n < _m)
+			Trim();
 		return *this;
 	}
 
 	//! OR
 	/*! Выполняется логическое сложение символов с 
 		соответствующими символами машинного слова wRight. */
-	Word& operator|=(word wRight)
+	WW& operator|=(word wRight)
 	{	
-		_words[0] &= wRight;
-		Trim();
+		_words[0] |= wRight;
+		if constexpr (_wcount == 1)
+			Trim();
 		return *this;
 	}
 
 	//! XOR
 	/*! Выполняется исключающее логическое сложение символов с 
 		соответствующими символами слова wRight. */
-	Word& operator^=(const Word& wRight)
+	WW& operator^=(const WW& wRight)
 	{	
-		for (size_t pos = 0; pos < _wcount; pos++)
-			_words[pos] ^= wRight.GetWord(pos);
+		for (size_t pos = 0; pos < _wcount; ++pos)
+			_words[pos] ^= wRight._words[pos];
 		return *this;
 	}
 
@@ -1040,50 +1062,52 @@ public:
 	/*! Выполняется исключающее логическое сложение символов с
 		соответствующими символами слова wRight другой длины. */
 	template<size_t _m>
-	Word& operator^=(const Word<_m>& wRight)
+	WW& operator^=(const WW<_m>& wRight)
 	{	
-		for (size_t pos = 0; pos < (_n < _m ? _wcount : wRight.WordSize());)
-			_words[pos++] ^= wRight.GetWord(pos);
-		Trim();
+		for (size_t pos = 0; pos < std::min(_wcount, wRight._wcount); ++pos)
+			_words[pos] ^= wRight._words[pos];
+		if constexpr (_n < _m)
+			Trim();
 		return *this;
 	}
 
 	//! XOR
 	/*! Выполняется исключающее логическое сложение символов с 
 		соответствующими символами машинного слова wRight. */
-	Word& operator^=(word wRight)
+	WW& operator^=(word wRight)
 	{	
 		_words[0] ^= wRight;
-		Trim();
+		if constexpr (_wcount == 1)
+			Trim();
 		return *this;
 	}
 
-	//! Сдвиг влево
-	/*! Выполняется сдвиг символов слова влево. */
-	Word& operator<<=(size_t shift)
+	//! Сдвиг в младшую сторону
+	/*! Выполняется сдвиг символов слова в младшую сторону. */
+	WW& operator>>=(size_t shift)
 	{	
-		return Shl(shift);
+		return ShLo(shift);
 	}
 
-	//! Сдвиг влево
-	/*! Возвращается слово со сдвинутыми влево символами. */
-	Word operator<<(size_t shift) const
+	//! Сдвиг в младшую сторону
+	/*! Возвращается слово со сдвинутыми в младшую сторону символами. */
+	WW operator>>(size_t shift) const
 	{	
-		return Word(*this).Shl(shift);
+		return WW(*this).ShLo(shift);
 	}
 
-	//! Сдвиг вправо
-	/*! Выполняется сдвиг символов слова вправо. */
-	Word& operator>>=(size_t shift)
+	//! Сдвиг в старшую сторону
+	/*! Выполняется сдвиг символов слова в старшую сторону. */
+	WW& operator<<=(size_t shift)
 	{	
-		return Shr(shift);
+		return ShHi(shift);
 	}
 
-	//! Сдвиг вправо
-	/*! Возвращается слово со сдвинутыми вправо символами. */
-	Word operator>>(size_t shift) const
+	//! Сдвиг в старшую сторону
+	/*! Возвращается слово со сдвинутыми в старшую сторону символами. */
+	WW operator<<(size_t shift) const
 	{	
-		return Word(*this).Shr(shift);
+		return WW(*this).ShHi(shift);
 	}
 
 
@@ -1091,7 +1115,7 @@ public:
 public:
 	//! Конструктор по умолчанию
 	/*! Создается нулевое слово. */
-	Word()
+	WW()
 	{
 		SetAllZero();
 	}
@@ -1100,30 +1124,32 @@ public:
 	/*! Создается копия машинного слова wRight 
 		(возможно, с потерей старших битов wRight или, наоборот, 
 		с добавлением нулевых символов). */
-	Word(word wRight)
+	WW(word wRight)
 	{
 		_words[0] = wRight;
-		for (size_t pos = 1; pos < _wcount; _words[pos++] = 0);
-		Trim();
+		if constexpr (_wcount == 1)
+			Trim();
+		else
+			for (size_t pos = 1; pos < _wcount; _words[pos++] = 0);
 	}
 
 	//! Конструктор копирования
 	/*! Создается копия слова wRight. */
-	Word(const Word& wRight)
+	WW(const WW& wRight)
 	{	
-		for (size_t pos = 0; pos < _wcount; pos++)
-			_words[pos] = wRight.GetWord(pos);
+		for (size_t pos = 0; pos < _wcount; ++pos)
+			_words[pos] = wRight._words[pos];
 	}
 
 	//! Конструктор копирования
 	/*! Создается копия слова wRight другой длины. */
 	template<size_t _m> 
-	Word(const Word<_m>& wRight)
+	WW(const WW<_m>& wRight)
 	{
-		size_t pos;
-		for (pos = 0; pos < (_n < _m ? _wcount : wRight.WordSize()); pos++)
-			_words[pos] = wRight.GetWord(pos);
-		if (_n < _m)
+		size_t pos = 0;
+		for (; pos < std::min(_wcount, wRight._wcount); ++pos)
+			_words[pos] = wRight._words[pos];
+		if constexpr (_n < _m)
 			Trim();
 		else 
 			for (; pos < _wcount; _words[pos++] = 0);
@@ -1133,7 +1159,7 @@ public:
 //! Равенство
 /*! Проверяется равенство машинного слова wLeft и слова wRight. */
 template<size_t _n> inline bool
-operator==(word wLeft, const Word<_n>& wRight)
+operator==(word wLeft, const WW<_n>& wRight)
 {
 	return wRight == wLeft;
 }
@@ -1141,7 +1167,7 @@ operator==(word wLeft, const Word<_n>& wRight)
 //! Неравенство
 /*! Проверяется неравенство машинного слова wLeft и слова wRight. */
 template<size_t _n> inline bool
-operator!=(word wLeft, const Word<_n>& wRight)
+operator!=(word wLeft, const WW<_n>& wRight)
 {
 	return wRight != wLeft;
 }
@@ -1149,7 +1175,7 @@ operator!=(word wLeft, const Word<_n>& wRight)
 //! Меньше?
 /*! Проверяется, что машинное слово wLeft меньше слова wRight. */
 template<size_t _n> inline bool
-operator<(word wLeft, const Word<_n>& wRight)
+operator<(word wLeft, const WW<_n>& wRight)
 {
 	return wRight > wLeft;
 }
@@ -1157,7 +1183,7 @@ operator<(word wLeft, const Word<_n>& wRight)
 //! Не больше?
 /*! Проверяется, что машинное слово wLeft не больше слова wRight. */
 template<size_t _n> inline bool
-operator<=(word wLeft, const Word<_n>& wRight)
+operator<=(word wLeft, const WW<_n>& wRight)
 {
 	return wRight >= wLeft;
 }
@@ -1165,7 +1191,7 @@ operator<=(word wLeft, const Word<_n>& wRight)
 //! Больше?
 /*! Проверяется, что машинное слово wLeft больше слова wRight. */
 template<size_t _n> inline bool
-operator>(word wLeft, const Word<_n>& wRight)
+operator>(word wLeft, const WW<_n>& wRight)
 {
 	return wRight < wLeft;
 }
@@ -1173,131 +1199,152 @@ operator>(word wLeft, const Word<_n>& wRight)
 //! Не меньше?
 /*! Проверяется, что машинное слово wLeft не меньше слова wRight. */
 template<size_t _n> inline bool
-operator>=(word wLeft, const Word<_n>& wRight)
+operator>=(word wLeft, const WW<_n>& wRight)
 {
 	return wRight <= wLeft;
 }
 
 //! AND
 /*! Определяется слово wLeft & wRight. */
-template<size_t _n, size_t _m> inline Word<MAX2(_n, _m)> 
-operator&(const Word<_n>& wLeft, const Word<_m>& wRight)
+template<size_t _n, size_t _m> inline decltype(auto)
+operator&(const WW<_n>& wLeft, const WW<_m>& wRight)
 {	
-	return Word<MAX2(_n,_m)>(wLeft) &= wRight;
+	WW<std::max(_n, _m)> w(wLeft);
+	w &= wRight;
+	return w;
 }
 
 //! AND
 /*! Определяется слово wLeft & wRight (wRight -- машинное слово). */
-template<size_t _n> inline Word<MAX2(_n, sizeof(word) * 8)> 
-operator&(const Word<_n>& wLeft, word wRight)
+template<size_t _n> inline decltype(auto)
+operator&(const WW<_n>& wLeft, word wRight)
 {	
-	return Word<MAX2(_n, sizeof(word) * 8)>(wLeft) &= wRight;
+	WW<std::max(_n, sizeof(word) * 8)> w(wLeft);
+	w &= wRight;
+	return w;
 }
 
 //! AND
 /*! Определяется слово wLeft & wRight (wLeft -- машинное слово). */
-template<size_t _n> inline Word<MAX2(_n, sizeof(word) * 8)> 
-operator&(word wLeft, const Word<_n>& wRight)
+template<size_t _n> inline decltype(auto)
+operator&(word wLeft, const WW<_n>& wRight)
 {	
-	return Word<MAX2(_n, sizeof(word) * 8)>(wRight) &= wLeft;
+	WW<std::max(_n, sizeof(word) * 8)> w(wRight);
+	w &= wLeft;
+	return w;
 }
 
 //! OR
 /*! Определяется слово wLeft | wRight. */
-template<size_t _n, size_t _m> inline Word<MAX2(_n, _m)> 
-operator|(const Word<_n>& wLeft, const Word<_m>& wRight)
+template<size_t _n, size_t _m> inline decltype(auto)
+operator|(const WW<_n>& wLeft, const WW<_m>& wRight)
 {	
-	return Word<MAX2(_n, _m)>(wLeft) |= wRight;
+	WW<std::max(_n, _m)> w(wLeft);
+	w |= wRight;
+	return w;
 }
 
 //! OR
 /*! Определяется слово wLeft | wRight (wRight -- машинное слово). */
-template<size_t _n> inline Word<MAX2(_n, sizeof(word) * 8)> 
-operator|(const Word<_n>& wLeft, word wRight)
+template<size_t _n> inline decltype(auto)
+operator|(const WW<_n>& wLeft, word wRight)
 {	
-	return Word<MAX2(_n, sizeof(word) * 8)>(wLeft) |= wRight;
+	WW<std::max(_n, sizeof(word) * 8)> w(wLeft);
+	w |= wRight;
+	return w;
 }
 
 //! OR
 /*! Определяется слово wLeft | wRight (wLeft -- машинное слово). */
-template<size_t _n> inline Word<MAX2(_n, sizeof(word) * 8)> 
-operator|(word wLeft, const Word<_n>& wRight)
+template<size_t _n> inline decltype(auto)
+operator|(word wLeft, const WW<_n>& wRight)
 {	
-	return Word<MAX2(_n, sizeof(word) * 8)>(wRight) |= wLeft;
+	WW<std::max(_n, sizeof(word) * 8)> w(wRight);
+	w |= wLeft;
+	return w;
 }
 
 //! XOR
 /*! Определяется слово wLeft ^ wRight. */
-template<size_t _n, size_t _m> inline Word<MAX2(_n, _m)> 
-operator^(const Word<_n>& wLeft, const Word<_m>& wRight)
+template<size_t _n, size_t _m> inline decltype(auto)
+operator^(const WW<_n>& wLeft, const WW<_m>& wRight)
 {	
-	return Word<MAX2(_n, _m)>(wLeft) ^= wRight;
+	WW<std::max(_n, _m)> w(wLeft);
+	w ^= wRight;
+	return w;
 }
 
 //! XOR
 /*! Определяется слово wLeft ^ wRight (wRight -- машинное слово). */
-template<size_t _n> inline Word<MAX2(_n, sizeof(word) * 8)> 
-operator^(const Word<_n>& wLeft, word wRight)
+template<size_t _n> inline decltype(auto)
+operator^(const WW<_n>& wLeft, word wRight)
 {	
-	return Word<MAX2(_n, sizeof(word) * 8)>(wLeft) ^= wRight;
+	WW<std::max(_n, sizeof(word) * 8)> w(wLeft);
+	w ^= wRight;
+	return w;
 }
 
 //! XOR
 /*! Определяется слово wLeft ^ wRight (wLeft -- машинное слово). */
-template<size_t _n> inline Word<MAX2(_n, sizeof(word) * 8)> 
-operator^(word wLeft, const Word<_n>& wRight)
+template<size_t _n> inline decltype(auto)
+operator^(word wLeft, const WW<_n>& wRight)
 {	
-	return Word<MAX2(_n, sizeof(word) * 8)>(wRight) ^= wLeft;
+	WW<std::max(_n, sizeof(word) * 8)> w(wRight);
+	w ^= wLeft;
+	return w;
 }
 
 //! Конкатенация слов
 /*! Слова wLeft и wRight конкатенируются. */
-template<size_t _n1, size_t _n2> inline Word<_n1 + _n2> 
-Concatenate(const Word<_n1>& wLeft, const Word<_n2>& wRight)
+template<size_t _n, size_t _m> inline decltype(auto)
+Concat(const WW<_n>& wLeft, const WW<_m>& wRight)
 {	
-	return Word<_n1 + _n2>().SetLeft(wLeft).SetRight(wRight);
+	WW<_n + _m> w(wLeft);
+	w.SetHi(wRight);
+	return w;
 }
 
 //! Конкатенация слов
 /*! Слова wLeft и wRight конкатенируются. 
 	\remark Запись a || b соответствует устоявшимся
 	математическим обозначениям. */
-template<size_t _n1, size_t _n2> inline Word<_n1 + _n2> 
-operator||(const Word<_n1>& wLeft, const Word<_n2>& wRight)
+template<size_t _n1, size_t _n2> inline decltype(auto)
+operator||(const WW<_n1>& wLeft, const WW<_n2>& wRight)
 {	
-	return Word<_n1 + _n2>().SetLeft(wLeft).SetRight(wRight);
+	WW<_n1 + _n2> w(wLeft);
+	w.SetHi(wRight);
+	return w;
 }
 
 //! Вывод в поток
 /*! Слово wRight выводится в поток os. */
 template<class _Char, class _Traits, size_t _n> inline 
 std::basic_ostream<_Char, _Traits>& 
-operator<<(std::basic_ostream<_Char, _Traits>& os, const Word<_n>& wRight)
+operator<<(std::basic_ostream<_Char, _Traits>& os, const WW<_n>& wRight)
 {
-	for (size_t pos = 0; pos < wRight.Size(); pos++)
+	for (size_t pos = 0; pos < _n; pos++)
 		os << (wRight.Test(pos) ? "1" : "0");
 	return os;
 }
 
 //! Ввод из потока
 /*! Слово wRight читается из потока is. 
-	\par Перед чтением слова пропускаются пробелы и знаки табуляции.
+	\remark Перед чтением слова пропускаются пробелы и знаки табуляции.
 	Чтение невозможно, если в состоянии потока установлен флаг ошибки.
-	\par Чтение слова прекращается, если 
+	\remark Чтение слова прекращается, если 
 	1) прочитаны все символы,
 	2) достигнут конец потока,
 	3) встретился недопустимый символ (не 0 или 1). 
-	Во втором случае в состоянии потока будет установлен флаг 
-	ios_base::eofbit. 
-	Если не прочитано ни одного символа непустого слова, 
-	то в состоянии потока будет установлен флаг ios_base::failbit, 
-	без снятия которого дальнейшее чтение из потока невозможно. 
+	Во втором случае в состоянии потока будет установлен флаг ios_base::eofbit.
+	Если не прочитано ни одного символа непустого слова, то в состоянии потока
+	будет установлен флаг ios_base::failbit, без снятия которого дальнейшее 
+	чтение из потока невозможно. 
 	При чтении из потока недопустимого символа он будет возвращен в поток.
-	По окончании ввода слово wRight будет содержать 
-	прочитанные символы, дополненные нулями. */
+	По окончании ввода слово wRight будет содержать прочитанные символы, 
+	дополненные нулями. */
 template<class _Char, class _Traits, size_t _n> inline
 std::basic_istream<_Char, _Traits>& 
-operator>>(std::basic_istream<_Char, _Traits>& is, Word<_n>& wRight)
+operator>>(std::basic_istream<_Char, _Traits>& is, WW<_n>& wRight)
 {	
 	// предварительно обнуляем слово
 	wRight.SetAll(0);
@@ -1309,7 +1356,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Word<_n>& wRight)
 		for (size_t pos = 0; pos < _n; ++pos) 
 		{
 			// читаем символ из потока
-			typename _Traits::int_type c1 = is.rdbuf()->sbumpc();
+			auto c1 = is.rdbuf()->sbumpc();
 			// конец файла?
 			if (_Traits::eq_int_type(c1, _Traits::eof()))
 			{
@@ -1336,11 +1383,11 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Word<_n>& wRight)
 			}
 		}
 	// чтение требовалось, но не удалось?
-	else if (_n > 0) 
-			is.setstate(std::ios_base::failbit);
+	else 
+		is.setstate(std::ios_base::failbit);
 	return is;
 }
 
 } // namespace GF2
 
-#endif // __GF2_WORD
+#endif // __GF2_WW

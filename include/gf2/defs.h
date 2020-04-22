@@ -4,7 +4,7 @@
 \brief Basic definitions
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.07
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -203,15 +203,15 @@ namespace GF2 {
 
 #if defined(__WORDSIZE)
 	#if (__WORDSIZE == 16)
-		#define B_PER_W 16
+		#define B_PER_W 16u
 		typedef u16 word;
 		typedef u32 dword;
 	#elif (__WORDSIZE == 32)
-		#define B_PER_W 32
+		#define B_PER_W 32u
 		typedef u32 word;
 		typedef u64 dword;
 	#elif (__WORDSIZE == 64)
-		#define B_PER_W 64
+		#define B_PER_W 64u
 		typedef u64 word;
 		typedef u128 dword;
 	#else
@@ -219,15 +219,15 @@ namespace GF2 {
 	#endif
 #else
 	#if (UINT_MAX == 65535u)
-		#define B_PER_W 16
+		#define B_PER_W 16u
 		typedef u16 word;
 		typedef u32 dword;
 	#elif (UINT_MAX == 4294967295u)
-		#define B_PER_W 32
+		#define B_PER_W 32u
 		typedef u32 word;
 		typedef u64 dword;
 	#elif (UINT_MAX == 18446744073709551615u)
-		#define B_PER_W 64
+		#define B_PER_W 64u
 		typedef u64 word;
 		typedef u128 dword;
 	#else
@@ -241,6 +241,7 @@ namespace GF2 {
 
 #define WORD_0 ((word)0)
 #define WORD_1 ((word)1)
+#define WORD_HI (WORD_1 << (B_PER_W - 1))
 #define WORD_MAX ((word)(WORD_0 - WORD_1))
 
 #define O_PER_W (B_PER_W / 8)
@@ -257,35 +258,14 @@ namespace GF2 {
 #endif
 
 #if (SIZE_MAX == 65535u)
-	#define B_PER_S 16
+	#define B_PER_S 16u
 #elif (SIZE_MAX == 4294967295u)
-	#define B_PER_S 32
+	#define B_PER_S 32u
 #elif (SIZE_MAX == 18446744073709551615u)
-	#define B_PER_S 64
+	#define B_PER_S 64u
 #else
 	#error "Unsupported size_t size"
 #endif
-
-/*!
-*******************************************************************************
-\def MIN2
-\brief Минимум из двух элементов
-
-\def MIN3
-\brief Минимум из трех элементов
-
-\def MAX2
-\brief Максимум из двух элементов
-
-\def MAX3
-\brief Максимум из трех элементов
-*******************************************************************************
-*/
-
-#define MIN2(a, b) ((a) < (b) ? (a) : (b))
-#define MAX2(a, b) ((a) > (b) ? (a) : (b))
-#define MIN3(a, b, c) MIN2(a, MIN2(b, c))
-#define MAX3(a, b, c) MAX2(a, MAX2(b, c))
 
 };
 

@@ -1,10 +1,10 @@
 /*
 *******************************************************************************
-\file monom.h
+\file mm.h
 \brief Monomials in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.07
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -12,18 +12,18 @@ in GF2/info.h.
 
 /*!
 *******************************************************************************
-\file monom.h
+\file mm.h
 \brief Мономы от нескольких переменных
 
-Модуль содержит описание и реализацию класса Monom,
-поддерживающего манипуляции с мономами от нескольких переменных
+Модуль содержит описание и реализацию класса MM, поддерживающего манипуляции 
+с мономами от нескольких переменных
 *******************************************************************************
 */
 
-#ifndef __GF2_MONOM
-#define __GF2_MONOM
+#ifndef __GF2_MM
+#define __GF2_MM
 
-#include "gf2/word.h"
+#include "gf2/ww.h"
 #include "gf2/zz.h"
 
 #include <iostream>
@@ -32,47 +32,50 @@ namespace GF2 {
 
 /*!
 *******************************************************************************
-Класс Monom
+Класс MM
 
--#  Поддерживает операции с мономами многочленов от переменных 
-	x_0,\ldots,x_{n-1} с коэффициентом из двоичного поля.
-	Количество переменных указывается при создании монома:
-	\code
-    Monom<n> m;
-	\endcode
--#  Мономы приводятся по модулю идеала 
-	(x_0^2-x_0,\ldots,x_{n-1}^2-x_{n-1}).
-    Это значит, что степени вхождения в моном переменных не превосходят 1. 
--#	Моном кодируется словом-экспонентой b_0\ldots b_{n-1}: 
-	символ b_i равняется 1, если и только если моном содержит переменную x_i.
-	Манипуляции над экспонентой поддерживаются базовым классом Word<n>.
--#  Нулевая строка кодирует моном-константу 1. Моном-константа 0
-	не поддерживается. Операции сравнения, присваивания и т.д. булевых 
-	констант не реализованы (нет большой необходимости, 
-	проблема не поддерживаемого нуля и др. причины).
--#	Удобно записывать моном в виде произведения \prod x_i^{b_i},
-	следуя правилам: x^0 = 1, x^1 = x.
--#  Метод Calc() возвращает значение \prod a_i^{b_i}, 
-    где бинарное слово a_0\ldots a_{n-1} передается в виде вектора.
+Поддерживает операции с мономами многочленов от переменных x0, x1,... x_{n-1}.
+Коэффициент монома всегда равняется 1. 
+
+Количество переменных указывается при создании монома:
+\code
+    MM<n> m;
+\endcode
+Мономы приводятся по модулю идеала (x0^2-x0, x1^2-x1,...,x_{n-1}^2-x_{n-1}).
+Это значит, что степени вхождения в моном переменных не превосходят 1. 
+
+Моном кодируется словом-экспонентой b0 b1 ... b_{n-1}: b_i равняется 1, 
+если и только если моном содержит переменную x_i.
+Манипуляции над экспонентой поддерживаются базовым классом WW<n>.
+
+Нулевая строка кодирует моном-константу 1. Моном-константа 0 не поддерживается.
+Операции сравнения, присваивания и т.д. булевых констант не реализованы 
+(нет большой необходимости, проблема не поддерживаемого нуля и др. причины).
+
+Удобно записывать моном в виде произведения \prod x_i^{b_i},
+cледуя правилам: x^0 = 1, x^1 = x.
+
+Метод Calc() возвращает значение \prod a_i^{b_i}, где бинарное слово 
+a0 a1 ... a_{n-1} передается в виде вектора.
 *******************************************************************************
 */
 
-template<size_t _n> class Monom : public Word<_n>
+template<size_t _n> class MM : public WW<_n>
 {
 protected:
-	using Word<_n>::_wcount;
-	using Word<_n>::_words;
+	using WW<_n>::_wcount;
+	using WW<_n>::_words;
 public:
-	using Word<_n>::Set;
-	using Word<_n>::Weight;
+	using WW<_n>::Set;
+	using WW<_n>::Weight;
 // базовые операции
 public:
 	//! Вычисление значения
 	/*! Вычисляется значение монома при подстановке на места переменных 
         символов слова val. */
-	bool Calc(const Word<_n>& val) const
+	bool Calc(const WW<_n>& val) const
 	{	
-		for (size_t pos = 0; pos < _wcount; pos++)
+		for (size_t pos = 0; pos < _wcount; ++pos)
 			if ((val.GetWord(pos) | ~_words[pos]) != WORD_MAX)
 				return false;
 		return true;
@@ -93,14 +96,14 @@ public:
 	//! Вычисление значения
 	/*! Вычисляется значение монома при подстановке на места переменных 
         символов слова val. */
-	bool operator()(const Word<_n>& val) const
+	bool operator()(const WW<_n>& val) const
 	{	
 		return Calc(val);
 	}
 
 	//! Плюс
 	/*! Унарный плюс (пустой оператор). */
-	Monom& operator+()
+	MM& operator+()
 	{	
 		return *this;
 	}
@@ -108,33 +111,33 @@ public:
 	//! Произведение
 	/*! Моном домножается на mRight (логическое OR экспонент).*/
 	template<size_t _m>
-	Monom& operator*=(const Monom<_m>& mRight)
+	MM& operator*=(const MM<_m>& mRight)
 	{	
-		Word<_n>::operator|=(mRight);
+		WW<_n>::operator|=(mRight);
 		return *this;
 	}
 
 	//! НОК
 	/*! Моному присваивается НОК мономов m1 и m2.*/
-	Monom& LCM(const Monom& m1, const Monom& m2)
+	MM& LCM(const MM& m1, const MM& m2)
 	{
-		for (size_t pos = 0; pos < _wcount; pos++)
+		for (size_t pos = 0; pos < _wcount; ++pos)
 			_words[pos] = m1.GetWord(pos) | m2.GetWord(pos);
 		return *this;
 	}
 
 	//! НОД
 	/*! Моному присваивается НОД мономов m1 и m2.*/
-	Monom& GCD(const Monom& m1, const Monom& m2)
+	MM& GCD(const MM& m1, const MM& m2)
 	{
-		for (size_t pos = 0; pos < _wcount; pos++)
+		for (size_t pos = 0; pos < _wcount; ++pos)
 			_words[pos] = m1.GetWord(pos) & m2.GetWord(pos);
 		return *this;
 	}
 
 	//! Взаимная простота
 	/*! Проверяется взаимная простота с мономом mRight.*/
-	bool IsRelPrime(const Monom& mRight) const
+	bool IsRelPrime(const MM& mRight) const
 	{
 		for (size_t pos = 0; pos < _wcount; pos++)
 			if (_words[pos] & mRight.GetWord(pos))
@@ -146,10 +149,10 @@ public:
 	/*! Проверяется взаимная простота с мономом mRight 
 		с другим числом переменных.*/
 	template<size_t _m>
-	bool IsRelPrime(const Monom<_m>& mRight) const
+	bool IsRelPrime(const MM<_m>& mRight) const
 	{
 		size_t pos;
-		for (pos = 0; pos < min(_wcount, mRight.WordSize()); pos++)
+		for (pos = 0; pos < min(_wcount, mRight.WordSize()); ++pos)
 			if (_words[pos] & mRight.GetWord(pos)) return false;
 		for (; pos < mRight.WordSize(); pos++)
 			if (mRight.GetWord(pos)) return false;
@@ -160,9 +163,9 @@ public:
 
 	//! Проверка делимости на
 	/*! Проверка делимости на моном mRight. */
-	bool IsDivisibleBy(const Monom& mRight) const
+	bool IsDivisibleBy(const MM& mRight) const
 	{	
-		for (size_t pos = 0; pos < _wcount; pos++)
+		for (size_t pos = 0; pos < _wcount; ++pos)
 			if (mRight.GetWord(pos) & ~_words[pos])
 				return false;
 		return true;
@@ -171,10 +174,10 @@ public:
 	//! Проверка делимости на
 	/*! Проверка делимости на моном mRight с другим числом переменных. */
 	template<size_t _m>
-	bool IsDivisibleBy(const Monom<_m>& mRight) const
+	bool IsDivisibleBy(const MM<_m>& mRight) const
 	{	
 		size_t pos;
-		for (pos = 0; pos < min(_wcount, mRight.WordSize()); pos++)
+		for (pos = 0; pos < std::min(_wcount, mRight.WordSize()); ++pos)
 			if (mRight.GetWord(pos) & ~_words[pos])
 				return false;
 		for (; pos < mRight.WordSize(); pos++)
@@ -185,9 +188,9 @@ public:
 
 	//! Признак делимости
 	/*! Проверка того, что моном делит моном mRight. */
-	bool IsDivide(const Monom& mRight) const
+	bool IsDivide(const MM& mRight) const
 	{	
-		for (size_t pos = 0; pos < _wcount; pos++)
+		for (size_t pos = 0; pos < _wcount; ++pos)
 			if (_words[pos] & ~mRight.GetWord(pos))
 				return false;
 		return true;
@@ -197,13 +200,13 @@ public:
 	/*! Проверка того, что моном делит моном mRight 
 		с другим числом переменных. */
 	template<size_t _m>
-	bool IsDivide(const Monom<_m>& mRight) const
+	bool IsDivide(const MM<_m>& mRight) const
 	{	
 		size_t pos;
-		for (pos = 0; pos < min(_wcount, mRight.WordSize()); pos++)
+		for (pos = 0; pos < min(_wcount, mRight.WordSize()); ++pos)
 			if (_words[pos] & ~mRight.GetWord(pos))
 				return false;
-		for (; pos < _wcount; pos++)
+		for (; pos < _wcount; ++pos)
 			if (_words[pos])
 				return false;
 		return true;
@@ -215,7 +218,7 @@ public:
 		\remark Запись a | b соответствует устоявшимся 
 		математическим обозначениям. */
 	template<size_t _m>
-	bool operator|(const Monom<_m>& mRight) const
+	bool operator|(const MM<_m>& mRight) const
 	{	
 		return IsDivide(mRight);
 	}
@@ -223,10 +226,10 @@ public:
 	//! Деление
 	/*! Деление монома на моном mRight. 
 		\pre mRight | *this. */
-	Monom& operator/=(const Monom& mRight)
+	MM& operator/=(const MM& mRight)
 	{	
 		assert(IsDivisibleBy(mRight));
-		for (size_t pos = 0; pos < _wcount; pos++)
+		for (size_t pos = 0; pos < _wcount; ++pos)
 			_words[pos] &= ~mRight.GetWord(pos);
 		return *this;
 	}
@@ -235,10 +238,10 @@ public:
 	/*! Деление монома на моном mRight с другим числом переменных. 
 		\pre mRight | *this. */
 	template<size_t _m>
-	Monom& operator/=(const Monom<_m>& mRight)
+	MM& operator/=(const MM<_m>& mRight)
 	{	
 		assert(IsDivisibleBy(mRight));
-		for (size_t pos = 0; pos < min(_wcount, mRight.WordSize()); pos++)
+		for (size_t pos = 0; pos < std::min(_wcount, mRight.WordSize()); ++pos)
 			_words[pos] &= ~mRight.GetWord(pos);
 		return *this;
 	}
@@ -247,111 +250,111 @@ public:
 public:
 	//! Конструктор по умолчанию
 	/*! Создается моном-константа 1. */
-	Monom() {}
+	MM() {}
 	
 	//! Конструктор копирования
 	/*! Создается копия монома mRight. */
-	Monom(const Monom& mRight) : Word<_n>(mRight) {}
+	MM(const MM& mRight) : WW<_n>(mRight) {}
 
 	//! Конструктор копирования
 	/*! Создается копия монома mRight c другим числом переменных. */
 	template<size_t _m> 
-	Monom(const Monom<_m>& mRight) : Word<_n>(mRight) {}
+	MM(const MM<_m>& mRight) : WW<_n>(mRight) {}
 	
 	//! Конструктор линейных мономов
 	/*! Создается моном x_i. */
-	explicit Monom(size_t i)
+	explicit MM(size_t i)
 	{	
 		Set(i, 1);
 	}
 
 	//! Конструктор квадратичных мономов
 	/*! Создается моном x_i x_j. */
-	explicit Monom(size_t i, size_t j)
+	explicit MM(size_t i, size_t j)
 	{	
-		Set(i, 1); Set(j, 1);
+		Set(i, 1), Set(j, 1);
 	}
 
 	//! Конструктор кубических мономов
 	/*! Создается моном x_i x_j x_k. */
-	explicit Monom(size_t i, size_t j, size_t k)
+	explicit MM(size_t i, size_t j, size_t k)
 	{	
-		Set(i, 1); Set(j, 1); Set(k, 1); 
+		Set(i, 1), Set(j, 1), Set(k, 1); 
 	}
 
-	//! Конструктор мономов степени 4
-	/*! Создается моном x_i x_j x_k x_l. */
-	explicit Monom(size_t i, size_t j, size_t k, size_t l)
-	{	
-		Set(i, 1); Set(j, 1); Set(k, 1); Set(l, 1);
-	}
-
-	//! Конструктор мономов степени 5
+	//! Конструктор по списку
 	/*! Создается моном x_i x_j x_k x_l x_m. */
-	explicit Monom(size_t i, size_t j, size_t k, size_t l, size_t m)
-	{	
-		Set(i, 1); Set(j, 1); Set(k, 1); Set(l, 1); Set(m, 1);
+	MM(const std::initializer_list<size_t> l)
+	{
+		for (auto iter = l.begin(); iter != l.end(); ++iter)
+			Set(*iter, 1);
 	}
 };
 
 //! НОД мономов
 /*! Определяется наибольший общй делитель мономов mLeft и mRight. */
-template<size_t _n, size_t _m> inline Monom<MAX2(_n, _m)> 
-GCD(const Monom<_n>& mLeft, const Monom<_m>& mRight)
+template<size_t _n, size_t _m> decltype(auto)
+GCD(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
-	Monom<MAX2(_n, _m)> ret(mLeft);
-	ret &= mRight;
-	return ret;
+	MM<std::max(_n, _m)> m(mLeft);
+	m &= mRight;
+	return m;
 }
 
 //! Умножение мономов
 /*! Определяется произведение мономов mLeft и mRight. */
-template<size_t _n, size_t _m> inline Monom<MAX2(_n, _m)> 
-operator*(const Monom<_n>& mLeft, const Monom<_m>& mRight)
+template<size_t _n, size_t _m> inline decltype(auto)
+operator*(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
-	return Monom<MAX2(_n, _m)>(mLeft) *= mRight;
+	MM<std::max(_n, _m)> m(mLeft);
+	m *= mRight;
+	return m;
 }
 
 //! НОК мономов
 /*! Определяется наименьшее общее кратное мономов mLeft и mRight. */
-template<size_t _n, size_t _m> inline Monom<MAX2(_n, _m)> 
-LCM(const Monom<_n>& mLeft, const Monom<_m>& mRight)
+template<size_t _n, size_t _m> inline decltype(auto)
+LCM(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
-	Monom<MAX2(_n, _m)> ret(mLeft);
-	ret |= mRight;
-	return ret;
+	MM<std::max(_n, _m)> m(mLeft);
+	m |= mRight;
+	return m;
 }
 
 //! Деление мономов
 /*! Определяется результат деления монома mLeft на mRight. 
 	\pre mLeft.IsDivisibleBy(mRight). */
-template<size_t _n, size_t _m> inline Monom<MAX2(_n, _m)> 
-operator/(const Monom<_n>& mLeft, const Monom<_m>& mRight)
+template<size_t _n, size_t _m> inline decltype(auto)
+operator/(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
-	return Monom<MAX2(_n, _m)>(mLeft) /= mRight;
+	MM<std::max(_n, _m)> m(mLeft);
+	m /= mRight;
+	return m;
 }
 
 //! Вывод в поток
 /*! Моном mRight выводится в поток os. */
 template<class _Char, class _Traits, size_t _n> inline 
 std::basic_ostream<_Char, _Traits>& 
-operator<<(std::basic_ostream<_Char, _Traits>& os, const Monom<_n>& mRight)
+operator<<(std::basic_ostream<_Char, _Traits>& os, const MM<_n>& mRight)
 {
 	bool waitfirst = true;
-	for (size_t pos = 0; pos < mRight.Size(); pos++)
+	for (size_t pos = 0; pos < mRight.Size(); ++pos)
 		if (mRight.Test(pos))
 		{
-			if (!waitfirst) os << " ";
+			if (!waitfirst) 
+				os << " ";
 			os << 'x' << pos;
 			waitfirst = false;
 		}
-	if (waitfirst) os << "1";
+	if (waitfirst) 
+		os << "1";
 	return os;
 }
 
 //! Ввод из потока
 /*! Моном mRight читается из потока is. 
-	\par Допустимый ввод представляет собой набор лексем "1" и "xi", 
+	\remark Допустимый ввод представляет собой набор лексем "1" и "xi", 
 	разделенных пробелами, знаками табуляции и другими пустыми разделителями
 	из набора " \n\r\t\v".
 	Набор лексем должен удовлетворять следующим ограничениям:
@@ -360,7 +363,7 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const Monom<_n>& mRight)
 		интервале [0, n).
 	Индексы могут быть дополнены слева незначащими нулями: 
 	допустим ввод как x01, так и x1.
-	\par Формат ввода: "1" или "x_i1 пробелы x_i2 ... x_ik", где
+	\remark Формат ввода: "1" или "x_i1 пробелы x_i2 ... x_ik", где
 	индексы i1, i2, ..., ik различны и лежат в интервале [0, n).
 	\par Чтение монома прекращается, если 
 	1) прочитана лексема "1",
@@ -369,12 +372,10 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const Monom<_n>& mRight)
 	Если не прочитано ни одной лексемы, либо возникла ошибка при разборе
 	лексем, то в состоянии потока будет установлен флаг 
 	ios_base::failbit, без снятия которого дальнейшее чтение из потока 
-	невозможно. 
-	\par По окончании ввода моном mRight будет содержать 
-	прочитанные множители-переменные. */
+	невозможно. */
 template<class _Char, class _Traits, size_t _n> inline
 std::basic_istream<_Char, _Traits>& 
-operator>>(std::basic_istream<_Char, _Traits>& is, Monom<_n>& mRight)
+operator>>(std::basic_istream<_Char, _Traits>& is, MM<_n>& mRight)
 {	
 	// предварительно обнуляем моном
 	mRight.SetAll(0);
@@ -391,7 +392,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Monom<_n>& mRight)
 		while (true)
 		{
 			// читаем символ из потока
-			typename _Traits::int_type c1 = is.rdbuf()->sbumpc();
+			auto c1 = is.rdbuf()->sbumpc();
 			// конец файла?
 			if (_Traits::eq_int_type(c1, _Traits::eof()))
 			{
@@ -446,11 +447,11 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Monom<_n>& mRight)
 		}
 	}
 	// чтение требовалось, но не удалось?
-	else if (_n > 0) 
-			is.setstate(std::ios_base::failbit);
+	else
+		is.setstate(std::ios_base::failbit);
 	return is;
 }
 
 } // namespace GF2
 
-#endif // __GF2_MONOM
+#endif // __GF2_MM

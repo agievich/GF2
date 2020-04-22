@@ -1,10 +1,10 @@
 /*
 *******************************************************************************
-\file order.h
-\brief Monom orders in GF(2)[x0,x1,...]
+\file mo.h
+\brief Monomial orders in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.07
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -12,92 +12,97 @@ in GF2/info.h.
 
 /*!
 *******************************************************************************
-\file order.h
+\file mo.h
 \brief Мономиальные порядки
 
 Модуль содержит описание и реализацию классов мономиальных порядков
 *******************************************************************************
 */
 
-#ifndef __GF2_ORDER
-#define __GF2_ORDER
+#ifndef __GF2_MO
+#define __GF2_MO
 
-#include "gf2/monom.h"
+#include "gf2/mm.h"
 #include <functional>
 
 namespace GF2 {
 
 /*!
 *******************************************************************************
-Класс Order
+Класс MO
 
--#  Базовый класс для сравнения мономов класса Monom. 
-    Класс порожден от std::binary_function, что вписывает его в семейство 
-	компараторов (см. std::greater, std::greater_equal, std::equal_to и др.)
--#	Порядки делятся на обычные и параметризованные в зависимости
-	от необходимости использовать дополнительные данные-параметры 
-	при сравнении мономов. Примером обычного порядка является lex 
-	(класс OrderLex), примером параметризованного -- alex 
-	(класс OrderAlex). Обычные порядки совпадают при совпадении типов,
-	а параметризованные -- при совпадении как типов, так и параметров.
--#  В порожденном классе MyOrder следует определить методы 
-	operator==(), Compare, operator(), operator==() и Next 
-	(последний метод -- при необходимости). Прототипы методов:
-	\code
+Базовый класс для сравнения мономов класса MM. 
+
+Порядки делятся на обычные и параметризованные в зависимости
+от необходимости использовать дополнительные данные-параметры 
+при сравнении мономов. Примером обычного порядка является lex 
+(класс OrderLex), примером параметризованного -- alex 
+(класс OrderAlex). Обычные порядки совпадают при совпадении типов,
+а параметризованные -- при совпадении как типов, так и параметров.
+
+В порожденном классе MyOrder следует определить методы 
+operator==(), Compare, operator(), operator==() и Next 
+(последний метод -- при необходимости). Прототипы методов:
+\code
 	bool operator==(const MyOrder& order) const
 	{
 		return true if параметры *this и order совпадают
 				false в противном случае
 	}
-	int Compare(const Monom<n>& m1, const Monom<n>& m2) const
+	int Compare(const MM<n>& m1, const MM<n>& m2) const
 	{
 		return -1 if m1 < m2
 				0 if m1 == m2
 				1 if m1 > m2
 	}
-	bool operator()(const Monom<n>& m1, const Monom<n>& m2) const
+	bool operator()(const MM<n>& m1, const MM<n>& m2) const
 	{
 		return true if m1 > m2
 			false if m1 <= m2
 	}
-	bool Next()(const Monom<n>& m) const
+	bool Next()(const MM<n>& m) const
 	{
 		return true if m заменен на следующий моном
 			false if m является последним мономом и заменен на первый.
 	}
-	\endcode
-	Оператор присваивания (operator=) и конструктор копирования 
-	в порожденных классах можно не перегружать, а использовать неявные
-	функции почленного копирования и присваивания 
-	(см. [Страуструп-2007, 10.4.4.1]).
--#  В порожденных классах правила сравнения формулируются для экспонент 
-	a=a_0\ldots a_{n-1} и b=b_0\ldots b_{n-1} мономов. 
-	Экспоненты считаются векторами с неотрицательными целочисленными 
-	координатами. Степенью (deg) монома является сумма координат экспоненты.
+\endcode
+
+\todo concepts
+
+Оператор присваивания (operator=) и конструктор копирования 
+в порожденных классах можно не перегружать, а использовать неявные
+функции почленного копирования и присваивания 
+(см. [Страуструп-2007, 10.4.4.1]).
+
+\todo default-реализации
+
+В порожденных классах правила сравнения формулируются для экспонент 
+a = a0 a1 .... a_{n-1} и b = b0 b1 ... b_{n-1} мономов. 
+Экспоненты считаются векторами с неотрицательными целочисленными 
+координатами. Степенью (deg) монома является сумма координат экспоненты.
 *******************************************************************************
 */
 
-template<size_t _n> struct Order : 
-	public std::binary_function<const Monom<_n>&, const Monom<_n>&, bool>
+template<size_t _n> struct MO 
 {
 	//! раскрытие числа переменных _n
-	enum {n = _n};
+	static constexpr size_t n = _n;
 };
 
 /*!
 *******************************************************************************
-Класс OrderLex
+Класс MOLex
 
 Сравнение мономов в порядке lex: a > b, если самая правая ненулевая координата 
 a - b положительна.
 *******************************************************************************
 */
 
-template<size_t _n> struct OrderLex : public Order<_n>
+template<size_t _n> struct MOLex : public MO<_n>
 {
 	//! Равенство порядков
 	/*! Проверяется (обязательное!) совпадение с другим порядком lex. */	
-	bool operator==(const OrderLex<_n>&) const
+	bool operator==(const MOLex&) const
 	{
 		return true;
 	}
@@ -106,7 +111,7 @@ template<size_t _n> struct OrderLex : public Order<_n>
 	/*! Мономы m1 и m2 сравниваются в порядке lex. 
 		\return 1 (>), 0 (=), -1 (<).
 	*/	
-	int Compare(const Monom<_n>& m1, const Monom<_n>& m2) const
+	int Compare(const MM<_n>& m1, const MM<_n>& m2) const
 	{
 		// воспользуемся лексикографическим сравнением слов-экспонент
 		return m1.Compare(m2);
@@ -114,7 +119,7 @@ template<size_t _n> struct OrderLex : public Order<_n>
 
 	//! Проверка >
 	/*! Определяется результат сравнения m1 > m2 в порядке lex. */
-	bool operator()(const Monom<_n>& m1, const Monom<_n>& m2) const
+	bool operator()(const MM<_n>& m1, const MM<_n>& m2) const
 	{
 		return Compare(m1, m2) > 0;
 	}
@@ -124,7 +129,7 @@ template<size_t _n> struct OrderLex : public Order<_n>
 		Если моном является последним, то определяется первый моном.
 		\return true, если построен следующий моном, и false, 
 		если возвратились к первому. */	
-	bool Next(Monom<_n>& m) const
+	bool Next(MM<_n>& m) const
 	{
 		// воспользуемся лексикографическим Next для слов-экспонент
 		return m.Next();
@@ -133,18 +138,18 @@ template<size_t _n> struct OrderLex : public Order<_n>
 
 /*!
 *******************************************************************************
-Класс OrderGrlex
+Класс MOGrlex
 
 Сравнение мономов в порядке grlex: a > b, если deg(a) > deg(b), 
 или deg(a) == deg(b) и a > b в lex.
 *******************************************************************************
 */
 
-template<size_t _n> struct OrderGrlex : public Order<_n>
+template<size_t _n> struct MOGrlex : public MO<_n>
 {
 	//! Равенство порядков
 	/*! Проверяется (обязательное!) совпадение с другим порядком grlex. */	
-	bool operator==(const OrderGrlex<_n>&) const
+	bool operator==(const MOGrlex<_n>&) const
 	{
 		return true;
 	}
@@ -153,7 +158,7 @@ template<size_t _n> struct OrderGrlex : public Order<_n>
 	/*! Мономы mLeft и mRight сравниваются в порядке grlex. 
 		\return 1 (>), 0 (=), -1 (<).
 	*/	
-	int Compare(const Monom<_n>& m1, const Monom<_n>& m2) const
+	int Compare(const MM<_n>& m1, const MM<_n>& m2) const
 	{
 		int nDiff = m1.Deg() - m2.Deg();
 		if (nDiff == 0)
@@ -164,7 +169,7 @@ template<size_t _n> struct OrderGrlex : public Order<_n>
 
 	//! Проверка >
 	/*! Определяется результат сравнения m1 > m2 в порядке grlex.*/
-	bool operator()(const Monom<_n>& m1, const Monom<_n>& m2) const
+	bool operator()(const MM<_n>& m1, const MM<_n>& m2) const
 	{
 		return Compare(m1, m2) > 0;
 	}
@@ -175,11 +180,12 @@ template<size_t _n> struct OrderGrlex : public Order<_n>
 		\return true, если построен следующий моном, и false, если 
         возвратились к первому.
 	*/	
-	bool Next(Monom<_n>& m) const
+	bool Next(MM<_n>& m) const
 	{
 		size_t start = 0;
 		// ищем начало серии из единиц
-		while (start < _n && !m.Test(start)) start++;
+		while (start < _n && !m.Test(start)) 
+			start++;
 		// единиц нет?
 		if (start == _n)
 		{
@@ -213,7 +219,7 @@ template<size_t _n> struct OrderGrlex : public Order<_n>
 
 /*!
 *******************************************************************************
-Класс OrderGrevlex
+Класс MOGrevlex
 
 Сравнение мономов в порядке grevlex:
 a > b, если deg(a) > deg(b) или deg(a) == deg(b) и самая левая ненулевая 
@@ -221,11 +227,11 @@ a > b, если deg(a) > deg(b) или deg(a) == deg(b) и самая левая
 *******************************************************************************
 */
 
-template<size_t _n> struct OrderGrevlex : public Order<_n>
+template<size_t _n> struct MOGrevlex : public MO<_n>
 {
 	//! Равенство порядков
 	/*! Проверяется (обязательное!) совпадение с другим порядком grevlex.*/
-	bool operator==(const OrderGrevlex<_n>&) const
+	bool operator==(const MOGrevlex<_n>&) const
 	{
 		return true;
 	}
@@ -234,7 +240,7 @@ template<size_t _n> struct OrderGrevlex : public Order<_n>
 	/*! Мономы m1 и m2 сравниваются в порядке grevlex.
 		\return 1 (>), 0 (=), -1 (<).
 	*/	
-	int Compare(const Monom<_n>& m1, const Monom<_n>& m2) const
+	int Compare(const MM<_n>& m1, const MM<_n>& m2) const
 	{
 		int nDiff = m1.Deg() - m2.Deg();
 		// степени отличаются?
@@ -280,7 +286,7 @@ template<size_t _n> struct OrderGrevlex : public Order<_n>
 
 	//! Проверка >
 	/*! Определяется результат сравнения m1 > m2 в порядке grevlex. */
-	bool operator()(const Monom<_n>& m1, const Monom<_n>& m2) const
+	bool operator()(const MM<_n>& m1, const MM<_n>& m2) const
 	{
 		return Compare(m1, m2) > 0;
 	}
@@ -291,28 +297,28 @@ template<size_t _n> struct OrderGrevlex : public Order<_n>
 		\return true, если построен следующий моном, и false, если 
         возвратились к первому.
 	*/	
-	bool Next(Monom<_n>& m) const
+	bool Next(MM<_n>& m) const
 	{
 		size_t end = _n - 1;
 		// ищем окончание серии из единиц
-		while (end != SIZE_MAX && !m.Test(end)) end--;
+		for (; end != SIZE_MAX && !m.Test(end); --end);
 		// единиц нет (нулевая экспонента)?
 		if (end == SIZE_MAX)
 		{
 			// установить экспоненту 100..0
-			if (_n > 0) m.Set(0, 1);
+			m.Set(0, 1);
 			return true;
 		}
 		// есть 0 справа?
 		if (end + 1 < _n)
 		{
 			// передвигаем единицу
-			m.Set(end, 0); m.Set(end + 1, 1);
+			m.Set(end, 0), m.Set(end + 1, 1);
 			return true;
 		}
 		// ищем начало серии из единиц
 		size_t start = end - 1;
-		while (start != SIZE_MAX && m.Test(start)) start--;
+		for (; start != SIZE_MAX && m.Test(start); --start);
 		// все единицы?
 		if (start == SIZE_MAX)
 		{
@@ -327,7 +333,7 @@ template<size_t _n> struct OrderGrevlex : public Order<_n>
 		if (start == SIZE_MAX)
 		{
 			// переходим к следующему весу
-			m.Set(0, end + 1, 1); m.Set(end + 1, _n, 0); 
+			m.Set(0, end + 1, 1), m.Set(end + 1, _n, 0); 
 			return true;
 		}
 		// сдвигаем серию
@@ -340,52 +346,56 @@ template<size_t _n> struct OrderGrevlex : public Order<_n>
 
 /*!
 *******************************************************************************
-Класс OrderAlex
+Класс MOAlex
 
--#	Реализует сравнение мономов в порядке alex:
-	векторы a и b умножаются на целочисленную матрицу A порядка n
-	и полученные векторы сравниваются лексикографически, т.е.
-	a > b если первая справа ненулевая координата aA - bA положительна.
--#	Известно [Robbiano, L.: On the theory of graded structures, 
-	J. Symb. Comp. 2 (1986) 139–170], что любой мономиальный порядок является 
-	порядком alex при некотором выборе матрицы A. Для матриц A
-	должны выполняться следующие ограничения: 
-	1) первый (справа) ненулевой элемент каждой строки положителен;
-	2) строки линейно независимы над полем рациональных чисел.
--#	Порядок alex является примером параметризованного порядка:
-	при копировании и сравнении объектов класса OrderAlex следует учитывать 
-	не только типы объектов, но и встроенные в них матрицы A.
--#	Используются матрицы только с неотрицательными целыми элементами,
-	которые поддерживаются типом word. Для корректной работы требуется,
-	чтобы сумма элементов каждого столбца матрицы умещалась в word.
--#	Метод Next для порядка alex не поддерживается.
+Реализует сравнение мономов в порядке alex: векторы a и b умножаются на 
+целочисленную матрицу A порядка n и полученные векторы сравниваются 
+лексикографически, т.е. a > b если первая справа ненулевая координата aA - bA 
+положительна.
+
+Известно [Robbiano, L.: On the theory of graded structures, 
+J. Symb. Comp. 2 (1986) 139–170], что любой мономиальный порядок является 
+порядком alex при некотором выборе матрицы A. Для матриц A
+должны выполняться следующие ограничения: 
+1) первый (справа) ненулевой элемент каждой строки положителен;
+2) строки линейно независимы над полем рациональных чисел.
+
+Порядок alex является примером параметризованного порядка:
+при копировании и сравнении объектов класса OrderAlex следует учитывать 
+не только типы объектов, но и встроенные в них матрицы A.
+
+Используются матрицы только с неотрицательными целыми элементами,
+которые поддерживаются типом word. Для корректной работы требуется,
+чтобы сумма элементов каждого столбца матрицы умещалась в word.
+
+Метод Next для порядка alex не поддерживается.
 *******************************************************************************
 */
 
-template<size_t _n> struct OrderAlex : public Order<_n>
+template<size_t _n> struct MOAlex : public MO<_n>
 {
 	//! Матрица A
 	word A[_n][_n];
 
 	//! Равенство порядков
 	/*! Проверяется совпадение с другим порядком alex. */	
-	bool operator==(const OrderAlex<_n>& oRight) const
+	bool operator==(const MOAlex<_n>& oRight) const
 	{
-		return ::memcmp(A, oRight._A, sizeof(A)) == 0;
+		return std::memcmp(A, oRight._A, sizeof(A)) == 0;
 	}
 
 	//! Сравнение alex
 	/*! Мономы m1 и m2 сравниваются в порядке аlex. 
 		\return 1 (>), 0 (=), -1 (<).
 	*/	
-	int Compare(const Monom<_n>& m1, const Monom<_n>& m2) const
+	int Compare(const MM<_n>& m1, const MM<_n>& m2) const
 	{
 		// цикл по столбцам справа налево
-		for (size_t row = _n - 1; row != SIZE_MAX; row--)
+		for (size_t row = _n - 1; row != SIZE_MAX; --row)
 		{
 			// умножаем векторы экспонент на столбец A
 			word sum1 = 0, sum2 = 0;
-			for (size_t pos = 0; pos < _n; pos++)
+			for (size_t pos = 0; pos < _n; ++pos)
 			{
 				if (m1.Test(pos)) sum1 += A[pos][row];
 				if (m2.Test(pos)) sum2 += A[pos][row];
@@ -402,7 +412,7 @@ template<size_t _n> struct OrderAlex : public Order<_n>
 
 	//! Проверка >
 	/*! Определяется результат сравнения m1 > m2 в порядке alex. */
-	bool operator()(const Monom<_n>& m1, const Monom<_n>& m2) const
+	bool operator()(const MM<_n>& m1, const MM<_n>& m2) const
 	{
 		return Compare(m1, m2) > 0;
 	}
@@ -410,9 +420,9 @@ template<size_t _n> struct OrderAlex : public Order<_n>
 	//! Конструктор по умолчанию
 	/*! Конструктор по умолчанию: Устанавливается тождественная матрица _A,
 		т.е. задается лексикографический порядок. */
-	OrderAlex()
+	MOAlex()
 	{
-		::memset(A, 0, sizeof(A));
+		std::memset(A, 0, sizeof(A));
 		for (size_t pos = 0; pos < _n; A[pos][pos++] = 1);
 	}
 
@@ -420,21 +430,21 @@ template<size_t _n> struct OrderAlex : public Order<_n>
 
 /*!
 *******************************************************************************
-Класс OrderRev
+Класс MORev
 
-Сравнение мономов в обратном порядке Rev(0):
+Сравнение мономов в обратном порядке MORev(O):
 переменные переписываются в обратном порядке, а затем сравниваются в O.
 *******************************************************************************
 */
 
-template<typename _O> struct OrderRev : public Order<_O::n>
+template<typename _O> struct MORev : public MO<_O::n>
 {
 	//! вложенный порядок
 	_O order;
 
 	//! Равенство порядков
 	/*! Проверяется совпадение с другим порядком Rev. */	
-	bool operator==(const OrderRev<_O>& o) const
+	bool operator==(const MORev<_O>& o) const
 	{
 		return order == o.order;
 	}
@@ -443,10 +453,10 @@ template<typename _O> struct OrderRev : public Order<_O::n>
 	/*! Мономы m1 и m2 сравниваются в реверсивном порядке Rev(0).
 		\return 1 (>), 0 (=), -1 (<).
 	*/	
-	int Compare(const Monom<_O::n>& m1, const Monom<_O::n>& m2) const
+	int Compare(const MM<_O::n>& m1, const MM<_O::n>& m2) const
 	{
 		// реверсировать переменные
-		Monom<_O::n> m1Rev(m1), m2Rev(m2);
+		MM<_O::n> m1Rev(m1), m2Rev(m2);
 		m1Rev.Reverse(), m2Rev.Reverse();
 		// сравнить
 		return order.Compare(m1Rev, m2Rev);
@@ -454,7 +464,7 @@ template<typename _O> struct OrderRev : public Order<_O::n>
 
 	//! Проверка >
 	/*! Определяется результат сравнения m1 > m2 в порядке Rev(O).*/
-	bool operator()(const Monom<_O::n>& m1, const Monom<_O::n>& m2) const
+	bool operator()(const MM<_O::n>& m1, const MM<_O::n>& m2) const
 	{
 		return Compare(m1, m2) > 0;
 	}
@@ -465,7 +475,7 @@ template<typename _O> struct OrderRev : public Order<_O::n>
 		\return true, если построен следующий моном, и false, если 
         возвратились к первому.
 	*/	
-	bool Next(Monom<_O::n>& m) const
+	bool Next(MM<_O::n>& m) const
 	{
 		m.Reverse();
 		bool res = order.Next(m);
@@ -476,9 +486,9 @@ template<typename _O> struct OrderRev : public Order<_O::n>
 
 /*!
 *******************************************************************************
-Класс OrderGr
+Класс MOGr
 
-Сравнение мономов в градуированном порядке Gr(0):
+Сравнение мономов в градуированном порядке Gr(O):
 сравниваются сначала степени мономов, а при равенстве степеней выполняется
 сравнение в O.
 
@@ -487,14 +497,14 @@ template<typename _O> struct OrderRev : public Order<_O::n>
 *******************************************************************************
 */
 
-template<class _O> struct OrderGr : public Order<_O::n>
+template<class _O> struct MOGr : public MO<_O::n>
 {
 	//! вложенный порядок
 	_O order;
 
 	//! Равенство порядков
 	/*! Проверяется совпадение с другим порядком Gr. */	
-	bool operator==(const OrderGr<_O>& o) const
+	bool operator==(const MOGr<_O>& o) const
 	{
 		return order == o.order;
 	}
@@ -503,7 +513,7 @@ template<class _O> struct OrderGr : public Order<_O::n>
 	/*! Мономы m1 и m2 сравниваются в градуированном порядке Gr(0).
 		\return 1 (>), 0 (=), -1 (<).
 	*/	
-	int Compare(const Monom<_O::n>& m1, const Monom<_O::n>& m2) const
+	int Compare(const MM<_O::n>& m1, const MM<_O::n>& m2) const
 	{
 		// сравнить степени
 		int nDiff = m1.Deg() - m2.Deg();
@@ -516,7 +526,7 @@ template<class _O> struct OrderGr : public Order<_O::n>
 
 	//! Проверка >
 	/*! Определяется результат сравнения m1 > m2 в порядке Gr(O).*/
-	bool operator()(const Monom<_O::n>& m1, const Monom<_O::n>& m2) const
+	bool operator()(const MM<_O::n>& m1, const MM<_O::n>& m2) const
 	{
 		return Compare(m1, m2) > 0;
 	}
@@ -524,17 +534,17 @@ template<class _O> struct OrderGr : public Order<_O::n>
 
 /*!
 *******************************************************************************
-Класс OrderLR
+Класс MOLR
 
 Сравнение мономов в составном порядке LR(01, O2):
 левые части сравниваются в O1, а при равенстве правые части сравниваются в 02.
 
-Порядок LR(O1,O2) является исключающим: 
-при нахождении базиса Гребнера исключаются левые переменные.
+Порядок LR(O1,O2) является исключающим: при нахождении базиса Гребнера 
+исключаются левые переменные.
 *******************************************************************************
 */
 
-template<class _O1, class _O2> struct OrderLR : public Order<_O1::n + _O2::n>
+template<class _O1, class _O2> struct MOLR : public MO<_O1::n + _O2::n>
 {
 	//! вложенный "левый" порядок
 	_O1 order1;
@@ -543,7 +553,7 @@ template<class _O1, class _O2> struct OrderLR : public Order<_O1::n + _O2::n>
 
 	//! Равенство порядков
 	/*! Проверяется совпадение с другим порядком LR. */	
-	bool operator==(const OrderLR<_O1, _O2>& o) const
+	bool operator==(const MOLR<_O1, _O2>& o) const
 	{
 		return order1 == o.order1 && order2 == o.order2;
 	}
@@ -552,20 +562,20 @@ template<class _O1, class _O2> struct OrderLR : public Order<_O1::n + _O2::n>
 	/*! Мономы m1 и m2 сравниваются в составном порядке LR(01, O2).
 		\return 1 (>), 0 (=), -1 (<).
 	*/	
-	int Compare(const Monom<_O1::n + _O2::n>& m1, 
-		const Monom<_O1::n + _O2::n>& m2) const
+	int Compare(const MM<_O1::n + _O2::n>& m1, 
+		const MM<_O1::n + _O2::n>& m2) const
 	{
 		// найти левые части
-		Monom<_O1::n> m1Left, m2Left;
-		m1.GetLeft(m1Left); m2.GetLeft(m2Left);
+		MM<_O1::n> m1Left, m2Left;
+		m1.GetLo(m1Left); m2.GetLo(m2Left);
 		// сравнить левые части
 		int res = order1.Compare(m1Left, m2Left);
 		// совпадают?
 		if (res == 0)
 		{
 			// найти правые части
-			Monom<_O2::n> m1Right, m2Right;
-			m1.GetRight(m1Right); m2.GetRight(m2Right);
+			MM<_O2::n> m1Right, m2Right;
+			m1.GetHi(m1Right), m2.GetHi(m2Right);
 			// сравнить правые части
 			res = order2.Compare(m1Right, m2Right);
 		}
@@ -575,8 +585,8 @@ template<class _O1, class _O2> struct OrderLR : public Order<_O1::n + _O2::n>
 	//! Проверка >
 	/*! Определяется результат сравнения m1 > m2 в составном 
 		порядке LR(01, 02).*/
-	bool operator()(const Monom<_O1::n + _O2::n>& m1, 
-		const Monom<_O1::n + _O2::n>& m2) const
+	bool operator()(const MM<_O1::n + _O2::n>& m1, 
+		const MM<_O1::n + _O2::n>& m2) const
 	{
 		return Compare(m1, m2) > 0;
 	}
@@ -587,10 +597,10 @@ template<class _O1, class _O2> struct OrderLR : public Order<_O1::n + _O2::n>
 		\return true, если построен следующий моном, и false, если 
         возвратились к первому.
 	*/	
-	bool Next(Monom<_O1::n + _O2::n>& m) const
+	bool Next(MM<_O1::n + _O2::n>& m) const
 	{
 		// Next в порядке 02
-		Monom<_O2::n> mRight;
+		MM<_O2::n> mRight;
 		m.GetRight(mRight);
 		bool res = order2.Next(mRight);
 		m.SetRight(mRight);
@@ -598,7 +608,7 @@ template<class _O1, class _O2> struct OrderLR : public Order<_O1::n + _O2::n>
 		if (!res)
 		{
 			// Next в порядке 01
-			Monom<_O1::n> mLeft;
+			MM<_O1::n> mLeft;
 			m.GetLeft(mLeft);
 			res = order1.Next(mLeft);
 			m.SetLeft(mLeft);
@@ -609,7 +619,7 @@ template<class _O1, class _O2> struct OrderLR : public Order<_O1::n + _O2::n>
 
 /*!
 *******************************************************************************
-Класс OrderRL
+Класс MORL
 
 Сравнение мономов в составном порядке RL(01, O2): правые части сравниваются 
 в O2, а при равенстве левые части сравниваются в 01.
@@ -619,7 +629,7 @@ template<class _O1, class _O2> struct OrderLR : public Order<_O1::n + _O2::n>
 *******************************************************************************
 */
 
-template<class _O1, class _O2> struct OrderRL : public Order<_O1::n + _O2::n>
+template<class _O1, class _O2> struct MORL : public MO<_O1::n + _O2::n>
 {
 	//! вложенный "левый" порядок
 	_O1 order1;
@@ -628,7 +638,7 @@ template<class _O1, class _O2> struct OrderRL : public Order<_O1::n + _O2::n>
 
 	//! Равенство порядков
 	/*! Проверяется совпадение с другим порядком RL. */	
-	bool operator==(const OrderRL<_O1, _O2>& o) const
+	bool operator==(const MORL<_O1, _O2>& o) const
 	{
 		return order1 == o.order1 && order2 == o.order2;
 	}
@@ -638,20 +648,20 @@ template<class _O1, class _O2> struct OrderRL : public Order<_O1::n + _O2::n>
 		RL(01, O2).
 		\return 1 (>), 0 (=), -1 (<).
 	*/	
-	int Compare(const Monom<_O1::n + _O2::n>& m1, 
-		const Monom<_O1::n + _O2::n>& m2) const
+	int Compare(const MM<_O1::n + _O2::n>& m1, 
+		const MM<_O1::n + _O2::n>& m2) const
 	{
 		// найти правые части
-		Monom<_O2::n> m1Right, m2Right;
-		m1.GetRight(m1Right); m2.GetRight(m2Right);
+		MM<_O2::n> m1Right, m2Right;
+		m1.GetHi(m1Right), m2.GetHi(m2Right);
 		// сравнить правые части
 		int res = order2.Compare(m1Right, m2Right);
 		// совпадают?
 		if (res == 0)
 		{
 			// найти левые части
-			Monom<_O1::n> m1Left, m2Left;
-			m1.GetLeft(m1Left); m2.GetLeft(m2Left);
+			MM<_O1::n> m1Left, m2Left;
+			m1.GetLo(m1Left), m2.GetLo(m2Left);
 			// сравнить левые части
 			res = order1.Compare(m1Left, m2Left);
 		}
@@ -661,8 +671,8 @@ template<class _O1, class _O2> struct OrderRL : public Order<_O1::n + _O2::n>
 	//! Проверка >
 	/*! Определяется результат сравнения m1 > m2 в составном 
 		порядке RL(01, 02).*/
-	bool operator()(const Monom<_O1::n + _O2::n>& m1, 
-		const Monom<_O1::n + _O2::n>& m2) const
+	bool operator()(const MM<_O1::n + _O2::n>& m1, 
+		const MM<_O1::n + _O2::n>& m2) const
 	{
 		return Compare(m1, m2) > 0;
 	}
@@ -673,21 +683,21 @@ template<class _O1, class _O2> struct OrderRL : public Order<_O1::n + _O2::n>
 		\return true, если построен следующий моном, и false, если 
         возвратились к первому.
 	*/	
-	bool Next(Monom<_O1::n + _O2::n>& m) const
+	bool Next(MM<_O1::n + _O2::n>& m) const
 	{
 		// Next в порядке 01
-		Monom<_O1::n> mLeft;
-		m.GetLeft(mLeft);
+		MM<_O1::n> mLeft;
+		m.GetLo(mLeft);
 		bool res = order1.Next(mLeft);
-		m.SetLeft(mLeft);
+		m.SetLo(mLeft);
 		// "переполнение" в 01?
 		if (!res)
 		{
 			// Next в порядке 02
-			Monom<_O2::n> mRight;
-			m.GetRight(mRight);
+			MM<_O2::n> mRight;
+			m.GetHi(mRight);
 			res = order2.Next(mRight);
-			m.SetRight(mRight);
+			m.SetHi(mRight);
 		}
 		return res;
 	}
@@ -695,4 +705,4 @@ template<class _O1, class _O2> struct OrderRL : public Order<_O1::n + _O2::n>
 
 } // namespace GF2
 
-#endif // __GF2_ORDER
+#endif // __GF2_MO

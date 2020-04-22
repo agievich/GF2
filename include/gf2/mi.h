@@ -1,10 +1,10 @@
 /*
 *******************************************************************************
-\file ideal.h
+\file mi.h
 \brief Ideals in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2016.07.07
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -12,20 +12,20 @@ in GF2/info.h.
 
 /*!
 *******************************************************************************
-\file ideal.h
+\file mi.h
 \brief Идеалы в GF(2)[x0,x1,...]
 
-Модуль содержит описание и реализацию класса Ideal,
+Модуль содержит описание и реализацию класса MI,
 поддерживающего манипуляции с идеалами в кольце многочленов 
 от нескольких переменных над полем из двух элементов.
 *******************************************************************************
 */
 
-#ifndef __GF2_IDEAL
-#define __GF2_IDEAL
+#ifndef __GF2_MI
+#define __GF2_MI
 
 #include "gf2/defs.h"
-#include "gf2/mpoly.h"
+#include "gf2/mp.h"
 #include "gf2/zz.h"
 #include <list>
 #include <iostream>
@@ -34,41 +34,42 @@ namespace GF2 {
 
 /*!
 *******************************************************************************
-Класс Ideal
+Класс MI
 
--#	Поддерживает операции с идеалом I кольца R= GF(2)[x_0,\ldots,x_{n-1}]. 
-	Идеал задается системой образующих и мономиальным порядком.
-	Явно заданные образующие -- это, так называемые, мультилинейные
-	многочлены, которые поддерживаются классом MPoly.
-	Неявные образующие -- уравнения поля вида x_i^2 + x_i.
--#	Класс порожден от списка std::list. Элементами списка являются различные 
-	мультилинейные многочлены системы. При управлении списками предполагается,
-	что многочлены не повторяются, не являются нулевыми и упорядочены 
-	по возрастанию в порядке _O.
+Поддерживает операции с идеалом I кольца R= GF(2)[x0,x1,...,x_{n-1}]. 
+Идеал задается системой образующих и мономиальным порядком.
+Явно заданные образующие -- это, так называемые, мультилинейные
+многочлены, которые поддерживаются классом MP.
+Неявные образующие -- уравнения поля вида x_i^2 + x_i.
+
+Класс порожден от списка std::list. Элементами списка являются различные 
+мультилинейные многочлены системы. При управлении списками предполагается,
+что многочлены не повторяются, не являются нулевыми и упорядочены 
+по возрастанию в порядке _O.
 *******************************************************************************
 */
 
-template<size_t _n, class _O> class Ideal : public std::list<MPoly<_n, _O> >
+template<size_t _n, class _O> class MI : public std::list<MP<_n, _O>>
 {
 public:
-	using typename std::list<MPoly<_n, _O> >::iterator;
-	using typename std::list<MPoly<_n, _O> >::const_iterator;
-	using typename std::list<MPoly<_n, _O> >::const_reverse_iterator;
-	using std::list<MPoly<_n, _O> >::begin;
-	using std::list<MPoly<_n, _O> >::clear;
-	using std::list<MPoly<_n, _O> >::end;
-	using std::list<MPoly<_n, _O> >::erase;
-	using std::list<MPoly<_n, _O> >::insert;
-	using std::list<MPoly<_n, _O> >::rbegin;
-	using std::list<MPoly<_n, _O> >::rend;
-	using std::list<MPoly<_n, _O> >::size;
-	using std::list<MPoly<_n, _O> >::sort;
-	using std::list<MPoly<_n, _O> >::splice;
-	using std::list<MPoly<_n, _O> >::swap;
+	using typename std::list<MP<_n, _O>>::iterator;
+	using typename std::list<MP<_n, _O>>::const_iterator;
+	using typename std::list<MP<_n, _O>>::const_reverse_iterator;
+	using std::list<MP<_n, _O>>::begin;
+	using std::list<MP<_n, _O>>::clear;
+	using std::list<MP<_n, _O>>::end;
+	using std::list<MP<_n, _O>>::erase;
+	using std::list<MP<_n, _O>>::insert;
+	using std::list<MP<_n, _O>>::rbegin;
+	using std::list<MP<_n, _O>>::rend;
+	using std::list<MP<_n, _O>>::size;
+	using std::list<MP<_n, _O>>::sort;
+	using std::list<MP<_n, _O>>::splice;
+	using std::list<MP<_n, _O>>::swap;
 // число переменных
 public:
-	//! раскрытие числа переменных _n
-	enum {n = _n};
+	//! раскрытие числа переменных
+	static constexpr size_t n = _n;
 
 // мономиальный порядок
 public:
@@ -101,7 +102,7 @@ public:
 	//! Согласованность
 	/*! Проверяется, что мономиальный порядок совпадает с порядком
 		многочлена polyRight. */
-	bool IsConsistent(const MPoly<_n, _O>& polyRight) const
+	bool IsConsistent(const MP<_n, _O>& polyRight) const
 	{
 		return _order == polyRight.GetOrder();
 	}
@@ -109,7 +110,7 @@ public:
 	//! Согласованность
 	/*! Проверяется, что мономиальный порядок совпадает с порядком
 		идеала iRight. */
-	bool IsConsistent(const Ideal& iRight) const
+	bool IsConsistent(const MI& iRight) const
 	{
 		return _order == iRight.GetOrder();
 	}
@@ -126,10 +127,13 @@ public:
 		// удаление повторов
 		iterator iter = begin(), iterNext;
 		while (iter != end() && ++(iterNext = iter) != end())
-			if (*iter == *iterNext) iter = erase(iter);
-			else iter = iterNext; 
+			if (*iter == *iterNext) 
+				iter = erase(iter);
+			else 
+				iter = iterNext; 
 		// удаление нулевого многочлена
-		if (size() && *begin() == 0) erase(begin());
+		if (size() && *begin() == 0) 
+			erase(begin());
 	}
 
 	//! Нормализован?
@@ -138,12 +142,15 @@ public:
 	bool IsNormalized() const
 	{	
 		const_iterator iter = begin(), iterNext;
-		if (iter == end()) return true;
-		else if (*iter == 0) return false;
+		if (iter == end()) 
+			return true;
+		if (*iter == 0) 
+			return false;
 		while (iter != end() && ++(iterNext = iter) != end())
 			if (*iter >= *iterNext)
 				return false;
-			else iter = iterNext;
+			else 
+				iter = iterNext;
 		return true;
 	}
 
@@ -151,7 +158,7 @@ public:
 	/*! Возвращется признак вхождения однотипного многочлена polyRight 
 		в систему. В pos возвращается первая позиция в списке, 
 		вставка в которую polyRight не нарушит порядок. */
-	bool Find(const MPoly<_n, _O>& polyRight, iterator& pos)
+	bool Find(const MP<_n, _O>& polyRight, iterator& pos)
 	{
 		if (IsConsistent(polyRight))
 		{
@@ -160,7 +167,7 @@ public:
 		}
 		// сравнение несогласованных многочленов неэффективно,
 		// поэтому сразу меняем порядок
-		MPoly<_n, _O> poly(_order);
+		MP<_n, _O> poly(_order);
 		pos = std::lower_bound(begin(), end(), poly = polyRight);
 		return pos != end() && *pos == poly;
 	}
@@ -169,14 +176,14 @@ public:
 	/*! Возвращется признак вхождения однотипного многочлена polyRight 
 		в систему. В pos возвращается первая позиция в списке, 
 		вставка в которую polyRight не нарушит порядок. */
-	bool Find(const MPoly<_n, _O>& polyRight, const_iterator& pos) const
+	bool Find(const MP<_n, _O>& polyRight, const_iterator& pos) const
 	{
 		if (IsConsistent(polyRight))
 		{
 			pos = std::lower_bound(begin(), end(), polyRight);
 			return pos != end() && *pos == polyRight;
 		}
-		MPoly<_n, _O> poly(_order);
+		MP<_n, _O> poly(_order);
 		pos = std::lower_bound(begin(), end(), poly = polyRight);
 		return pos != end() && *pos == poly;
 	}
@@ -187,9 +194,9 @@ public:
 		В pos возвращается первая позиция в списке, 
 		вставка в которую polyRight не нарушит порядок. */
 	template<size_t _m, class _O1>
-	bool Find(const MPoly<_m, _O1>& polyRight, iterator& pos)
+	bool Find(const MP<_m, _O1>& polyRight, iterator& pos)
 	{
-		MPoly<_n, _O> poly(_order);
+		MP<_n, _O> poly(_order);
 		pos = std::lower_bound(begin(), end(), poly = polyRight);
 		return pos != end() && *pos == poly;
 	}
@@ -200,9 +207,9 @@ public:
 		В pos возвращается первая позиция в списке, 
 		вставка в которую polyRight не нарушит порядок. */
 	template<size_t _m, class _O1>
-	bool Find(const MPoly<_m, _O1>& polyRight, const_iterator& pos) const
+	bool Find(const MP<_m, _O1>& polyRight, const_iterator& pos) const
 	{
-		MPoly<_n, _O> poly(_order);
+		MP<_n, _O> poly(_order);
 		pos = std::lower_bound(begin(), end(), poly = polyRight);
 		return pos != end() && *pos == poly;
 	}
@@ -210,7 +217,7 @@ public:
 	//! Содержит многочлен?
 	/*! Проверка принадлежности системе многочлена polyRight. */
 	template<size_t _m, class _O1>
-	bool IsContain(const MPoly<_m, _O1>& polyRight) const
+	bool IsContain(const MP<_m, _O1>& polyRight) const
 	{	
 		return Find(polyRight, const_iterator());
 	}
@@ -219,23 +226,23 @@ public:
 	/*! В систему добавляется ненулевой многочлен polyRight. 
 		\return позиция polyRight в списке. */
 	template<size_t _m, class _O1>
-	iterator Insert(const MPoly<_m, _O1>& polyRight)
+	iterator Insert(const MP<_m, _O1>& polyRight)
 	{	
 		assert(!polyRight.IsEmpty());
 		iterator pos;
 		if (!Find(polyRight, pos))
-			*(pos = insert(pos, MPoly<_n, _O>(_order))) = polyRight;
+			*(pos = insert(pos, MP<_n, _O>(_order))) = polyRight;
 		return pos;
 	}
 
 	//! Добавление системы
 	/*! В систему добавляются многочлены другой системы iRight. */
 	template<size_t _m, class _O1>
-	void Insert(const Ideal<_m, _O1>& iRight)
+	void Insert(const MI<_m, _O1>& iRight)
 	{	
 		// другая система?
 		assert(static_cast<const void*>(this) != static_cast<const void*>(&iRight));
-		typename Ideal<_m, _O1>::const_iterator iter;
+		typename MI<_m, _O1>::const_iterator iter;
 		for (iter = iRight.begin(); iter != iRight.end(); ++iter)
 			Insert(*iter);
 	}
@@ -243,7 +250,7 @@ public:
 	//! Удаление многочлена
 	/*! Из системы удаляется многочлен polyRight. */
 	template<size_t _m, class _O1>
-	void Remove(const MPoly<_m, _O1>& polyRight)
+	void Remove(const MP<_m, _O1>& polyRight)
 	{	
 		iterator pos;
 		if (Find(polyRight, pos))
@@ -253,11 +260,11 @@ public:
 	//! Удаление системы
 	/*! Из системы удаляются все многочлены другой системы iRight. */
 	template<size_t _m, class _O1>
-	void Remove(const Ideal<_m, _O1>& iRight)
+	void Remove(const MI<_m, _O1>& iRight)
 	{	
 		// другая система?
 		assert(static_cast<void*>(this) != static_cast<void*>(&iRight));
-		typename Ideal<_m, _O1>::const_iterator iter;
+		typename MI<_m, _O1>::const_iterator iter;
 		for (iter = iRight.begin(); iter != iRight.end(); ++iter)
 			Remove(*iter);
 	}
@@ -317,19 +324,19 @@ public:
 	//! Обмен
 	/*! Производится обмен списком многочленов с согласованной системой
 		iRight. */
-	void Swap(Ideal& iRight)
+	void Swap(MI& iRight)
 	{
 		assert(IsConsistent(iRight));
 		swap(iRight);
 	}
 
 	//! Заем многочлена
-	/*! Производится заем из согласованной системы iRight 
-		многочлена в позиции pos. 
+	/*! Производится заем из согласованной системы iRight многочлена 
+		в позиции pos. 
 		\return позиция занятого многочлена.
-		\remark Даже если многочлен уже присутствует в системе,
-		он все равно удаляется из iRight. */
-	iterator Splice(Ideal& iRight, iterator pos)
+		\remark Даже если многочлен уже присутствует в системе, он все равно
+		удаляется из iRight. */
+	iterator Splice(MI& iRight, iterator pos)
 	{
 		assert(IsConsistent(iRight));
 		iterator where;
@@ -412,12 +419,12 @@ public:
 	//! Сбор переменных
 	/*! Возвращается моном, который фиксирует вхождения всех переменных 
 		системы. */		
-	Monom<_n> GatherVars() const
+	MM<_n> GatherVars() const
 	{	
-		Monom<_n> vars;
+		MM<_n> vars;
 		for (const_iterator iter = begin(); iter != end(); ++iter)
 		{
-			typename MPoly<_n>::const_iterator iterPoly = iter->begin();
+			typename MP<_n>::const_iterator iterPoly = iter->begin();
 			for (; iterPoly != iter->end(); ++iterPoly)
 				vars *= *iterPoly;
 		}
@@ -428,7 +435,7 @@ public:
 	/*! Возвращаемый по ссылке согласованный многочлен polyMons содержит 
 		все мономы многочленов системы. 
 		\return количество мономов. */
-	size_t GatherMons(MPoly<_n, _O>& polyMons) const
+	size_t GatherMons(MP<_n, _O>& polyMons) const
 	{	
 		// согласованный?
 		assert(IsConsistent(polyMons));
@@ -442,7 +449,7 @@ public:
 	/*! Возвращаемый по ссылке согласованный многочлен polyMons содержит 
 		все старшие мономы многочленов системы. 
 		\return количество мономов.	*/
-	size_t GatherLMons(MPoly<_n, _O>& polyMons) const
+	size_t GatherLMons(MP<_n, _O>& polyMons) const
 	{	
 		// согласованный?
 		assert(IsConsistent(polyMons));
@@ -457,15 +464,15 @@ public:
 		минимальные (такие, которые не делятся на другие) 
 		старшие мономы многочленов системы. 
 		\return количество мономов.	*/
-	size_t GatherMinLMons(MPoly<_n, _O>& polyMons) const
+	size_t GatherMinLMons(MP<_n, _O>& polyMons) const
 	{
 		GatherLMons(polyMons);
-		typename MPoly<_n, _O>::iterator iter;
+		typename MP<_n, _O>::iterator iter;
 		// от старших мономов к младшим
 		for (iter = polyMons.begin(); iter != polyMons.end();)
 		{
 			// от младших мономов к старшим
-			typename MPoly<_n, _O>::iterator iter1 = --polyMons.end();
+			typename MP<_n, _O>::iterator iter1 = --polyMons.end();
 			for (; iter1 != iter; --iter1)
 				if (*iter1 | *iter)
 					break;
@@ -478,7 +485,7 @@ public:
 	//! Старший моном
 	/*! Возвращается самый старший моном многочленов системы. 
 		\pre система не может быть пустой. */
-	const Monom<_n>& LM() const
+	const MM<_n>& LM() const
 	{	
 		// система не пуста?
 		assert(!IsEmpty());
@@ -492,7 +499,7 @@ public:
 	//! Упаковка
 	/*! Переменные, которые входят в mMask, заменяются на переменные x0, x1,...
 		Остальные переменные исключаются. */
-	void Pack(const Monom<_n>& mMask)
+	void Pack(const MM<_n>& mMask)
 	{
 		for (iterator iter = begin(); iter != end(); ++iter)
 			iter->Pack(mMask);
@@ -501,7 +508,7 @@ public:
 
 	//! Распаковка
 	/*! Переменные x0, x1,... заменяются на переменные, которые входят в mMask. */
-	void Unpack(const Monom<_n>& mMask)
+	void Unpack(const MM<_n>& mMask)
 	{
 		for (iterator iter = begin(); iter != end(); ++iter)
 			iter->Unpack(mMask);
@@ -511,24 +518,47 @@ public:
 
 // операции
 public:
-	//! Присваивание системы
-	/*! Присваивание слову значения-системы iRight. */
+	//! Присваивание
+	/*! Присваивание системе однотипного значения-системы iRight.
+		\remark присваиваются только многочлены iRight, но не
+		(возможно отличающиеся) параметры порядка iRight. */
+	MI& operator=(const MI& iRight)
+	{
+		if (&iRight != this)
+			std::list<MP<_n, _O>>::operator=(iRight);
+		return *this;
+	}
+
+	//! Захват
+	/*! Захватывается однотипная временная система iRight.
+		\remark присваиваются только многочлены iRight, но не
+		(возможно отличающиеся) параметры порядка iRight. */
+	MI& operator=(MI&& iRight)
+	{
+		if (&iRight != this)
+			std::list<MP<_n, _O>>::operator=(std::move(iRight));
+		return *this;
+	}
+
+	//! Присваивание
+	/*! Присваивание системе значения-системы iRight с произвольными 
+		мономиальным порядком и числом переменных. */
 	template<size_t _m, class _O1>
-	Ideal& operator=(const Ideal<_m, _O1>& iRight)
+	MI& operator=(const MI<_m, _O1>& iRight)
 	{	
-		if (static_cast<void*>(this) != static_cast<void*>(&iRight))
-			SetEmpty(), Insert(iRight);
+		SetEmpty();
+		Insert(iRight);
 		return *this;
 	}
 
 	//! Равенство системе
 	/*! Проверяется равенство системе iRight. */
 	template<size_t _m, class _O1>
-	bool operator==(const Ideal<_m, _O1>& iRight) const
+	bool operator==(const MI<_m, _O1>& iRight) const
 	{	
 		if (Size() != iRight.Size()) 
 			return false;
-		typename Ideal<_m, _O1>::const_iterator iter;
+		typename MI<_m, _O1>::const_iterator iter;
 		for (iter = iRight.begin(); iter != iRight.end(); ++iter)
 			if (!IsContain(*iter)) 
 				return false;
@@ -538,11 +568,11 @@ public:
 	//! Неравенство системе
 	/*! Проверяется неравенство системе iRight. */
 	template<size_t _m, class _O1>
-	bool operator!=(const Ideal<_m, _O1>& iRight) const
+	bool operator!=(const MI<_m, _O1>& iRight) const
 	{	
 		if (Size() != iRight.Size()) 
 			return true;
-		typename Ideal<_m, _O1>::const_iterator iter;
+		typename MI<_m, _O1>::const_iterator iter;
 		for (iter = iRight.begin(); iter != iRight.end(); ++iter)
 			if (!IsContain(*iter)) 
 				return true;
@@ -560,13 +590,13 @@ public:
 		определяется очередностью делений и определена однозначно, 
 		только если система является базисом Гребнера.
 		\return Признак того, что выходной polyRight отличается от входного. */
-	bool ReduceClassic(MPoly<_n, _O>& polyRight) const
+	bool ReduceClassic(MP<_n, _O>& polyRight) const
 	{	
 		assert(IsConsistent(polyRight));
 		bool changed = false;
-		MPoly<_n, _O> poly(_order);
+		MP<_n, _O> poly(_order);
 		// двигаемся от старших мономов polyRight к младшим
-		typename MPoly<_n, _O>::iterator iterMon = polyRight.begin();
+		typename MP<_n, _O>::iterator iterMon = polyRight.begin();
 		while (iterMon != polyRight.end())
 		{
 			// двигаемся от младших многочленов системы к старшим
@@ -589,7 +619,8 @@ public:
 					break;
 				}
 			}
-			if (iterPoly == end()) ++iterMon;
+			if (iterPoly == end())
+				++iterMon;
 		}
 		return changed;
 	}
@@ -600,11 +631,11 @@ public:
 		Деления прекращаются, когда старший моном polyRight 
 		не делится ни на один из старших мономов системы.
 		\return Признак того, что выходной polyRight отличается от входного. */
-	bool MinimizeClassic(MPoly<_n, _O>& polyRight) const
+	bool MinimizeClassic(MP<_n, _O>& polyRight) const
 	{	
 		assert(IsConsistent(polyRight));
 		bool changed = false;
-		MPoly<_n, _O> poly(_order);
+		MP<_n, _O> poly(_order);
 		const_iterator iterPoly = begin();
 		while (iterPoly != end() && polyRight.Size())
 		{
@@ -636,15 +667,15 @@ public:
 		polyRight не делится ни на один из старших мономов системы.
 		При вычислениях используется структура geobucket.
 		\return Признак того, что выходной polyRight отличается от входного. */
-	bool Reduce(MPoly<_n, _O>& polyRight) const
+	bool Reduce(MP<_n, _O>& polyRight) const
 	{	
-		typename MPoly<_n, _O>::template Geobucket<2> gb(polyRight);
+		typename MP<_n, _O>::template Geobucket<2> gb(polyRight);
 		// будем сохранять в polyRight остаток
 		polyRight.SetEmpty();
 		// цикл деления
 		bool changed = false;
-		Monom<_n> lm;
-		MPoly<_n, _O> poly(_order);
+		MM<_n> lm;
+		MP<_n, _O> poly(_order);
 		while (gb.PopLM(lm))
 		{
 			// двигаемся от младших многочленов системы к старшим
@@ -683,15 +714,15 @@ public:
 		не делится ни на один из старших мономов системы.
 		При вычислениях используется структура geobucket.
 		\return Признак того, что выходной polyRight отличается от входного. */
-	bool Minimize(MPoly<_n, _O>& polyRight) const
+	bool Minimize(MP<_n, _O>& polyRight) const
 	{	
-		typename MPoly<_n, _O>::template Geobucket<2> gb(polyRight);
+		typename MP<_n, _O>::template Geobucket<2> gb(polyRight);
 		// будем сохранять в polyRight остаток
 		polyRight.SetEmpty();
 		// цикл деления
 		bool changed = false;
-		Monom<_n> lm;
-		MPoly<_n, _O> poly(_order);
+		MM<_n> lm;
+		MP<_n, _O> poly(_order);
 		const_iterator iterPoly = begin();
 		while (iterPoly != end() && gb.PopLM(lm))
 		{
@@ -738,8 +769,8 @@ public:
 	bool ReduceClassic(iterator pos)
 	{	
 		bool changed = false;
-		MPoly<_n, _O> poly(_order);
-		typename MPoly<_n, _O>::iterator iterMon = pos->begin();
+		MP<_n, _O> poly(_order);
+		typename MP<_n, _O>::iterator iterMon = pos->begin();
 		while (iterMon != pos->end())
 		{
 			iterator iterPoly = begin();
@@ -781,7 +812,7 @@ public:
 	bool MinimizeClassic(iterator pos) const
 	{	
 		bool changed = false;
-		MPoly<_n, _O> poly(_order);
+		MP<_n, _O> poly(_order);
 		const_iterator iterPoly = begin();
 		while (iterPoly != end() && pos->Size())
 		{
@@ -822,13 +853,13 @@ public:
 		*/
 	bool Reduce(iterator pos)
 	{	
-		typename MPoly<_n, _O>::template Geobucket<2> gb(*pos);
+		typename MP<_n, _O>::template Geobucket<2> gb(*pos);
 		// будем сохранять в *pos остаток
 		pos->SetEmpty();
 		// цикл деления
 		bool changed = false;
-		Monom<_n> lm;
-		MPoly<_n, _O> poly(_order);
+		MM<_n> lm;
+		MP<_n, _O> poly(_order);
 		while (gb.PopLM(lm))
 		{
 			iterator iterPoly = begin();
@@ -869,13 +900,13 @@ public:
 		*/
 	bool Minimize(iterator pos) const
 	{	
-		typename MPoly<_n, _O>::template Geobucket<2> gb(*pos);
+		typename MP<_n, _O>::template Geobucket<2> gb(*pos);
 		// будем сохранять в *pos остаток
 		pos->SetEmpty();
 		// цикл деления
 		bool changed = false;
-		Monom<_n> lm;
-		MPoly<_n, _O> poly(_order);
+		MM<_n> lm;
+		MP<_n, _O> poly(_order);
 		const_iterator iterPoly = begin();
 		while (iterPoly != end() && gb.PopLM(lm))
 		{
@@ -915,7 +946,7 @@ public:
 	/*! Многочлены системы заменяются на нормальные формы.
 		Нулевые формы исключаются из системы, а упрощение прекращается, 
 		когда все нормальные формы совпадают с исходными многочленами. */
-	Ideal& SelfReduce()
+	MI& SelfReduce()
 	{	
 		// важно, чтобы система была нормализована
 		assert(IsNormalized());
@@ -948,7 +979,7 @@ public:
 	/*! Многочлены системы минимизируются.
 		Нулевые результаты исключаются из системы, а упрощение прекращается, 
 		когда старшие мономы многочленов не делятся друг на друга. */
-	Ideal& SelfMinimize()
+	MI& SelfMinimize()
 	{	
 		// важно, чтобы система была нормализована
 		assert(IsNormalized());
@@ -981,7 +1012,7 @@ public:
 	/*! Для всех многочленов системы выполняется замена вхождений переменной 
 		с номером pos на многочлен polyReplace. */
 	template<class _O1>
-	void Replace(size_t pos, const MPoly<_n, _O1>& polyReplace)
+	void Replace(size_t pos, const MP<_n, _O1>& polyReplace)
 	{	
 		for (iterator iter = begin(); iter != end(); ++iter)
 			iter->Replace(pos, polyReplace);
@@ -1025,7 +1056,7 @@ public:
 		порождаемого идеала. */
 	bool IsGB() const
 	{
-		MPoly<_n, _O> poly(_order);
+		MP<_n, _O> poly(_order);
 		// цикл по многочленам
 		word trace = 0;
         for (const_reverse_iterator iter = rbegin(); iter != rend(); ++iter)
@@ -1064,29 +1095,29 @@ public:
 		размерность факторкольца должна помещаться в size_t. 
 		\return размерность и базис (по ссылке polyQB). */
 	template<class _O1>
-	size_t QuotientBasis(MPoly<_n, _O1>& polyQB) const
+	size_t QuotientBasis(MP<_n, _O1>& polyQB) const
 	{
 		// начинаем с пустого базиса
 		polyQB.SetEmpty();
 		if (IsEmpty()) return 0;
 		// существенные переменные
-		Monom<_n> vars = GatherVars();
+		MM<_n> vars = GatherVars();
 		// если базис состоит из константы 1
 		if (vars.Deg() == 0) return 0;
 		// старшие мономы
-		MPoly<_n, _O> mons(_order);
+		MP<_n, _O> mons(_order);
 		GatherMinLMons(mons);
 		// мономы для просмотра, начинаем с монома-константы
-		MPoly<_n, _O1> tosee(polyQB.GetOrder());
+		MP<_n, _O1> tosee(polyQB.GetOrder());
 		tosee = 1; 
 		// пока есть что просматривать
 		while (!tosee.IsEmpty())
 		{
 			// выбираем и удаляем из списка просмотра младший моном
-			Monom<_n> mon = *(--tosee.end());
+			MM<_n> mon = *(--tosee.end());
 			tosee.pop_back();
 			// один из старших мономов делит mon?
-			typename MPoly<_n, _O1>::reverse_iterator iter;
+			typename MP<_n, _O1>::reverse_iterator iter;
 			for ( iter = mons.rbegin(); iter != mons.rend(); iter++)
 				if (*iter | mon) break;
 			// элемент базиса и еще не добавлен в базис?
@@ -1128,14 +1159,14 @@ public:
 		// пустая система?
 		if (IsEmpty()) return dim;
 		// собираем минимальные старшие мономы
-		MPoly<_n, _O> mons(_order);
+		MP<_n, _O> mons(_order);
 		GatherMinLMons(mons);
 		// нет решений?
 		if (mons == 1) return dim;
 		// собираем переменные
-		Monom<_n> vars = GatherVars();
+		MM<_n> vars = GatherVars();
 		// будем обрабатывать пары (переменные, мономы)
-		typedef std::pair<Monom<_n>, MPoly<_n, _O> > Pair;
+		typedef std::pair<MM<_n>, MP<_n, _O>> Pair;
 		std::list<Pair> pairs;
 		// добавляем первую пару
 		pairs.push_back(Pair(vars, mons));
@@ -1147,16 +1178,16 @@ public:
 			Pair& pair = *posPair;
 			// нет уравнений?
 			if (pair.second == 0)
-				dim += ZZ<_n>(1).Shr(pair.first.Weight());
+				dim += ZZ<_n>(1).ShHi(pair.first.Weight());
 			// одно уравнение?
 			else if (pair.second.Size() == 1)
-				dim += ZZ<_n>(1).Shr(pair.first.Weight()) - ZZ<_n>(1).
-					Shr(pair.first.Weight() - pair.second.LM().Weight());
+				dim += ZZ<_n>(1).ShHi(pair.first.Weight()) - ZZ<_n>(1).
+					ShHi(pair.first.Weight() - pair.second.LM().Weight());
 			else
 			{
 				// ищем тривиальное уравнение x_i = 0
 				// если тривиальных нет, то выбираем первое уравнение 
-				typename MPoly<_n, _O>::iterator iter;
+				typename MP<_n, _O>::iterator iter;
 				for (iter = pair.second.end(); iter != pair.second.begin();)
 					if ((--iter)->Weight() == 1) 
 						break;
@@ -1197,28 +1228,36 @@ public:
 public:
 	//! Конструктор по умолчанию
 	/*! Создается пустая система. */
-	Ideal() {}
+	MI() {}
 	
 	//! Конструктор порядка
 	/*! Создается пустая система с порядком oRight. */
-	Ideal(const _O& oRight)
+	MI(const _O& oRight)
 	{
 		SetOrder(oRight);
 	}
 
 	//! Конструктор копирования
 	/*! Создается копия системы iRight. */
-	Ideal(const Ideal& iRight)
+	MI(const MI& iRight) :
+		std::list<MP<_n, _O>>(iRight)
 	{	
 		SetOrder(iRight.GetOrder());
-		insert(end(), iRight.begin(), iRight.end());
+	}
+
+	//! Конструктор перемещения
+	/*! Выполняется захват временной системы iRight. */
+	MI(MI&& iRight) :
+		std::list<MP<_n, _O>>(std::move(iRight))
+	{
+		SetOrder(iRight.GetOrder());
 	}
 
 	//! Конструктор копирования
 	/*! Создается копия системы iRight с другим мономиальным порядком 
 		и возможно другим числом переменных. */
 	template<size_t _m, class _O1>
-	Ideal(const Ideal<_m, _O1>& iRight)
+	MI(const MI<_m, _O1>& iRight)
 	{	
 		Insert(iRight);
 	}
@@ -1228,10 +1267,10 @@ public:
 /*! Система многочленов iRight выводится в поток os. */
 template<class _Char, class _Traits, size_t _n, class _O> inline 
 std::basic_ostream<_Char, _Traits>& 
-operator<<(std::basic_ostream<_Char, _Traits>& os, const Ideal<_n, _O>& iRight)
+operator<<(std::basic_ostream<_Char, _Traits>& os, const MI<_n, _O>& iRight)
 {
 	bool waitfirst = true;
-	typename Ideal<_n, _O>::const_iterator iter = iRight.begin();
+	typename MI<_n, _O>::const_iterator iter = iRight.begin();
 	for (; iter != iRight.end(); ++iter)
 	{
 		os << (waitfirst ? "{\n  " : ",\n  ");
@@ -1262,7 +1301,7 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const Ideal<_n, _O>& iRight)
 	упрощенный (без повторов) набор многочленов. */
 template<class _Char, class _Traits, size_t _n, class _O> inline
 std::basic_istream<_Char, _Traits>& 
-operator>>(std::basic_istream<_Char, _Traits>& is, Ideal<_n, _O>& iRight)
+operator>>(std::basic_istream<_Char, _Traits>& is, MI<_n, _O>& iRight)
 {	
 	// предварительно обнуляем систему
 	iRight.SetEmpty();
@@ -1280,7 +1319,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Ideal<_n, _O>& iRight)
 		while (true)
 		{
 			// читаем символ из потока
-			typename _Traits::int_type c1 = is.rdbuf()->sbumpc();
+			auto c1 = is.rdbuf()->sbumpc();
 			// конец файла?
 			if (_Traits::eq_int_type(c1, _Traits::eof()))
 			{
@@ -1332,7 +1371,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Ideal<_n, _O>& iRight)
 				// возвращаем символ
 				is.rdbuf()->sputbackc(_Traits::to_char_type(c1));
 				// читаем многочлен
-				MPoly<_n, _O> poly(iRight.GetOrder());
+				MP<_n, _O> poly(iRight.GetOrder());
 				is >> poly;
 				// ошибка чтения?
 				if (!is.good())
@@ -1354,11 +1393,11 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Ideal<_n, _O>& iRight)
 		}
 	}
 	// чтение требовалось, но не удалось?
-	else if (_n > 0) 
-			is.setstate(std::ios_base::failbit);
+	else
+		is.setstate(std::ios_base::failbit);
 	return is;
 }
 
 } // namespace GF2
 
-#endif // __GF2_IDEAL
+#endif // __GF2_MI

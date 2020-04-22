@@ -4,7 +4,7 @@
 \brief Tests
 \project GF2 [algebra over GF(2)]
 \created 2016.07.06
-\version 2020.04.10
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -12,7 +12,7 @@ in GF2/info.h.
 
 #include "gf2/buchb.h"
 #include "gf2/func.h"
-#include "gf2/ideal.h"
+#include "gf2/mi.h"
 #include <sstream>
 
 using namespace GF2;
@@ -27,16 +27,16 @@ using namespace std;
 *******************************************************************************
 */
 
-template class GF2::Word<127>;
-	template class GF2::Monom<129>;
+template class GF2::WW<127>;
+	template class GF2::MM<129>;
 	template class GF2::ZZ<130>;
 
-template struct GF2::OrderGr<OrderLR<OrderLex<65>, OrderGrlex<66> > >;
-template struct GF2::OrderRL<OrderRev<OrderGrevlex<68> >, OrderLex<67> >;
+template struct GF2::MOGr<MOLR<MOLex<65>, MOGrlex<66>>>;
+template struct GF2::MORL<MORev<MOGrevlex<68>>, MOLex<67>>;
 
-template class GF2::MPoly<135, OrderLex<135> >;
-template class GF2::Ideal<136, OrderGrevlex<136> >;
-template class GF2::Buchb<137, OrderGrlex<137> >;
+template class GF2::MP<135, MOLex<135>>;
+template class GF2::MI<136, MOGrevlex<136>>;
+template class GF2::Buchb<137, MOGrlex<137>>;
 
 template class GF2::Func<5, int>;
 	template class GF2::BFunc<6>;
@@ -46,6 +46,7 @@ template class GF2::Func<5, int>;
 *******************************************************************************
 Тесты 
 
+#	wwTest: функционал WW;
 #	orderTest: проверка тождественности OrderGrlex<6> и OrderGr<OrderLex<6> >;
 #	bentTest: проверка бентовости функции Майораны-МакФарланда;
 #	sboxTest: проверка криптографических характеристик 4-битового S-блока 
@@ -59,19 +60,68 @@ template class GF2::Func<5, int>;
 *******************************************************************************
 */
 
+bool wwTest()
+{
+	// 1
+	WW<127> w1;
+	w1.SetAll(1);
+	if (w1.Weight() != 127)
+		return false;
+	// 2
+	WW<126> w2;
+	w1.SetLo(w2);
+	if (w1[126] != 1 || w1.Weight() != 1)
+		return false;
+	// 3
+	w1.FlipAll();
+	w2[37] = 1;
+	w1.SetHi(w2);
+	if (w1[0] != 1 || w1[38] != 1 || w1.Weight() != 2)
+		return false;
+	// 4
+	w1.RotHi(126 - 38);
+	w2 |= w1;
+	if (w2.Weight() != 2)
+		return false;
+	// 5
+	word c = 0x7F00;
+	w1 ^= w2;
+	if (w1.Weight() != 2 || !WW<126>(w2 & c).IsAllZero())
+		return false;
+	// 6
+	w2.Next(), w2.Next(), w2.Prev();
+	w1 &= ~(w2 ^ c);
+	w1 ^= (w2 ^ c);
+	if (w1.Weight() != w2.Weight() + WW<15>(c).Weight())
+		return false;
+	// 7
+	WW<127 + 126> w3(w1 || w2);
+	if (w3.Weight() != w1.Weight() + w2.Weight())
+		return false;
+	// 8
+	w3.FlipAll();
+	WW<127> w4 = w3.GetLo<127>();
+	if (w1.FlipAll() != w4)
+		return false;
+	// 9
+	std::stringstream ss;
+	ss << w1.Rand(), ss >> w4;
+	if (w1 != w4)
+		return false;
+	return true;
+}
+
 bool orderTest()
 {
-	OrderGrlex<6> o1;
-	OrderGr<OrderLex<6> > o2;
-	Monom<6> m1;
+	MOGrlex<6> o1;
+	MOGr<MOLex<6> > o2;
+	MM<6> m1;
 	do
 	{
-		Monom<6> m2;
+		MM<6> m2;
 		do
-		{
 			if (o1.Compare(m1, m2) != o2.Compare(m1, m2))
 				return false;
-		}
 		while (m2.Next());
 	}
 	while (m1.Next());
@@ -80,12 +130,12 @@ bool orderTest()
 
 bool bentTest()
 {
-	typedef Monom<12> X;
-	MPoly<12> p;
+	typedef MM<12> X;
+	MP<12> p;
 	BFunc<12> bf;
 	// многочлен
 	p = X(0,6) + X(1, 7) + X(2, 8) + X(3, 9);
-	p += X(4, 10) + X(5, 11);
+	p += X({4, 10}) + X({5, 5, 11, 11, 11});
 	// функция
 	bf.From(p);
 	return bf.IsBent();
@@ -143,24 +193,24 @@ bool beltTest(bool verbose = false)
 
 bool bashTest()
 {
-	typedef OrderGrevlex<6> O;
-	typedef Monom<6> X;
+	typedef MOGrevlex<6> O;
+	typedef MM<6> X;
 	// S-блок и его идеал
 	word s_table[] = {1, 2, 3, 4, 6, 7, 5, 0};
 	VSubst<3> s(s_table);
-	Ideal<6, O> i;
+	MI<6, O> i;
 	// i <- {x_{k + 3} - s_k(x_0, s_1, x_2): k = 0, 1, 2}
-	MPoly<3, O> p;
+	MP<3, O> p;
 	BFunc<3> bf;
 	s.GetCoord(0, bf);
 	bf.To(p);
-	i.Insert(MPoly<6, O>(p) + X(3));
+	i.Insert(MP<6, O>(p) + X(3));
 	s.GetCoord(1, bf);
 	bf.To(p);
-	i.Insert(MPoly<6, O>(p) + X(4));
+	i.Insert(MP<6, O>(p) + X(4));
 	s.GetCoord(2, bf);
 	bf.To(p);
-	i.Insert(MPoly<6, O>(p) + X(5));
+	i.Insert(MP<6, O>(p) + X(5));
 	// базис Гребнера
 	Buchb<6, O> bb;
 	bb.Init();
@@ -175,16 +225,16 @@ bool bashTest()
 bool bashTest2()
 {
 	const size_t n = 3;
-	Word<3 * n> v;
+	WW<3 * n> v;
 	VSubst<3 * n> s;
 	do
 	{
-		Word<n> x0 = v.GetLeft<n>();
-		Word<n> x1 = v.GetLeft<2 * n>().GetRight<n>();
-		Word<n> x2 = v.GetRight<n>();
-		Word<n> y0 = (x1 | ~x2) ^ x0.Rotl(1) ^ x1;
-		Word<n> y1 = (x0 | x1) ^ x0 ^ x1 ^ x2;
-		Word<n> y2 = (x0 & x1) ^ x1 ^ x2;
+		WW<n> x0 = v.GetLo<n>();
+		WW<n> x1 = v.GetLo<2 * n>().GetHi<n>();
+		WW<n> x2 = v.GetHi<n>();
+		WW<n> y0 = (x1 | ~x2) ^ x0.RotLo(1) ^ x1;
+		WW<n> y1 = (x0 | x1) ^ x0 ^ x1 ^ x2;
+		WW<n> y2 = (x0 & x1) ^ x1 ^ x2;
 		s[x0 || x1 || x2] = y0 || y1 || y2;
 	}
 	while (v.Next());
@@ -195,7 +245,7 @@ bool bashTest2()
 
 bool commuteTest()
 {
-	typedef OrderGrevlex<8> O;
+	typedef MOGrevlex<8> O;
 	// система
 	stringstream ss;
 	ss << 
@@ -204,7 +254,7 @@ bool commuteTest()
 		"  x1 x7 + x3 x5 + x0 x5 + x1 x4,"	/* коммутируемость */
 		"  x2 x7 + x3 x6 + x0 x6 + x2 x4,"	/* коммутируемость */
 		"  x4 x7 + x5 x6 + 1}";				/* обратимость второй матрицы */
-	Ideal<8, O> i;
+	MI<8, O> i;
 	ss >> i;
 	// базис Гребнера
 	Buchb<8, O> bb;
@@ -230,7 +280,9 @@ int main()
 	bool code;
 	int ret = 0;
 	Env::Print("gf2/test [gf2 version %s]\n", Env::Version());
-	Env::Print("orderTest: %s\n", (code = orderTest()) ? "OK" : "Err"), 
+	Env::Print("wwTest: %s\n", (code = wwTest()) ? "OK" : "Err"),
+		ret |= !code;
+	Env::Print("orderTest: %s\n", (code = orderTest()) ? "OK" : "Err"),
 		ret |= !code;
 	Env::Print("bentTest: %s\n", (code = bentTest()) ? "OK" : "Err"), 
 		ret |= !code;
@@ -244,5 +296,6 @@ int main()
 		ret |= !code;
 	Env::Print("commuteTest: %s\n", (code = commuteTest()) ? "OK" : "Err"), 
 		ret |= !code;
+
 	return ret;
 }

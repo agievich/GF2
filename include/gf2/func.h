@@ -4,7 +4,7 @@
 \brief Functions {0, 1}^n \to T
 \project GF2 [algebra over GF(2)]
 \created 2004.06.10
-\version 2020.04.10
+\version 2020.04.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -28,8 +28,8 @@ in GF2/info.h.
 #define __GF2_FUNC
 
 #include "gf2/env.h"
-#include "gf2/ideal.h"
-#include "gf2/word.h"
+#include "gf2/mi.h"
+#include "gf2/ww.h"
 #include "gf2/zz.h"
 #include <iostream>
 
@@ -53,26 +53,31 @@ namespace GF2 {
 -#	Класс T должен допускать создание нулевых экземпляров Т(0), 
 	сравнения, присваивания и вывод в поток.
 -#	Для индексации значений функции используются числа от 0 до 
-	Size() - 1. Экземпляры Word<n> неявно приводятся к таким числам.
+	Size() - 1. Экземпляры WW<n> неявно приводятся к таким числам.
 *******************************************************************************
 */
 
 template<size_t _n, class _T> class Func
 {
 // прообразы
-private:
-	enum {__assert = 1 / word(_n < sizeof(word) * 8)}; //< проверка
 public:
-	enum {n = _n}; //< раскрытие числа переменных
-	typedef Word<_n> Preimage; //< тип прообразов
+	//! раскрытие числа переменных
+	static constexpr size_t n = _n;
+	// число переменных не должно быть велико
+	static_assert(_n < B_PER_W && _n < B_PER_S, "");
+	//! тип прообразов
+	typedef WW<_n> Preimage;
 
 // образы
 public:
-	typedef _T Image; //< тип образов
+	//! тип образов
+	typedef _T Image;
 protected:
-	enum {_size = size_t(1) << _n}; //< число образов
+	// число образов
+	static constexpr size_t _size = SIZE_1 << _n;
 private:
-	_T _vals[_size]; //< массив образов
+	// образы
+	_T _vals[_size];
 
 // базовые операции
 public:
@@ -112,8 +117,9 @@ public:
 	size_t Count(const _T& valRight) const
 	{	
 		size_t count = 0;
-		for (word x = 0; x < _size; x++)
-			if (_vals[x] == valRight) count++;
+		for (word x = 0; x < _size; ++x)
+			if (_vals[x] == valRight) 
+				count++;
 		return count;
 	}
 
@@ -122,8 +128,9 @@ public:
 	const _T& Max() const
 	{	
 		word xmax = 0;
-		for (word x = 1; x < _size; x++)
-			if (_vals[x] > _vals[xmax]) xmax = x;
+		for (word x = 1; x < _size; ++x)
+			if (_vals[x] > _vals[xmax]) 
+				xmax = x;
 		return _vals[xmax];
 	}
 
@@ -132,8 +139,9 @@ public:
 	const _T& Min() const
 	{	
 		word xmin = 0;
-		for (word x = 1; x < _size; x++)
-			if (_vals[x] < _vals[xmin]) xmin = x;
+		for (word x = 1; x < _size; ++x)
+			if (_vals[x] < _vals[xmin]) 
+				xmin = x;
 		return _vals[xmin];
 	}
 
@@ -175,7 +183,7 @@ public:
 	/*! Присваивание всем образам значения valRight. */
 	Func& operator=(const _T& valRight)
 	{	
-		for (word x = 0; x < _size; x++)
+		for (word x = 0; x < _size; ++x)
 			_vals[x] = valRight;
 		return *this;
 	}
@@ -288,7 +296,7 @@ template<class _Char, class _Traits, size_t _n, class _T> inline
 std::basic_ostream<_Char, _Traits>& 
 operator<<(std::basic_ostream<_Char, _Traits>& os, const Func<_n, _T>& fRight)
 {
-	Word<_n> x;
+	WW<_n> x;
 	do
 	{
 		if (!x.IsAllZero()) os << ' ';
@@ -304,7 +312,7 @@ template<class _Char, class _Traits, size_t _n, class _T> inline
 std::basic_istream<_Char, _Traits>& 
 operator>>(std::basic_istream<_Char, _Traits>& is, Func<_n, _T>& fRight)
 {
-	Word<_n> x;
+	WW<_n> x;
 	do
 	{
 		typename Func<_n, _T>::Image y;
@@ -355,15 +363,15 @@ public:
 	//! Построение многочлена по функции
 	/*! По булевой функции строится многочлен Жегалкина polyRight. */
 	template<class _O>
-	void To(MPoly<_n, _O>& polyRight) const
+	void To(MP<_n, _O>& polyRight) const
 	{	
 		polyRight = 0;
 		// цикл по мономам
-		Monom<_n> mon;
+		MM<_n> mon;
 		do
 		{
 			bool bCoeff = 0;
-			Monom<_n> x;
+			MM<_n> x;
 			do bCoeff ^= x.Calc(mon) & Get(x);
 			while (x.Next());
 			if (bCoeff)
@@ -374,7 +382,7 @@ public:
 
 	//! Построение многочлена по функции
 	/*! По многочлену Жегалкина polyRight определяется булева функция. */
-	void From(const MPoly<_n>& polyRight)
+	void From(const MP<_n>& polyRight)
 	{	
 		Preimage x;
 		do Set(x, polyRight.Calc(x));			
@@ -448,7 +456,7 @@ public:
 	/*! Генерация случайной функции. */
 	BFunc& Rand()
 	{
-		Word<_size> w;
+		WW<_size> w;
 		w.Rand();
 		for (word x = 0; x < _size; x++)
 			Set(x, w[x]);
@@ -461,7 +469,7 @@ public:
 	/*! Определяется степень многочлена Жегалкина. */
 	int Deg() const
 	{	
-		MPoly<_n> poly;
+		MP<_n> poly;
 		To(poly);
 		return poly.Deg();
 	}
@@ -511,7 +519,7 @@ public:
 		r = WORD_1 << (_n - r / 2);
 		Func<_n, int> zf;
 		FWHT(zf);
-		Word<_n> x;
+		WW<_n> x;
 		do
 			if (zf.Get(x) != 0 && abs(zf.Get(x)) != r)
 				return false;
@@ -528,7 +536,7 @@ public:
 			return false;
 		Func<_n, int> zf;
 		FWHT(zf);
-		Word<_n> x;
+		WW<_n> x;
 		do
 			if (abs(zf.Get(x)) != (WORD_1 << _n / 2))
 				return false;
@@ -543,7 +551,7 @@ public:
 		assert(IsBent());
 		Func<_n, int> zf;
 		To(zf);
-		Word<_n> x;
+		WW<_n> x;
 		do 
 			Set(x, zf(x) < 0);
 		while (x.Next());
@@ -588,7 +596,7 @@ public:
 
 	//! Конструктор по значениям из слова
 	/*! Создается функция со значениями из массива valsRight. */
-	BFunc(const Word<1 << _n> valsRight)
+	BFunc(const WW<1 << _n> valsRight)
 	{
 		for (word x = 0; x < _size; x++)
 			Set(x, valsRight[x]);
@@ -605,20 +613,21 @@ public:
 Поддерживает манипуляции с вектор-функциями \{0,1\}^n \to \{0,1\}^m.
 *******************************************************************************/
 
-template<size_t _n, size_t _m> class VFunc : public Func<_n, Word<_m> >
+template<size_t _n, size_t _m> class VFunc : public Func<_n, WW<_m>>
 {
 public:
-	using typename Func<_n, Word<_m> >::Image;
-	using typename Func<_n, Word<_m> >::Preimage;
+	using typename Func<_n, WW<_m>>::Image;
+	using typename Func<_n, WW<_m>>::Preimage;
 protected:
-	using Func<_n, Word<_m> >::_size;
+	using Func<_n, WW<_m>>::_size;
 public:
-	using Func<_n, Word<_m> >::Get;
-	using Func<_n, Word<_m> >::Set;
-	using Func<_n, Word<_m> >::Size;
+	using Func<_n, WW<_m>>::Get;
+	using Func<_n, WW<_m>>::Set;
+	using Func<_n, WW<_m>>::Size;
 // размерность образов
 public:
-	enum {m = _m}; //< размерность образов
+	//! раскрытие размерности образов
+	static constexpr size_t m = _m;
 
 // операции
 public:
@@ -662,15 +671,15 @@ public:
 		ideal.SetEmpty();
 		// подготовить переменные
 		BFunc<_n> bf;
-		MPoly<_n, _O> poly;
+		MP<_n, _O> poly;
 		// цикл по координатным функциям
 		for (size_t i = 0; i < _m; i++)
 		{
 			GetCoord(i, bf);
 			bf.To(poly);
 			// добавляем многочлен y_i - bf(x)
-			ideal.Insert(MPoly<_n + _m, _O>(poly) += 
-				Monom<_n + _m>(_n + i));
+			ideal.Insert(MP<_n + _m, _O>(poly) += 
+				MM<_n + _m>(_n + i));
 		}
 	}
 
@@ -723,7 +732,7 @@ public:
 	size_t Spr() const
 	{	
 		BFunc<_n> bf;
-		MPoly<_n> poly;
+		MP<_n> poly;
 		size_t record = Size(), spr;
 		Image wComb;
 		while (wComb.Next())
@@ -818,7 +827,7 @@ public:
 	//! Конструктор по умолчанию
 	/*! Создается функция с одинаковыми значениями-машинными словами 
 		 valRight (нулевыми по умолчанию). */
-	VFunc(word valRight = 0) : Func<_n, Image>(Word<_m>(valRight)) {}
+	VFunc(word valRight = 0) : Func<_n, Image>(WW<_m>(valRight)) {}
 
 	//! Конструктор по значению
 	/*! Создается функция с одинаковыми значениями valRight. */
@@ -876,7 +885,7 @@ public:
 		assert(IsBijection());
 		VSubst<_n> save(*this);
 		for (word x = 0; x < _size; x++)
-			Set(save(x), Word<_n>(x));
+			Set(save(x), WW<_n>(x));
 		return *this;
 	}
 
@@ -898,7 +907,7 @@ public:
 	void SetId()
 	{	
 		for (word x = 0; x < _size; x++)
-			Set(x, Word<_n>(x));
+			Set(x, WW<_n>(x));
 	}
 
 	//!	Тождественная подстановка?
@@ -989,7 +998,7 @@ public:
 	{
 		VFunc<_n, _n>::operator=(valsRight);
 		for (word x = 0; x < _size; x++)
-			Set(x, Word<_n>(valsRight[x]));
+			Set(x, WW<_n>(valsRight[x]));
 		assert(IsBijection());
 		return *this;
 	}

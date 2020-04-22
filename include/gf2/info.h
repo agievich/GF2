@@ -24,19 +24,19 @@ at the end of this file.
 #define GF2_NAME				"GF2"
 #define GF2_VERSION_MAJOR		"0"
 #define GF2_VERSION_MINOR 		"9"
-#define GF2_VERSION_PATCH		"1"
+#define GF2_VERSION_PATCH		"2"
 
 #define GF2_VERSION\
 		GF2_VERSION_MAJOR "." GF2_VERSION_MINOR "." GF2_VERSION_PATCH
 
 #define GF2_VERSION_NUM\
-		0, 9, 1
+		0, 9, 2
 
 /*!
 *******************************************************************************
 \mainpage Библиотека GF2
 
-\version 0.9.1
+\version 0.9.2
 
 \section toc Содержание
 

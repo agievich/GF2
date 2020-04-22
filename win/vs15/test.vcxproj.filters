@@ -30,25 +30,25 @@
     <ClInclude Include="..\..\include\gf2\func.h">
       <Filter>Include Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\gf2\ideal.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\gf2\info.h">
       <Filter>Include Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\gf2\monom.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\gf2\mpoly.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\gf2\order.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\gf2\word.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\gf2\zz.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\gf2\ww.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\gf2\mp.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\gf2\mm.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\gf2\mi.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\gf2\mo.h">
       <Filter>Include Files</Filter>
     </ClInclude>
   </ItemGroup>
