@@ -4,7 +4,7 @@
 \brief Tests
 \project GF2 [algebra over GF(2)]
 \created 2016.07.06
-\version 2020.04.22
+\version 2020.04.23
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -284,7 +284,7 @@ main
 
 int main()
 {
-	int ret;
+	int ret = 0;
 	Env::Print("gf2/test [gf2 version %s]\n", Env::Version());
 	ret |= !Env::RunTest("wwTest", wwTest);
 	ret |= !Env::RunTest("orderTest", orderTest);

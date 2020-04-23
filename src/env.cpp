@@ -134,7 +134,7 @@ void Env::Trace(const char* format,...)
 		::SetConsoleTitleA(Name());
 #elif defined OS_UNIX
 		// clear line from cursor right
-		// (http://www.climagic.org/mirrors/VT100_Escape_Codes.html)
+		// [http://www.climagic.org/mirrors/VT100_Escape_Codes.html]
 		printf("\033[0K");
 #endif
 		return;
@@ -160,7 +160,7 @@ void Env::Trace(const char* format,...)
 		// move cursor backward
 		printf("\033[%dD", (int)strlen(buf));
 #else
-		fprintf(stderr, "%s\n", buf);
+		fprintf(stderr, "%s ", buf);
 #endif
 		::strcpy(prevbuf, buf);
 	}
@@ -168,27 +168,25 @@ void Env::Trace(const char* format,...)
 
 // Время (в ms) с отправного момента в прошлом
 u32 Env::Ticks()
-{	
+{
+	u32 ticks = 0;
 #if defined OS_WIN
-	return (u32)::GetTickCount();
+	ticks = (u32)::GetTickCount();
 #elif defined OS_LINUX
 	timespec ts;
-    u32 ticks = 0;
     ::clock_gettime(CLOCK_MONOTONIC, &ts);
     ticks = ts.tv_nsec / 1000000;
     ticks += ts.tv_sec * 1000;
-    return ticks;
 #elif defined OS_APPLE
 	clock_serv_t cclock;
 	mach_timespec_t mts;
-    u32 ticks = 0;
 	host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
 	clock_get_time(cclock, &mts);
 	mach_port_deallocate(mach_task_self(), cclock);
     ticks = mts.tv_nsec / 1000000;
     ticks += mts.tv_sec * 1000;
-	return ticks;
 #endif
+	return ticks;
 }
 
 // Время (в секундах) с отправного момента в прошлом
