@@ -4,7 +4,7 @@
 \brief Buchberger's algorithm
 \project GF2 [algebra over GF(2)]
 \created 2006.01.01
-\version 2020.04.22
+\version 2020.05.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -158,7 +158,8 @@ public:
 		пары (признак отстутствия зацепления). */
 	bool IsRelPrime() const
 	{	
-		return var1 != SIZE_MAX ? lm2.Test(var1) == 0 : GCD(lm1, lm2).IsAllZero();
+		return var1 != SIZE_MAX ? 
+			lm2.Test(var1) == 0 : GCD(lm1, lm2).IsAllZero();
 	}
 
 	//! R-пара?

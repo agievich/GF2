@@ -4,7 +4,7 @@
 \brief Monomials in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.04.22
+\version 2020.05.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -152,7 +152,7 @@ public:
 	bool IsRelPrime(const MM<_m>& mRight) const
 	{
 		size_t pos;
-		for (pos = 0; pos < min(_wcount, mRight.WordSize()); ++pos)
+		for (pos = 0; pos < std::min(_wcount, mRight.WordSize()); ++pos)
 			if (_words[pos] & mRight.GetWord(pos)) return false;
 		for (; pos < mRight.WordSize(); pos++)
 			if (mRight.GetWord(pos)) return false;
@@ -203,7 +203,7 @@ public:
 	bool IsDivide(const MM<_m>& mRight) const
 	{	
 		size_t pos;
-		for (pos = 0; pos < min(_wcount, mRight.WordSize()); ++pos)
+		for (pos = 0; pos < std::min(_wcount, mRight.WordSize()); ++pos)
 			if (_words[pos] & ~mRight.GetWord(pos))
 				return false;
 		for (; pos < _wcount; ++pos)
@@ -293,7 +293,7 @@ public:
 
 //! НОД мономов
 /*! Определяется наибольший общй делитель мономов mLeft и mRight. */
-template<size_t _n, size_t _m> decltype(auto)
+template<size_t _n, size_t _m> auto
 GCD(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
 	MM<std::max(_n, _m)> m(mLeft);
@@ -303,7 +303,7 @@ GCD(const MM<_n>& mLeft, const MM<_m>& mRight)
 
 //! Умножение мономов
 /*! Определяется произведение мономов mLeft и mRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator*(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
 	MM<std::max(_n, _m)> m(mLeft);
@@ -313,7 +313,7 @@ operator*(const MM<_n>& mLeft, const MM<_m>& mRight)
 
 //! НОК мономов
 /*! Определяется наименьшее общее кратное мономов mLeft и mRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 LCM(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
 	MM<std::max(_n, _m)> m(mLeft);
@@ -324,7 +324,7 @@ LCM(const MM<_n>& mLeft, const MM<_m>& mRight)
 //! Деление мономов
 /*! Определяется результат деления монома mLeft на mRight. 
 	\pre mLeft.IsDivisibleBy(mRight). */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator/(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
 	MM<std::max(_n, _m)> m(mLeft);

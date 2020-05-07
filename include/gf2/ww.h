@@ -4,7 +4,7 @@
 \brief Binary words of arbitrary length
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.04.22
+\version 2020.05.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -132,7 +132,8 @@ Set(), SetWord() и др.
 		return WW<std::max(_n, _m)>(wLeft) ^= wRight;
 	}
 \endcode
-некорректна: decltype(auto) будет раскрываться как ссылка.
+некорректна: decltype(auto) будет раскрываться как ссылка. 
+Замена decltype(auto) на auto не спасает.
 *******************************************************************************
 */
 
@@ -1206,7 +1207,7 @@ operator>=(word wLeft, const WW<_n>& wRight)
 
 //! AND
 /*! Определяется слово wLeft & wRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator&(const WW<_n>& wLeft, const WW<_m>& wRight)
 {	
 	WW<std::max(_n, _m)> w(wLeft);
@@ -1216,7 +1217,7 @@ operator&(const WW<_n>& wLeft, const WW<_m>& wRight)
 
 //! AND
 /*! Определяется слово wLeft & wRight (wRight -- машинное слово). */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator&(const WW<_n>& wLeft, word wRight)
 {	
 	WW<std::max(_n, sizeof(word) * 8)> w(wLeft);
@@ -1226,7 +1227,7 @@ operator&(const WW<_n>& wLeft, word wRight)
 
 //! AND
 /*! Определяется слово wLeft & wRight (wLeft -- машинное слово). */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator&(word wLeft, const WW<_n>& wRight)
 {	
 	WW<std::max(_n, sizeof(word) * 8)> w(wRight);
@@ -1236,7 +1237,7 @@ operator&(word wLeft, const WW<_n>& wRight)
 
 //! OR
 /*! Определяется слово wLeft | wRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator|(const WW<_n>& wLeft, const WW<_m>& wRight)
 {	
 	WW<std::max(_n, _m)> w(wLeft);
@@ -1246,7 +1247,7 @@ operator|(const WW<_n>& wLeft, const WW<_m>& wRight)
 
 //! OR
 /*! Определяется слово wLeft | wRight (wRight -- машинное слово). */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator|(const WW<_n>& wLeft, word wRight)
 {	
 	WW<std::max(_n, sizeof(word) * 8)> w(wLeft);
@@ -1256,7 +1257,7 @@ operator|(const WW<_n>& wLeft, word wRight)
 
 //! OR
 /*! Определяется слово wLeft | wRight (wLeft -- машинное слово). */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator|(word wLeft, const WW<_n>& wRight)
 {	
 	WW<std::max(_n, sizeof(word) * 8)> w(wRight);
@@ -1266,7 +1267,7 @@ operator|(word wLeft, const WW<_n>& wRight)
 
 //! XOR
 /*! Определяется слово wLeft ^ wRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator^(const WW<_n>& wLeft, const WW<_m>& wRight)
 {	
 	WW<std::max(_n, _m)> w(wLeft);
@@ -1276,7 +1277,7 @@ operator^(const WW<_n>& wLeft, const WW<_m>& wRight)
 
 //! XOR
 /*! Определяется слово wLeft ^ wRight (wRight -- машинное слово). */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator^(const WW<_n>& wLeft, word wRight)
 {	
 	WW<std::max(_n, sizeof(word) * 8)> w(wLeft);
@@ -1286,7 +1287,7 @@ operator^(const WW<_n>& wLeft, word wRight)
 
 //! XOR
 /*! Определяется слово wLeft ^ wRight (wLeft -- машинное слово). */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator^(word wLeft, const WW<_n>& wRight)
 {	
 	WW<std::max(_n, sizeof(word) * 8)> w(wRight);
@@ -1296,7 +1297,7 @@ operator^(word wLeft, const WW<_n>& wRight)
 
 //! Конкатенация слов
 /*! Слова wLeft и wRight конкатенируются. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 Concat(const WW<_n>& wLeft, const WW<_m>& wRight)
 {	
 	WW<_n + _m> w(wLeft);
@@ -1308,7 +1309,7 @@ Concat(const WW<_n>& wLeft, const WW<_m>& wRight)
 /*! Слова wLeft и wRight конкатенируются. 
 	\remark Запись a || b соответствует устоявшимся
 	математическим обозначениям. */
-template<size_t _n1, size_t _n2> inline decltype(auto)
+template<size_t _n1, size_t _n2> inline auto
 operator||(const WW<_n1>& wLeft, const WW<_n2>& wRight)
 {	
 	WW<_n1 + _n2> w(wLeft);

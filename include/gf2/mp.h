@@ -4,7 +4,7 @@
 \brief Multivariate polynomials in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.04.22
+\version 2020.05.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -1661,7 +1661,7 @@ public:
 
 //! Сложение
 /*! Складываются константа cLeft и моном mRight. */
-template<size_t _n> inline MP<_n> 
+template<size_t _n> inline auto 
 operator+(bool cLeft, const MM<_n>& mRight)
 {
 	MP<_n> poly(cLeft);
@@ -1671,7 +1671,7 @@ operator+(bool cLeft, const MM<_n>& mRight)
 
 //! Сложение
 /*! Складываются моном mLeft и константа cRight. */
-template<size_t _n> inline MP<_n> 
+template<size_t _n> inline auto 
 operator+(const MM<_n>& mLeft, bool cRight)
 {
 	MP<_n> p(mLeft);
@@ -1681,7 +1681,7 @@ operator+(const MM<_n>& mLeft, bool cRight)
 
 //! Сложение
 /*! Складываются мономы mLeft и mRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator+(const MM<_n>& mLeft, const MM<_m>& mRight)
 {
 	MP<std::max(_n, _m)> poly(mLeft);
@@ -1691,7 +1691,7 @@ operator+(const MM<_n>& mLeft, const MM<_m>& mRight)
 
 //! Сложение
 /*! Складываются многочлен polyLeft и константа сRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+template<size_t _n, class _O> inline auto 
 operator+(const MP<_n, _O>& polyLeft, bool cRight)
 {
 	MP<_n, _O> poly(polyLeft);
@@ -1699,9 +1699,17 @@ operator+(const MP<_n, _O>& polyLeft, bool cRight)
 	return poly;
 }
 
+template<size_t _n, class _O> inline auto
+operator+(MP<_n, _O>&& polyLeft, bool cRight)
+{
+	MP<_n, _O> poly(std::move(polyLeft));
+	poly += cRight;
+	return poly;
+}
+
 //! Сложение
 /*! Складываются константа cLeft и многочлен polyRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+template<size_t _n, class _O> inline auto 
 operator+(bool cLeft, const MP<_n, _O>& polyRight)
 {
 	MP<_n, _O> poly(polyRight);
@@ -1709,9 +1717,17 @@ operator+(bool cLeft, const MP<_n, _O>& polyRight)
 	return poly;
 }
 
+template<size_t _n, class _O> inline auto
+operator+(bool cLeft, MP<_n, _O>&& polyRight)
+{
+	MP<_n, _O> poly(std::move(polyRight));
+	poly += cLeft;
+	return poly;
+}
+	
 //! Сложение
 /*! Складываются многочлен polyLeft и моном mRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+template<size_t _n, class _O> inline auto 
 operator+(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 {
 	MP<_n, _O> poly(polyLeft);
@@ -1719,9 +1735,17 @@ operator+(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 	return poly;
 }
 
+template<size_t _n, class _O> inline auto
+operator+(MP<_n, _O>&& polyLeft, const MM<_n>& mRight)
+{
+	MP<_n, _O> poly(std::move(polyLeft));
+	poly += mRight;
+	return poly;
+}
+
 //! Сложение
 /*! Складываются моном mLeft и многочлен polyRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+template<size_t _n, class _O> inline auto 
 operator+(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	MP<_n, _O> poly(polyRight);
@@ -1729,9 +1753,17 @@ operator+(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 	return poly;
 }
 
+template<size_t _n, class _O> inline auto
+operator+(const MM<_n>& mLeft, MP<_n, _O>&& polyRight)
+{
+	MP<_n, _O> poly(std::move(polyRight));
+	poly += mLeft;
+	return poly;
+}
+
 //! Сложение
 /*! Складываются многочлены polyLeft и polyRight. */
-template<size_t _n, class _O1, class _O2> inline MP<_n, _O1> 
+template<size_t _n, class _O1, class _O2> inline auto 
 operator+(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 {
 	MP<_n, _O1> poly(polyLeft);
@@ -1739,9 +1771,33 @@ operator+(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 	return poly;
 }
 
+template<size_t _n, class _O1, class _O2> inline auto
+operator+(MP<_n, _O1>&& polyLeft, const MP<_n, _O2>& polyRight)
+{
+	MP<_n, _O1> poly(std::move(polyLeft));
+	poly += polyRight;
+	return poly;
+}
+
+template<size_t _n, class _O1, class _O2> inline auto
+operator+(MP<_n, _O1>&& polyLeft, MP<_n, _O2>&& polyRight)
+{
+	MP<_n, _O1> poly(std::move(polyLeft));
+	poly += polyRight;
+	return poly;
+}
+
+template<size_t _n, class _O> inline auto
+operator+(const MP<_n, _O>& polyLeft, MP<_n, _O>&& polyRight)
+{
+	MP<_n, _O> poly(std::move(polyRight));
+	poly += polyLeft;
+	return poly;
+}
+
 //! Умножение
 /*! Умножаются многочлен polyLeft и моном mRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+template<size_t _n, class _O> inline auto 
 operator*(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 {
 	MP<_n, _O> poly(polyLeft);
@@ -1749,9 +1805,17 @@ operator*(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 	return poly;
 }
 
+template<size_t _n, class _O> inline auto
+operator*(MP<_n, _O>&& polyLeft, const MM<_n>& mRight)
+{
+	MP<_n, _O> poly(std::move(polyLeft));
+	poly *= mRight;
+	return poly;
+}
+
 //! Умножение
 /*! Умножаются моном mLeft и многочлен polyRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+template<size_t _n, class _O> inline auto 
 operator*(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
 	MP<_n, _O> poly(polyRight);
@@ -1759,9 +1823,17 @@ operator*(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 	return poly;
 }
 
+template<size_t _n, class _O> inline auto
+operator*(const MM<_n>& mLeft, MP<_n, _O>&& polyRight)
+{
+	MP<_n, _O> poly(std::move(polyRight));
+	poly *= mLeft;
+	return poly;
+}
+
 //! Умножение
 /*! Умножаются многочлены polyLeft и polyRight. */
-template<size_t _n, class _O1, class _O2> inline MP<_n, _O1> 
+template<size_t _n, class _O1, class _O2> inline auto 
 operator*(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 {
 	MP<_n, _O1> poly(polyLeft);
@@ -1769,10 +1841,33 @@ operator*(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 	return poly;
 }
 
+template<size_t _n, class _O1, class _O2> inline auto
+operator*(MP<_n, _O1>&& polyLeft, const MP<_n, _O2>& polyRight)
+{
+	MP<_n, _O1> poly(std::move(polyLeft));
+	poly *= polyRight;
+	return poly;
+}
+
+template<size_t _n, class _O1, class _O2> inline auto
+operator*(MP<_n, _O1>&& polyLeft, MP<_n, _O2>&& polyRight)
+{
+	MP<_n, _O1> poly(std::move(polyLeft));
+	poly *= polyRight;
+	return poly;
+}
+
+template<size_t _n, class _O> inline auto
+operator*(const MP<_n, _O>& polyLeft, MP<_n, _O>&& polyRight)
+{
+	MP<_n, _O> poly(std::move(polyRight));
+	poly *= polyLeft;
+	return poly;
+}
+
 //! Частное от деления
-/*! Определяется частное от деления многочлена polyLeft 
-	на моном mRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+/*! Определяется частное от деления многочлена polyLeft на моном mRight. */
+template<size_t _n, class _O> inline auto 
 operator/(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 {
 	MP<_n, _O> poly(polyLeft);
@@ -1780,23 +1875,46 @@ operator/(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 	return poly;
 }
 
+template<size_t _n, class _O> inline auto
+operator/(MP<_n, _O>&& polyLeft, const MM<_n>& mRight)
+{
+	MP<_n, _O> poly(std::move(polyLeft));
+	poly /= mRight;
+	return poly;
+}
+
 //! Частное от деления
-/*! Определяется частное от деления монома mLeft 
-	на многочлен polyRight.*/
-template<size_t _n, class _O> inline MP<_n, _O> 
+/*! Определяется частное от деления монома mLeft на многочлен polyRight.*/
+template<size_t _n, class _O> inline auto 
 operator/(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
-	MP<_n, _O> poly(polyRight);
-	poly /= mLeft;
+	MP<_n, _O> poly(mLeft);
+	poly /= polyRight;
 	return poly;
 }
 
 //! Частное от деления
 /*! Определяется частное от деления многочлена polyLeft на polyRight. */
-template<size_t _n, class _O1, class _O2> inline MP<_n, _O1> 
+template<size_t _n, class _O1, class _O2> inline auto 
 operator/(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 {
 	MP<_n, _O1> poly(polyLeft);
+	poly /= polyRight;
+	return poly;
+}
+
+template<size_t _n, class _O1, class _O2> inline auto
+operator/(MP<_n, _O1>&& polyLeft, const MP<_n, _O2>& polyRight)
+{
+	MP<_n, _O1> poly(std::move(polyLeft));
+	poly /= polyRight;
+	return poly;
+}
+
+template<size_t _n, class _O1, class _O2> inline auto
+operator/(MP<_n, _O1>&& polyLeft, MP<_n, _O2>&& polyRight)
+{
+	MP<_n, _O1> poly(std::move(polyLeft));
 	poly /= polyRight;
 	return poly;
 }
@@ -1810,9 +1928,8 @@ operator|(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 }
 
 //! Остаток от деления
-/*! Определяется остаток от деления многочлена polyLeft 
-	на моном mRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+/*! Определяется остаток от деления многочлена polyLeft на моном mRight. */
+template<size_t _n, class _O> inline auto 
 operator%(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 {
 	MP<_n, _O> poly(polyLeft);
@@ -1820,20 +1937,28 @@ operator%(const MP<_n, _O>& polyLeft, const MM<_n>& mRight)
 	return poly;
 }
 
+template<size_t _n, class _O> inline auto
+operator%(const MP<_n, _O>&& polyLeft, const MM<_n>& mRight)
+{
+	MP<_n, _O> poly(std::move(polyLeft));
+	poly %= mRight;
+	return poly;
+}
+
 //! Остаток от деления
 /*! Определяется остаток от деления монома mLeft 
 	на многочлен polyRight.*/
-template<size_t _n, class _O> inline MP<_n, _O> 
+template<size_t _n, class _O> inline auto
 operator%(const MM<_n>& mLeft, const MP<_n, _O>& polyRight)
 {
-	MP<_n, _O> poly(polyRight);
-	poly %= mLeft;
+	MP<_n, _O> poly(mLeft);
+	poly %= polyRight;
 	return poly;
 }
 
 //! Остаток от деления
 /*! Определяется остаток от деления многочлена polyLeft на polyRight. */
-template<size_t _n, class _O1, class _O2> inline MP<_n, _O1> 
+template<size_t _n, class _O1, class _O2> inline auto 
 operator%(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 {
 	MP<_n, _O1> poly(polyLeft);
@@ -1841,13 +1966,37 @@ operator%(const MP<_n, _O1>& polyLeft, const MP<_n, _O2>& polyRight)
 	return poly;
 }
 
+template<size_t _n, class _O1, class _O2> inline auto
+operator%(MP<_n, _O1>&& polyLeft, const MP<_n, _O2>& polyRight)
+{
+	MP<_n, _O1> poly(std::move(polyLeft));
+	poly %= polyRight;
+	return poly;
+}
+
+template<size_t _n, class _O1, class _O2> inline auto
+operator%(MP<_n, _O1>&& polyLeft, MP<_n, _O2>&& polyRight)
+{
+	MP<_n, _O1> poly(std::move(polyLeft));
+	poly %= polyRight;
+	return poly;
+}
+
 //! Остаток от деления
 /*! Определяется остаток от деления многочлена polyLeft на согласованную 
 	систему iRight. */
-template<size_t _n, class _O> inline MP<_n, _O> 
+template<size_t _n, class _O> inline auto 
 operator%(const MP<_n, _O>& polyLeft, const Ideal<_n, _O>& iRight)
 {
 	MP<_n, _O> poly(polyLeft);
+	poly %= iRight;
+	return poly;
+}
+
+template<size_t _n, class _O> inline auto
+operator%(MP<_n, _O>&& polyLeft, const Ideal<_n, _O>& iRight)
+{
+	MP<_n, _O> poly(std::move(polyLeft));
 	poly %= iRight;
 	return poly;
 }

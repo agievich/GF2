@@ -4,7 +4,7 @@
 \brief Tests
 \project GF2 [algebra over GF(2)]
 \created 2016.07.06
-\version 2020.04.22
+\version 2020.05.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -42,25 +42,16 @@ template class GF2::Func<5, int>;
 	template class GF2::BFunc<6>;
 	template class GF2::VFunc<7, 8>;
 		template class GF2::VSubst<8>;
+
 /*
 *******************************************************************************
-Тесты 
+Тест testWW
 
-#	wwTest: функционал WW;
-#	orderTest: проверка тождественности OrderGrlex<6> и OrderGr<OrderLex<6> >;
-#	bentTest: проверка бентовости функции Майораны-МакФарланда;
-#	sboxTest: проверка криптографических характеристик 4-битового S-блока 
-	(by.gost28147.params.1);
-#	beltTest: проверка криптографических характеристик 8-битового S-блока belt
-	(СТБ 34.101.31);
-#	bashTest: базис Гребнера идеала, описывающего S-блок Bash;
-#	bash2Test: формульное расширение размерности S-блока Bash, 
-	проверка биективности, обращение и проверка степеней;
-#	commuteTest: коммутируемые обратимые двоичные матрицы порядка 2.
+Проверка функционала класса WW
 *******************************************************************************
 */
 
-bool wwTest()
+bool testWW()
 {
 	// 1
 	WW<127> w1;
@@ -117,7 +108,47 @@ bool wwTest()
 	return true;
 }
 
-bool orderTest()
+/*
+*******************************************************************************
+Тест testMP
+
+Проверка функционала класса MP
+
+todo
+*******************************************************************************
+*/
+
+bool testMP()
+{
+	typedef MM<6> X;
+	typedef MOGrlex<6> O1;
+	typedef MOGrevlex<6> O2;
+	// 1
+	MP<6> p1 = (X(0) + X(1)) * (X{1, 2} + X{2, 3, 4});
+	MP<6> p2 = (X(0) + X(1)) + (X{1, 2} + X{2, 3, 4});
+	// 2
+	MP<6, O1> p3(p1);
+	p3 /= X(0) + X(1);
+	if (p3 != X(2) + X(0, 2) + X{2, 3, 4})
+		return false;
+	// 3
+	p3 = p1 * p2;
+	MP<6, O2> p4 = p2;
+	p4 *= p1;
+	if (p3 != p4)
+		return false;
+	return true;
+}
+
+/*
+*******************************************************************************
+Тест testОrder
+
+Проверка тождественности OrderGrlex<6> и OrderGr<OrderLex<6>>
+*******************************************************************************
+*/
+
+bool testOrder()
 {
 	MOGrlex<6> o1;
 	MOGr<MOLex<6> > o2;
@@ -134,30 +165,102 @@ bool orderTest()
 	return true;
 }
 
-bool bentTest()
+/*
+*******************************************************************************
+Тест testBent
+
+Проверка бентовости функции Майораны-МакФарланда.
+*******************************************************************************
+*/
+
+bool testBent()
 {
 	typedef MM<12> X;
 	MP<12> p;
 	BFunc<12> bf;
 	// многочлен
-	p = X(0,6) + X(1, 7) + X(2, 8) + X(3, 9);
-	p += X({4, 10}) + X({5, 5, 11, 11, 11});
+	p = X(0, 6) + X(1, 7) + X(2, 8) + X(3, 9) + X(4, 10) + X(5, 11);
 	// функция
 	bf.From(p);
 	return bf.IsBent();
 }
 
-bool sboxTest()
+/*
+*******************************************************************************
+Тест testBent2
+
+Проверка бентовости функций из статьи [Rothaus O. On "bent" functions].
+*******************************************************************************
+*/
+
+bool testBent2()
 {
-	static const word s_table[16] = {2,6,3,14,12,15,7,5,11,13,8,9,10,0,4,1};
-	VSubst<4> s(s_table);
-	// характеристики
-	return s.Nl() == 4 && 
-		s.Deg() == 3 && s.DegSpan() == 3 &&
-		s.Dc(0) == 4 && s.Dc(1) == 4 && s.Dc(2) == 4 && s.Dc(3) == 3;
+	typedef MM<6> X;
+	BFunc<6> bf1, bf3, bf4;
+	// функции -- представители классов 1, 3, 4
+	bf1.From(X{0,1,2} + X{0,3} + X{1,4} + X{2,5});
+	bf3.From(X{0,1,2} + X{1,3,4} + X{0,1} +	X{0,3} + X{1,5} + X{2,4} + X{3,4});
+	bf4.From(X{0,1,2} + X{1,3,4} + X{2,3,5} + X{0,3} + X{1,5} + X{2,3} + 
+		X{2,4} + X{2,5} + X{3,4} + X{3,5});
+	// проверка
+	return bf1.IsBent() && bf3.IsBent() && bf4.IsBent();
 }
 
-bool beltTest(bool verbose = false)
+/*
+*******************************************************************************
+Тест testGOST
+
+Проверка криптографических характеристик 4-битовых S-блоков ГОСТ 28147 
+(заданы в СТБ 34.101.50, by.gost28147.params.1).
+*******************************************************************************
+*/
+
+bool testGOST()
+{
+	static const word s_table[8][16] =
+	{
+		{2, 6, 3, 14, 12, 15, 7, 5, 11, 13, 8, 9, 10, 0, 4, 1}, 
+		{8, 12, 9, 6, 10, 7, 13, 1, 3, 11, 14, 15, 2, 4, 0, 5}, 
+		{1, 5, 4, 13, 3, 8, 0, 14, 12, 6, 7, 2, 9, 15, 11, 10}, 
+		{4, 0, 5, 10, 2, 11, 1, 9, 15, 3, 6, 7, 14, 12, 8, 13}, 
+		{7, 9, 6, 11, 15, 10, 8, 12, 4, 14, 1, 0, 5, 3, 13, 2}, 
+		{14, 8, 15, 2, 6, 3, 9, 13, 5, 7, 0, 1, 4, 10, 12, 11}, 
+		{9, 13, 8, 5, 11, 4, 12, 2, 0, 10, 15, 14, 1, 7, 3, 6}, 
+		{11, 15, 10, 8, 1, 14, 3, 6, 9, 0, 4, 5, 13, 2, 7, 12}, 
+	};
+	for (size_t i = 0; i < 8; ++i)
+	{
+		VSubst<4> s(s_table[i]);
+		// проверить инварианты add-семейства
+		if (s.Dc(2) != 4 && s.Dc(3) != 4 - (i == 0))
+			return false;
+		// цикл по add-семейству
+		for (word a = 0; a < 16; ++a)
+		{
+			if (s.Nl() != 4 ||
+				s.Deg() != 3 && s.DegSpan() != 3 &&
+				s.Dc(0) != 4 && s.Dc(1) != 4)
+				return false;
+			// к следующему представителю add-семейства
+			word t = s[0], x;
+			for (x = 0; x < 15; ++x)
+				s[x] = s[x + 1];
+			s[x] = t;
+		}
+	}
+	return true;
+}
+
+/*
+*******************************************************************************
+Тест testBelt 
+
+Проверка криптографических характеристик 8-битового S-блока Belt 
+(СТБ 34.101.31).
+*******************************************************************************
+*/
+
+bool testBelt(bool verbose = false)
 {
 	static const word h_table[256] = {
 		0xB1,0x94,0xBA,0xC8,0x0A,0x08,0xF5,0x3B,0x36,0x6D,0x00,0x8E,0x58,0x4A,0x5D,0xE4,
@@ -199,12 +302,20 @@ bool beltTest(bool verbose = false)
 	return true;
 }
 
-bool bashTest()
+/*
+*******************************************************************************
+Тест testBash 
+
+Вычисление базиса Гребнера идеала, описывающего S-блок Bash (СТБ 34.101.77).
+*******************************************************************************
+*/
+
+bool testBash()
 {
 	typedef MOGrevlex<6> O;
 	typedef MM<6> X;
 	// S-блок и его идеал
-	word s_table[] = {1, 2, 3, 4, 6, 7, 5, 0};
+	const word s_table[] = {1, 2, 3, 4, 6, 7, 5, 0};
 	VSubst<3> s(s_table);
 	MI<6, O> i;
 	// i <- {x_{k + 3} - s_k(x_0, s_1, x_2): k = 0, 1, 2}
@@ -229,19 +340,28 @@ bool bashTest()
 	return i.Size() == 14 && i.QuotientBasisDim() == word(8);
 }
 
-bool bashTest2()
+/*
+*******************************************************************************
+Тест testBash2 
+
+Формульное расширение размерности S-блока Bash, проверка биективности, 
+обращение и проверка степеней.
+*******************************************************************************
+*/
+
+bool testBash2()
 {
 	const size_t n = 3;
 	WW<3 * n> v;
 	VSubst<3 * n> s;
 	do
 	{
-		WW<n> x0 = v.GetLo<n>();
-		WW<n> x1 = v.GetLo<2 * n>().GetHi<n>();
-		WW<n> x2 = v.GetHi<n>();
-		WW<n> y0 = (x1 | ~x2) ^ x0.RotLo(1) ^ x1;
-		WW<n> y1 = (x0 | x1) ^ x0 ^ x1 ^ x2;
-		WW<n> y2 = (x0 & x1) ^ x1 ^ x2;
+		auto x0 = v.GetLo<n>();
+		auto x1 = v.GetLo<2 * n>().GetHi<n>();
+		auto x2 = v.GetHi<n>();
+		auto y0 = (x1 | ~x2) ^ x0.RotLo(1) ^ x1;
+		auto y1 = (x0 | x1) ^ x0 ^ x1 ^ x2;
+		auto y2 = (x0 & x1) ^ x1 ^ x2;
 		s[x0 || x1 || x2] = y0 || y1 || y2;
 	}
 	while (v.Next());
@@ -250,7 +370,16 @@ bool bashTest2()
 	return (s.Deg() == 2 && s.Inverse().Deg() == 2);
 }
 
-bool commuteTest()
+/*
+*******************************************************************************
+Тест testCommute
+
+Алгебраическое описание пар коммутируемых обратимым двоичных матриц порядка 2, 
+контроль числа пар.
+*******************************************************************************
+*/
+
+bool testCommute()
 {
 	typedef MOGrevlex<8> O;
 	// система
@@ -273,7 +402,7 @@ bool commuteTest()
 	if (!i.IsGB())
 		return false;
 	// количество матриц
-	return i.QuotientBasisDim() == (word)18;
+	return i.QuotientBasisDim() == word(18);
 }
 
 /*
@@ -286,13 +415,15 @@ int main()
 {
 	int ret;
 	Env::Print("gf2/test [gf2 version %s]\n", Env::Version());
-	ret |= !Env::RunTest("wwTest", wwTest);
-	ret |= !Env::RunTest("orderTest", orderTest);
-	ret |= !Env::RunTest("bentTest", bentTest);
-	ret |= !Env::RunTest("sboxTest", sboxTest);
-	ret |= !Env::RunTest("beltTest", beltTest, true);
-	ret |= !Env::RunTest("bashTest", bashTest);
-	ret |= !Env::RunTest("bashTest2", bashTest2);
-	ret |= !Env::RunTest("commuteTest", commuteTest);
+	ret |= !Env::RunTest("testWW", testWW);
+	ret |= !Env::RunTest("testMP", testMP);
+	ret |= !Env::RunTest("testOder", testOrder);
+	ret |= !Env::RunTest("testBent", testBent);
+	ret |= !Env::RunTest("testBent2", testBent2);
+	ret |= !Env::RunTest("testGOST", testGOST);
+	ret |= !Env::RunTest("testBelt", testBelt, true);
+	ret |= !Env::RunTest("testBash", testBash);
+	ret |= !Env::RunTest("testBash2", testBash2);
+	ret |= !Env::RunTest("testCommute", testCommute);
 	return ret;
 }

@@ -4,7 +4,7 @@
 \brief Binary words as integers
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.04.22
+\version 2020.05.07
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -219,7 +219,7 @@ public:
 	{	
 		word carry = 0;
 		size_t pos;
-		for (pos = 0; pos < min(_wcount, zRight.WordSize()); ++pos)
+		for (pos = 0; pos < std::min(_wcount, zRight.WordSize()); ++pos)
 			if ((_words[pos] += carry) < carry) 
 				_words[pos] = zRight.GetWord(pos);
             else 
@@ -266,7 +266,7 @@ public:
 	{	
 		word borrow = 0;
 		size_t pos = 0;
-		for (; pos < min(_wcount, zRight.WordSize()); ++pos)
+		for (; pos < std::min(_wcount, zRight.WordSize()); ++pos)
 			if ((_words[pos] -= borrow) > WORD_MAX - borrow) 
 				_words[pos] -= zRight.GetWord(pos);
             else 
@@ -536,7 +536,7 @@ public:
 
 //! Сложение
 /*! Определяется сумма чисел zLeft и zRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator+(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
 	ZZ<std::max(_n, _m)> z(zLeft);
@@ -546,7 +546,7 @@ operator+(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 
 //! Сложение
 /*! Определяется сумма машинного слова wLeft и числа zRight. */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator+(word wLeft, const ZZ<_n>& zRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(zRight);
@@ -556,7 +556,7 @@ operator+(word wLeft, const ZZ<_n>& zRight)
 
 //! Сложение
 /*! Определяется сумма числа zLeft и машинного слова wRight. */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator+(const ZZ<_n>& zLeft, word wRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
@@ -566,7 +566,7 @@ operator+(const ZZ<_n>& zLeft, word wRight)
 
 //! Вычитание
 /*! Определяется разность чисел zLeft и zRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator-(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
 	ZZ<std::max(_n, _m)> z(zLeft);
@@ -576,7 +576,7 @@ operator-(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 
 //! Вычитание
 /*! Определяется разность машинного слова wLeft и числа zRight. */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator-(word wLeft, const ZZ<_n>& zRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(zRight);
@@ -586,7 +586,7 @@ operator-(word wLeft, const ZZ<_n>& zRight)
 
 //! Вычитание
 /*! Определяется разность числа zLeft и машинного слова wRight. */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator-(const ZZ<_n>& zLeft, word wRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
@@ -596,7 +596,7 @@ operator-(const ZZ<_n>& zLeft, word wRight)
 
 //! Умножение
 /*! Определяется произведение чисел zLeft и zRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator*(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
 	ZZ<std::max(_n, _m)> z(zLeft);
@@ -606,7 +606,7 @@ operator*(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 
 //! Умножение
 /*! Определяется произведение машинного слова wLeft и числа zRight.*/
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator*(word wLeft, const ZZ<_n>& zRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(zRight);
@@ -616,7 +616,7 @@ operator*(word wLeft, const ZZ<_n>& zRight)
 
 //! Умножение
 /*! Определяется произведение числа zLeft и машинного слова wRight. */
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator*(const ZZ<_n>& zLeft, word wRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
@@ -626,7 +626,7 @@ operator*(const ZZ<_n>& zLeft, word wRight)
 
 //! Частное
 /*! Определяется частное от деления числа zLeft на zRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator/(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
 	ZZ<std::max(_n, _m)> z(zLeft);
@@ -637,7 +637,7 @@ operator/(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 //! Частное
 /*! Определяется частное от деления числа zLeft 
 на машинное слово wRight.*/
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator/(const ZZ<_n>& zLeft, word wRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
@@ -648,7 +648,7 @@ operator/(const ZZ<_n>& zLeft, word wRight)
 //! Частное
 /*! Определяется частное от деления машинного слова wLeft 
 на число zRight.*/
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator/(word wLeft, const ZZ<_n>& zRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(wLeft);
@@ -658,7 +658,7 @@ operator/(word wLeft, const ZZ<_n>& zRight)
 
 //! Остаток
 /*! Определяется остаток от деления числа zLeft на zRight. */
-template<size_t _n, size_t _m> inline decltype(auto)
+template<size_t _n, size_t _m> inline auto
 operator%(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 {
 	ZZ<std::max(_n, _m)> z(zLeft);
@@ -669,7 +669,7 @@ operator%(const ZZ<_n>& zLeft, const ZZ<_m>& zRight)
 //! Остаток
 /*! Определяется остаток от деления числа zLeft 
 на машинное слово wRight.*/
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator%(const ZZ<_n>& zLeft, word wRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(zLeft);
@@ -680,7 +680,7 @@ operator%(const ZZ<_n>& zLeft, word wRight)
 //! Остаток
 /*! Определяется остаток от деления машинного слова wLeft 
 на число zRight.*/
-template<size_t _n> inline decltype(auto)
+template<size_t _n> inline auto
 operator%(word wLeft, const ZZ<_n>& zRight)
 {
 	ZZ<std::max(_n, sizeof(word) * 8)> z(wLeft);
