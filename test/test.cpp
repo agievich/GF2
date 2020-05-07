@@ -413,7 +413,7 @@ main
 
 int main()
 {
-	int ret;
+	int ret = 0;
 	Env::Print("gf2/test [gf2 version %s]\n", Env::Version());
 	ret |= !Env::RunTest("testWW", testWW);
 	ret |= !Env::RunTest("testMP", testMP);
