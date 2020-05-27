@@ -4,7 +4,7 @@
 \brief Functions {0, 1}^n \to T
 \project GF2 [algebra over GF(2)]
 \created 2004.06.10
-\version 2020.04.22
+\version 2020.05.27
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -67,7 +67,7 @@ public:
 	//! раскрытие числа переменных
 	static constexpr size_t n = _n;
 	// число переменных не должно быть велико
-	static_assert(_n < B_PER_W && _n < B_PER_S, "");
+	static_assert(_n < B_PER_W && _n < B_PER_S);
 	//! тип прообразов
 	typedef WW<_n> Preimage;
 

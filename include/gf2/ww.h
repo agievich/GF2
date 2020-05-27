@@ -4,7 +4,7 @@
 \brief Binary words of arbitrary length
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.05.07
+\version 2020.05.27
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -144,7 +144,7 @@ public:
 	//! раскрытие длины
 	static constexpr size_t n = _n;
 	// запрет нулевой длины
-	static_assert(_n > 0, "");
+	static_assert(_n > 0);
 
 // поддержка ссылок на отдельные (!) биты слов
 public:
@@ -519,7 +519,7 @@ public:
 	template<size_t _m>
 	WW<_m>& GetLo(WW<_m>& w) const
 	{
-		static_assert(_m <= _n, "");
+		static_assert(_m <= _n);
 		for (size_t pos = 0; pos < w._wcount; ++pos)
 			w._words[pos] = _words[pos];
 		w.Trim();
@@ -541,7 +541,7 @@ public:
 	template<size_t _m>
 	WW& SetLo(const WW<_m>& w)
 	{
-		static_assert(_m <= _n, "");
+		static_assert(_m <= _n);
 		size_t pos = 0;
 		for (; pos + 1 < w._wcount; ++pos)
 			_words[pos] = w._words[pos];
@@ -560,7 +560,7 @@ public:
 	template<size_t _m>
 	WW<_m>& GetHi(WW<_m>& w) const
 	{
-		static_assert(_m <= _n, "");
+		static_assert(_m <= _n);
 		// первое слово, в котором начинается правая часть
 		size_t start = (_n - _m) / B_PER_W;
 		// правая часть начинается посередине слова (со смещением offset)?
@@ -597,7 +597,7 @@ public:
 	template<size_t _m>
 	WW& SetHi(const WW<_m>& w)
 	{
-		static_assert(_m <= _n, "");
+		static_assert(_m <= _n);
 		// первое слово, в котором начинается правая часть
 		size_t start = (_n - _m) / B_PER_W;
 		// правая часть начинается посередине слова (со смещением offset)?
