@@ -4,7 +4,7 @@
 \brief Binary words as integers
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.05.07
+\version 2020.07.14
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -25,6 +25,7 @@ in GF2/info.h.
 
 #include "gf2/defs.h"
 #include "gf2/ww.h"
+#include <iomanip>
 #include <cstring>
 #include <vector>
 
@@ -708,17 +709,21 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const ZZ<_n>& zRight)
 	if ((os.flags() & std::ios_base::basefield) == std::ios_base::hex)
 	{
 		size_t pos = zRight.WordSize() - 1;
-		while (pos > 0 && zRight.GetWord(pos) == 0) pos--;
+		while (pos > 0 && zRight.GetWord(pos) == 0) 
+			pos--;
 		bool waitfirst = true;
 		if (os.flags() & std::ios_base::showbase)
 			os << "0x";
 		for (; pos != SIZE_MAX; pos--)
 		{
 			if (waitfirst)
-				::sprintf(buffer, "%X", zRight.GetWord(pos));
-			else
-				::sprintf(buffer, "%0*X", sizeof(word) * 2, 
+				::sprintf(buffer, 
+					sizeof(word) <= sizeof(unsigned) ? "%X" : "%lX", 
 					zRight.GetWord(pos));
+			else
+				::sprintf(buffer, 
+					sizeof(word) <= sizeof(unsigned) ? "%0*X" : "%0*lX", 
+					int(sizeof(word) * 2), zRight.GetWord(pos));
 			os << buffer;
 			waitfirst = false;
 		}
@@ -727,8 +732,10 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const ZZ<_n>& zRight)
 	else
 	{
 		// деление
-		word base = 10, digits = 1;
-		while (dword(base) * 10 == base * 10) base *= 10, digits++;
+		word base = 10;
+		int digits = 1;
+		while (dword(base) * 10 == base * 10) 
+			base *= 10, digits++;
 		ZZ<_n> save(zRight);
 		word symbol;
 		std::vector<word> symbols;
@@ -740,7 +747,9 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const ZZ<_n>& zRight)
 		os << symbol;
 		for (size_t pos = 1; pos < symbols.size(); pos++)
 		{
-			::sprintf(buffer, "%0*u", digits, symbols[pos]);
+			::sprintf(buffer, 
+				sizeof(word) <= sizeof(unsigned) ? "%0*u" : "%0*lu",
+				digits, symbols[pos]);
 			os << buffer;
 		}
 	}
@@ -748,25 +757,25 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const ZZ<_n>& zRight)
 }
 
 //! Чтение из потока
-/*! Число zRight читается из потока is. 
-	\par Перед чтением числа пропускаются пробелы и знаки табуляции.
-	В зависимости от флагов форматирования число вводится в десятичной 
-	или шестнадцатеричной форме, с префиксом 0x для шестнадцатеричной
-	формы или без (см. выше). Символы читаются от старших к младшим.
-	Чтение невозможно, если в состоянии потока установлен флаг ошибки.
-	\par Чтение прекращается, если 
+/*! Число zRight читается из потока is.
+	Перед чтением числа пропускаются пробелы и знаки табуляции. В зависимости
+	от флагов форматирования число вводится в десятичной или шестнадцатеричной
+	форме, с префиксом 0x для шестнадцатеричной формы или без (см. выше).
+	Символы читаются от старших к младшим. Чтение невозможно, если в состоянии
+	потока установлен флаг ошибки.
+	Чтение прекращается, если
 	1) превышена разрядность,
 	2) достигнут конец потока,
-	3) встретился недопустимый символ (не десятичная и не шестнадцатеричная цифра
-	и не символ префикса).
-	Во втором случае в состоянии потока будет установлен флаг ios_base::eofbit. 
-	Если не прочитано ни одной цифры, либо встретился недопустимый символ, 
-	то в состоянии потока будет установлен флаг ios_base::failbit, 
-	без снятия которого дальнейшее чтение из потока станет невозможно. 
-	При чтении из потока символа, после чтения которого превышается разрядность, 
-	прочитанный символ будет возвращен в поток. 
-	По окончании ввода число wRight будет содержать 
-	прочитанные символы, дополненные нулями. */
+	3) встретился недопустимый символ (не десятичная и не шестнадцатеричная
+	цифра и не символ префикса).
+	Во втором случае в состоянии потока будет установлен флаг ios_base::eofbit.
+	Если не прочитано ни одной цифры, либо встретился недопустимый символ,
+	то в состоянии потока будет установлен флаг ios_base::failbit,
+	без снятия которого дальнейшее чтение из потока станет невозможно.
+	При чтении из потока символа, после чтения которого превышается
+	разрядность, прочитанный символ будет возвращен в поток.
+	По окончании ввода число wRight будет содержать прочитанные символы,
+	дополненные нулями. */
 template<class _Char, class _Traits, size_t _n> inline
 std::basic_istream<_Char, _Traits>& 
 operator>>(std::basic_istream<_Char, _Traits>& is, ZZ<_n>& zRight)

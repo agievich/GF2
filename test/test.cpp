@@ -4,7 +4,7 @@
 \brief Tests
 \project GF2 [algebra over GF(2)]
 \created 2016.07.06
-\version 2020.05.07
+\version 2020.07.14
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -124,12 +124,12 @@ bool testMP()
 	typedef MOGrlex<6> O1;
 	typedef MOGrevlex<6> O2;
 	// 1
-	MP<6> p1 = (X(0) + X(1)) * (X{1, 2} + X{2, 3, 4});
-	MP<6> p2 = (X(0) + X(1)) + (X{1, 2} + X{2, 3, 4});
+	MP<6> p1 = (X(0) + X(1)) * (X{ 1, 2 } + X{ 2, 3, 4 });
+	MP<6> p2 = (X(0) + X(1)) + (X{ 1, 2 } + X{ 2, 3, 4 });
 	// 2
 	MP<6, O1> p3(p1);
 	p3 /= X(0) + X(1);
-	if (p3 != X(2) + X(0, 2) + X{2, 3, 4})
+	if (p3 != X(2) + X(0, 2) + X{ 2, 3, 4 })
 		return false;
 	// 3
 	p3 = p1 * p2;
@@ -167,6 +167,32 @@ bool testOrder()
 
 /*
 *******************************************************************************
+Тест testBFunc
+
+Проверка функционала класса BFunc
+*******************************************************************************
+*/
+
+bool testBFunc()
+{
+	typedef MM<4> X;
+	MP<4> p, p1;
+	BFunc<4> bf;
+	Func<4, int> zf;
+	// многочлен
+	p = X(0, 1) + X(2, 3) + X{ 0, 1, 2, 3 };
+	// преобразования
+	bf.From(p);
+	bf.To(zf);
+	bf.From(zf);
+	bf.To(p1);
+	if (p != p1)
+		return false;
+	return true;
+}
+
+/*
+*******************************************************************************
 Тест testBent
 
 Проверка бентовости функции Майораны-МакФарланда.
@@ -198,10 +224,13 @@ bool testBent2()
 	typedef MM<6> X;
 	BFunc<6> bf1, bf3, bf4;
 	// функции -- представители классов 1, 3, 4
-	bf1.From(X{0,1,2} + X{0,3} + X{1,4} + X{2,5});
-	bf3.From(X{0,1,2} + X{1,3,4} + X{0,1} +	X{0,3} + X{1,5} + X{2,4} + X{3,4});
-	bf4.From(X{0,1,2} + X{1,3,4} + X{2,3,5} + X{0,3} + X{1,5} + X{2,3} + 
-		X{2,4} + X{2,5} + X{3,4} + X{3,5});
+	bf1.From(X{ 0, 1, 2 } + 
+		X{ 0, 3 } + X{ 1, 4 } + X{ 2, 5 });
+	bf3.From(X{ 0, 1, 2 } + X{ 1, 3, 4 } + 
+		X{ 0, 1 } + X{ 0, 3 } + X{ 1, 5 } +X{ 2, 4 } +X{ 3, 4 });
+	bf4.From(X{ 0, 1, 2 } + X{ 1, 3, 4 } + X{ 2, 3, 5 } + 
+		X{ 0, 3 } + X{ 1, 5 } + X{ 2, 3 } + X{ 2, 4 } + X{ 2, 5 } + 
+		X{ 3, 4 } + X{ 3, 5 });
 	// проверка
 	return bf1.IsBent() && bf3.IsBent() && bf4.IsBent();
 }
@@ -407,6 +436,106 @@ bool testCommute()
 
 /*
 *******************************************************************************
+Тест testEM
+
+Алгебраическая атака на 2-тактовую криптосистему Even-Mansour:
+	Ci = F(F(Pi ^ K1) ^ K2) ^ K3, i = 1, 2, ..., np.
+Открытый текст Pi, шифртекст Сi и тактовые ключи K1, K2, K3 являются 3-битовыми
+словами. 
+
+Тактовая функция F является композицией S-блока Bash (см. testBash()) 
+и циклического сдвига:
+	F(x0, x1, x2) = (x0 ^ x1 | ~x2, x1 ^ x0 | x2, x2 ^ x0 & x1) >>> 1 =
+		(x2 + x0 x1, x0 + x1 x2 + x2 + 1, x1 + x0 x2 + x0 + x2).
+Таблица x0 x1 x2 -> F(x0 x1 x2):
+	000 -> 010
+	100 -> 001
+	010 -> 011
+	110 -> 100
+	001 -> 101
+	101 -> 111
+	011 -> 110
+	111 -> 000
+
+Раскладка переменных (Ti = S(Pi ^ K1)):
+	K1 = x[0, 1, 2]
+	K2 = x[3, 4, 5]
+	K3 = x[6, 7, 8]
+	Pi = x[0 + 9i, 1 + 9i, 2 + 9i]
+	Ti = x[3 + 9i, 4 + 9i, 5 + 9i]
+	Ci = x[6 + 9i, 7 + 9i, 8 + 9i]
+
+Шифрматериал (K1 = 101, K2 = 110, K3 = 010):
+	P1 = 000, T1 = F(101) = 111, C1 = F(T1 ^ K2) ^ K3 = S(001) ^ K3 = 111
+	P2 = 001, T2 = F(100) = 001, C2 = F(T2 ^ K2) ^ K3 = S(111) ^ K3 = 010
+	P3 = 100, T3 = F(001) = 101, C3 = F(T3 ^ K2) ^ K3 = S(011) ^ K3 = 100
+	P4 = 101, T4 = F(000) = 010, C4 = F(T4 ^ K2) ^ K3 = S(100) ^ K3 = 011
+*******************************************************************************
+*/
+
+bool testEM()
+{
+	const size_t np = 4;
+	const size_t n = 9 + 9 * np;
+	typedef MOGrevlex<n> O;
+	typedef MM<n> X;
+	MI<n, O> s, t;
+	Buchb<n, O> bb;
+	// атака 
+	for (size_t i = 1; i <= np; ++i)
+	{
+		// Ti = F(Pi ^ K1)
+		s.Insert(X(3 + 9 * i) + X(2 + 9 * i) + X(2) +
+			(X(0 + 9 * i) + X(0)) * (X(1 + 9 * i) + X(1)));
+		s.Insert(X(4 + 9 * i) + X(0 + 9 * i) + X(0) +
+			(X(1 + 9 * i) + X(1)) * (X(0 + 9 * i) + X(0)) +
+			X(2 + 9 * i) + X(2) + true);
+		s.Insert(X(5 + 9 * i) + X(1 + 9 * i) + X(1) +
+			(X(0 + 9 * i) + X(0)) * (X(2 + 9 * i) + X(2)) +
+			X(0 + 9 * i) + X(0) + X(2 + 9 * i) + X(2));
+		// Ci ^ K3 = S(Ti ^ K2)
+		s.Insert(X(6 + 9 * i) + X(6) + X(5 + 9 * i) + X(5) +
+			(X(3 + 9 * i) + X(3)) * (X(4 + 9 * i) + X(4)));
+		s.Insert(X(7 + 9 * i) + X(7) + X(3 + 9 * i) + X(3) +
+			(X(4 + 9 * i) + X(4)) * (X(5 + 9 * i) + X(5)) +
+			X(5 + 9 * i) + X(5) + true);
+		s.Insert(X(8 + 9 * i) + X(8) + X(4 + 9 * i) + X(4) +
+			(X(3 + 9 * i) + X(3)) * (X(5 + 9 * i) + X(5)) +
+			X(3 + 9 * i) + X(3) + X(5 + 9 * i) + X(5));
+		// ввод шифрматериала
+		static const string material[5] =
+		{
+			"",
+			"{x9, x10, x11, x15 + 1, x16 + 1, x17 + 1}",		// 000 -> 111
+			"{x18, x19, x20 + 1, x24, x25 + 1, x26}",			// 001 -> 010
+			"{x27 + 1, x28, x29, x33 + 1, x34, x35}",			// 100 -> 100
+			"{x36 + 1, x37, x38 + 1, x42, x43 + 1, x44 + 1}",	// 101 -> 011
+		};
+		stringstream ss;
+		ss << material[i];
+		ss >> t;
+		s.Insert(t);
+		// базис Гребнера
+		bb.Init();
+		bb.Update(s);
+		bb.Process();
+		bb.Done(t);
+		// проверка числа решений
+		static const word nsol[5] = { 0, 64, 8, 2, 1 };
+		if (t.QuotientBasisDim() != nsol[i])
+			return false;
+	}
+	// проверка ключа
+	WW<9> key;
+	for (size_t i = 0; i < 9; ++i)
+		if (t.IsContain(X(i) + true))
+			key[i] = true;
+	// key[8..0] =? 010 011 101
+	return key == (word)0x009D;
+}
+
+/*
+*******************************************************************************
 main
 *******************************************************************************
 */
@@ -418,6 +547,7 @@ int main()
 	ret |= !Env::RunTest("testWW", testWW);
 	ret |= !Env::RunTest("testMP", testMP);
 	ret |= !Env::RunTest("testOder", testOrder);
+	ret |= !Env::RunTest("testBFunc", testBFunc);
 	ret |= !Env::RunTest("testBent", testBent);
 	ret |= !Env::RunTest("testBent2", testBent2);
 	ret |= !Env::RunTest("testGOST", testGOST);
@@ -425,5 +555,6 @@ int main()
 	ret |= !Env::RunTest("testBash", testBash);
 	ret |= !Env::RunTest("testBash2", testBash2);
 	ret |= !Env::RunTest("testCommute", testCommute);
+	ret |= !Env::RunTest("testEM", testEM);
 	return ret;
 }

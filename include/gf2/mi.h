@@ -4,7 +4,7 @@
 \brief Ideals in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.04.22
+\version 2020.07.14
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -219,7 +219,8 @@ public:
 	template<size_t _m, class _O1>
 	bool IsContain(const MP<_m, _O1>& polyRight) const
 	{	
-		return Find(polyRight, const_iterator());
+		const_iterator pos;
+		return Find(polyRight, pos);
 	}
 
 	//! Добавление многочлена
@@ -242,8 +243,7 @@ public:
 	{	
 		// другая система?
 		assert(static_cast<const void*>(this) != static_cast<const void*>(&iRight));
-		typename MI<_m, _O1>::const_iterator iter;
-		for (iter = iRight.begin(); iter != iRight.end(); ++iter)
+		for (auto iter = iRight.begin(); iter != iRight.end(); ++iter)
 			Insert(*iter);
 	}
 
@@ -424,7 +424,7 @@ public:
 		MM<_n> vars;
 		for (const_iterator iter = begin(); iter != end(); ++iter)
 		{
-			typename MP<_n>::const_iterator iterPoly = iter->begin();
+			auto iterPoly = iter->begin();
 			for (; iterPoly != iter->end(); ++iterPoly)
 				vars *= *iterPoly;
 		}
@@ -467,17 +467,18 @@ public:
 	size_t GatherMinLMons(MP<_n, _O>& polyMons) const
 	{
 		GatherLMons(polyMons);
-		typename MP<_n, _O>::iterator iter;
 		// от старших мономов к младшим
-		for (iter = polyMons.begin(); iter != polyMons.end();)
+		for (auto iter = polyMons.begin(); iter != polyMons.end();)
 		{
 			// от младших мономов к старшим
 			typename MP<_n, _O>::iterator iter1 = --polyMons.end();
 			for (; iter1 != iter; --iter1)
 				if (*iter1 | *iter)
 					break;
-			if (iter1 == iter) ++iter;
-			else iter = polyMons.erase(iter);
+			if (iter1 == iter) 
+				++iter;
+			else 
+				iter = polyMons.erase(iter);
 		}
 		return polyMons.Size();
 	}
@@ -558,8 +559,7 @@ public:
 	{	
 		if (Size() != iRight.Size()) 
 			return false;
-		typename MI<_m, _O1>::const_iterator iter;
-		for (iter = iRight.begin(); iter != iRight.end(); ++iter)
+		for (auto iter = iRight.begin(); iter != iRight.end(); ++iter)
 			if (!IsContain(*iter)) 
 				return false;
 		return true;
@@ -572,8 +572,7 @@ public:
 	{	
 		if (Size() != iRight.Size()) 
 			return true;
-		typename MI<_m, _O1>::const_iterator iter;
-		for (iter = iRight.begin(); iter != iRight.end(); ++iter)
+		for (auto iter = iRight.begin(); iter != iRight.end(); ++iter)
 			if (!IsContain(*iter)) 
 				return true;
 		return false;
@@ -596,7 +595,7 @@ public:
 		bool changed = false;
 		MP<_n, _O> poly(_order);
 		// двигаемся от старших мономов polyRight к младшим
-		typename MP<_n, _O>::iterator iterMon = polyRight.begin();
+		auto iterMon = polyRight.begin();
 		while (iterMon != polyRight.end())
 		{
 			// двигаемся от младших многочленов системы к старшим
@@ -770,7 +769,7 @@ public:
 	{	
 		bool changed = false;
 		MP<_n, _O> poly(_order);
-		typename MP<_n, _O>::iterator iterMon = pos->begin();
+		auto iterMon = pos->begin();
 		while (iterMon != pos->end())
 		{
 			iterator iterPoly = begin();
@@ -1118,7 +1117,7 @@ public:
 			tosee.pop_back();
 			// один из старших мономов делит mon?
 			typename MP<_n, _O1>::reverse_iterator iter;
-			for ( iter = mons.rbegin(); iter != mons.rend(); iter++)
+			for (iter = mons.rbegin(); iter != mons.rend(); iter++)
 				if (*iter | mon) break;
 			// элемент базиса и еще не добавлен в базис?
 			if (iter == mons.rend() && !polyQB.IsContain(mon))
@@ -1174,7 +1173,7 @@ public:
 		while (pairs.size())
 		{
 			// обработаем первую пару
-			typename std::list<Pair>::iterator posPair = pairs.begin();
+			auto posPair = pairs.begin();
 			Pair& pair = *posPair;
 			// нет уравнений?
 			if (pair.second == 0)
@@ -1270,7 +1269,7 @@ std::basic_ostream<_Char, _Traits>&
 operator<<(std::basic_ostream<_Char, _Traits>& os, const MI<_n, _O>& iRight)
 {
 	bool waitfirst = true;
-	typename MI<_n, _O>::const_iterator iter = iRight.begin();
+	auto iter = iRight.begin();
 	for (; iter != iRight.end(); ++iter)
 	{
 		os << (waitfirst ? "{\n  " : ",\n  ");
