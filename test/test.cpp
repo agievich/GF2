@@ -4,7 +4,7 @@
 \brief Tests
 \project GF2 [algebra over GF(2)]
 \created 2016.07.06
-\version 2020.07.14
+\version 2020.07.15
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -438,16 +438,16 @@ bool testCommute()
 *******************************************************************************
 Тест testEM
 
-Алгебраическая атака на 2-тактовую криптосистему Even-Mansour:
+Алгебраическая атака на 2-тактовую криптосистему EM (Even-Mansour):
 	Ci = F(F(Pi ^ K1) ^ K2) ^ K3, i = 1, 2, ..., np.
 Открытый текст Pi, шифртекст Сi и тактовые ключи K1, K2, K3 являются 3-битовыми
 словами. 
 
 Тактовая функция F является композицией S-блока Bash (см. testBash()) 
 и циклического сдвига:
-	F(x0, x1, x2) = (x0 ^ x1 | ~x2, x1 ^ x0 | x2, x2 ^ x0 & x1) >>> 1 =
-		(x2 + x0 x1, x0 + x1 x2 + x2 + 1, x1 + x0 x2 + x0 + x2).
-Таблица x0 x1 x2 -> F(x0 x1 x2):
+	F(a, b, c) = (a ^ b | ~c, b ^ a | c, c ^ a & b) >>> 1 =
+		(c + a b, a + b c + c + 1, b + a c + a + c).
+Таблица abc -> F(abc):
 	000 -> 010
 	100 -> 001
 	010 -> 011
@@ -477,7 +477,7 @@ bool testEM()
 {
 	const size_t np = 4;
 	const size_t n = 9 + 9 * np;
-	typedef MOGrevlex<n> O;
+	typedef MOGrlex<n> O;
 	typedef MM<n> X;
 	MI<n, O> s, t;
 	Buchb<n, O> bb;
