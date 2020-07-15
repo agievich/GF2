@@ -4,7 +4,7 @@
 \brief Buchberger's algorithm
 \project GF2 [algebra over GF(2)]
 \created 2006.01.01
-\version 2020.05.07
+\version 2020.07.15
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -313,7 +313,7 @@ protected:
 		// критерий A:
 		// если LM(poly) | [LM(f_i), LM(f_j)] и (f_i, f_j) не является r-парой,
 		// то (f_i, f_j) можно исключить
-		typename _CPs::iterator posPair = _pairs.begin();
+		auto posPair = _pairs.begin();
 		for (; posPair != _pairs.end();)
 			if ((posPoly->LM() | posPair->lcm) && !posPair->IsRPair())
 				posPair = _pairs.erase(posPair), _stat.a_criterion++;

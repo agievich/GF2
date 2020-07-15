@@ -4,7 +4,7 @@
 \brief Multivariate polynomials in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.05.07
+\version 2020.07.15
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -325,7 +325,7 @@ public:
 	void UnionNC(const MP<_n, _O1>& polyRight)
 	{
 		iterator iter = begin();
-		typename MP<_n, _O1>::const_iterator iterRight = polyRight.begin();
+		auto iterRight = polyRight.begin();
 		while (iterRight != polyRight.end())
 		{
 			// сравнить текущие элементы списков
@@ -403,7 +403,7 @@ public:
 	void DiffNC(const MP<_n, _O1>& polyRight)
 	{
 		iterator iter = begin();
-		typename MP<_n, _O1>::const_iterator iterRight = polyRight.begin();
+		auto iterRight = polyRight.begin();
 		while (iterRight != polyRight.end())
 		{
 			// сравнить текущие элементы списков
@@ -522,7 +522,7 @@ public:
 	void SymDiffNC(const MP<_n, _O1>& polyRight)
 	{
 		iterator iter = begin();
-		typename MP<_n, _O1>::const_iterator iterRight = polyRight.begin();
+		auto iterRight = polyRight.begin();
 		while (iterRight != polyRight.end())
 		{
 			// сравнить текущие элементы списков
@@ -775,8 +775,7 @@ public:
 	template<size_t _m, class _O1>
 	MP& operator=(const MP<_m, _O1>& polyRight)
 	{	
-		typename MP<_m, _O1>::const_iterator iter;
-		for (iter = polyRight.begin(); iter != polyRight.end(); ++iter)
+		for (auto iter = polyRight.begin(); iter != polyRight.end(); ++iter)
 			SymDiff(MM<_n>(*iter));
 		return *this;
 	}
@@ -847,14 +846,14 @@ public:
 
 	-#	Класс Geobucket<_d> поддерживает специальную структуру данных:
 		"последовательность корзин с геометрически растущими размерами" 
-		(\b geobucket) [Yan T. The Geobucket Data Structure for Polynomials, 
+		(geobucket) [Yan T. The Geobucket Data Structure for Polynomials, 
 		J. of Symb. Comp., v.25 (1998)]. Корзинами являются многочлены как 
 		упорядоченные списки мономов.
 	-#	Использование geobucket позволяет повысить скорость следующего 
 		алгоритмического примитива:
 		\code
 		for(...) 
-			выделить старший моном многочлена p,
+			выделить старший моном многочлена p;
 			p += некоторый многочлен;
 		\endcode
 	-#	Скорость роста размеров корзин определяет параметр шаблона _d.
@@ -866,7 +865,7 @@ public:
 		выбор d = 4.31. В реализации поддержаны только целые _d.
 	-#	Мономиальный порядок передается в конструкторе через ссылку на объект
 		поддержки порядка либо через ссылку на многочлен с определенным 
-		порядком. Все добавляемые в \b geobucket многочлены должны быть 
+		порядком. Все добавляемые в geobucket многочлены должны быть 
 		согласованы с первоначальным порядком конструктора.
 	-#	Для повышения эффективности мономы добавляемого многочлена poly
 		не копируются, а перемещаются в корзины. Многочлен poly "отдает"
@@ -937,7 +936,7 @@ public:
 
 		//! Исключающее добавление многочлена
 		/*! Добавляются мономы согласованного многочлена polyRight, 
-			которые отсутствуют в \b geobucket, и исключаются присутствующие 
+			которые отсутствуют в geobucket, и исключаются присутствующие 
 			мономы. */
 		void SymDiffSplice(MP& polyRight)
 		{
@@ -963,8 +962,8 @@ public:
 		//! Старший моном
 		/*! Определяется и удаляется старший моном многочлена, 
 			размещенного в корзинах.
-			\return \b false, если многочлен нулевой, и \b true, 
-			если многочлен ненулевой и старший моном занесен в lm. */
+			\return false, если многочлен нулевой, и true, если многочлен
+			ненулевой и старший моном занесен в lm. */
 		bool PopLM(MM<_n>& lm)
 		{
 			int cmp;
@@ -973,7 +972,8 @@ public:
 			do
 			{
 				// пропускаем пустые корзины
-				if (_buckets[--j].IsEmpty()) continue;
+				if (_buckets[--j].IsEmpty())
+					continue;
 				// новый старший моном?
 				if (i == SIZE_MAX || (cmp = o.Compare(_buckets[j].LM(), lm)) > 0)
 					lm = _buckets[i = j].LM();
@@ -1006,37 +1006,40 @@ public:
 // мультипликативные примитивы
 public:
 	//! Умножение на многочлен
-	/*! Выполняется стандартное умножение на многочлен polyRight. */
+	/*! Выполняется умножение на многочлен polyRight. */
 	template<class _O1>
 	void MultClassic(const MP<_n, _O1>& polyRight)
 	{
 		MP polySave(*this), poly(_order);
-		typename MP<_n, _O1>::const_iterator iter;
-		for (clear(), iter = polyRight.end(); iter != polyRight.begin();)
-			SymDiffSplice((poly = polySave) *= *--iter);
+		clear();
+		for (auto iter = polyRight.rbegin(); iter != polyRight.rend(); ++iter)
+			SymDiffSplice((poly = polySave) *= *iter);
 	}
 
-	//! Умножение на многочлен
-	/*! Выполняется умножение на многочлен polyRight с использованием
-		\b geobucket. */
 	template<class _O1>
-	void Mult(const MP<_n, _O1>& polyRight)
+	void MultGB(const MP<_n, _O1>& polyRight)
 	{
 		// поскольку операция выбора старшего монома не задействована,
 		// коэффициент роста geobucket выберем равным 3
 		Geobucket<3> gb(_order);
 		MP poly;
 		// цикл по мономам polyRight
-		typename MP<_n, _O1>::const_iterator iterRight;
-		for (iterRight = polyRight.end(); iterRight != polyRight.begin();)
-			gb.SymDiffSplice((poly = *this) *= *--iterRight);
+		typename MP<_n, _O1>::const_iterator iter;
+		for (auto iter = polyRight.rbegin(); iter != polyRight.rend(); ++iter)
+			gb.SymDiffSplice((poly = *this) *= *iter);
 		// сборка
 		gb.Mount(*this);
 	}
 
+	template<class _O1>
+	inline void Mult(const MP<_n, _O1>& polyRight)
+	{
+		MultClassic(polyRight);
+	}
+
 	//! Остаток от деления на многочлен
 	/*! Определяется остаток от деления на ненулевой многочлен polyRight.
-		\return \b true, если остаток отличается от делимого. */
+		\return Признак того, что остаток отличается от делимого. */
 	template<class _O1>
 	bool ModClassic(const MP<_n, _O1>& polyRight)
 	{	
@@ -1055,12 +1058,8 @@ public:
 		return changed;
 	}
 
-	//! Остаток от деления на многочлен
-	/*! Определяется остаток от деления на ненулевой многочлен polyRight. 
-		Используется структура geobucket. 
-		\return \b true, если остаток отличается от делимого. */
 	template<class _O1>
-	bool Mod(const MP<_n, _O1>& polyRight)
+	bool ModGB(const MP<_n, _O1>& polyRight)
 	{	
 		// поскольку операция выбора старшего монома задействована,
 		// коэффициент роста geobucket выберем равным 4
@@ -1087,11 +1086,18 @@ public:
 		return changed;
 	}
 
+	template<class _O1>
+	inline bool Mod(const MP<_n, _O1>& polyRight)
+	{
+		return ModGB(polyRight);
+	}
+
 	//! Частное от деления на многочлен
 	/*! Определяются частное от деления на ненулевой многочлен polyRight.*/
 	template<class _O1>
 	void DivClassic(const MP<_n, _O1>& polyRight)
 	{	
+		assert(polyRight != 0);
 		// готовим временный многочлен и многочлен для остатка
 		MP poly(_order), polyMod(_order);
 		polyMod.Swap(*this);
@@ -1113,12 +1119,10 @@ public:
 		while (iter != polyMod.end());
 	}
 
-	//! Частное от деления на многочлен
-	/*! Находится частное от деления на ненулевой многочлен polyRight.
-		Используется структура \b geobucket */
 	template<class _O1>
-	void Div(const MP<_n, _O1>& polyRight)
-	{	
+	void DivGB(const MP<_n, _O1>& polyRight)
+	{
+		assert(polyRight != 0);
 		// поскольку операция выбора старшего монома задействована,
 		// коэффициент роста geobucket выберем равным 4
 		Geobucket<4> gb(*this);
@@ -1138,6 +1142,12 @@ public:
 				// заносим lm в частное
 				push_back(lm);
 			}
+	}
+
+	template<class _O1>
+	inline void Div(const MP<_n, _O1>& polyRight)
+	{
+		DivGB(polyRight);
 	}
 
 	//! Признак делимости
@@ -1169,11 +1179,8 @@ public:
 		Swap(polyResult);
 	}
 
-	//! Замена переменной
-	/*! Выполняется замена вхождений переменной с номером pos 
-		на многочлен polyReplace. Используется структура \b geobucket. */
 	template<class _O1>
-	void Replace(size_t pos, const MP<_n, _O1>& polyReplace)
+	void ReplaceGB(size_t pos, const MP<_n, _O1>& polyReplace)
 	{	
 		MM<_n> m;
 		MP poly(_order);
@@ -1189,12 +1196,19 @@ public:
 		gb.Mount(*this);
 	}
 
+	template<class _O1>
+	inline void Replace(size_t pos, const MP<_n, _O1>& polyReplace)
+	{
+		ReplaceGB(pos, polyReplace);
+	}
+
 	//! Замена переменной
 	/*! Выполняется замена вхождений переменной с номером pos 
 		на переменную с номером posNew. */
 	void Replace(size_t pos, size_t posNew)
 	{	
-		if (pos == posNew) return;
+		if (pos == posNew)
+			return;
 		for (iterator iter = begin(); iter != end(); ++iter)
 			// переменная pos входит в моном *iter?
 			if (iter->Test(pos))
@@ -1219,8 +1233,10 @@ public:
 		if (val == 0)
 		{
 			for (iterator iter = begin(); iter != end();)
-				if (iter->Test(pos)) iter = erase(iter);
-				else ++iter;
+				if (iter->Test(pos))
+					iter = erase(iter);
+				else
+					++iter;
 		}
 		else
 		{
@@ -2111,8 +2127,7 @@ std::basic_ostream<_Char, _Traits>&
 operator<<(std::basic_ostream<_Char, _Traits>& os, const MP<_n, _O>& polyRight)
 {
 	bool waitfirst = true;
-	typename MP<_n, _O>::const_iterator iter = polyRight.begin();
-	for (; iter != polyRight.end(); ++iter)
+	for (auto iter = polyRight.begin(); iter != polyRight.end(); ++iter)
 	{
 		if (!waitfirst) os << " + ";
 		os << *iter;

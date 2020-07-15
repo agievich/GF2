@@ -4,7 +4,7 @@
 \brief Ideals in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.07.14
+\version 2020.07.15
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -264,8 +264,7 @@ public:
 	{	
 		// другая система?
 		assert(static_cast<void*>(this) != static_cast<void*>(&iRight));
-		typename MI<_m, _O1>::const_iterator iter;
-		for (iter = iRight.begin(); iter != iRight.end(); ++iter)
+		for (auto iter = iRight.begin(); iter != iRight.end(); ++iter)
 			Remove(*iter);
 	}
 
@@ -471,7 +470,7 @@ public:
 		for (auto iter = polyMons.begin(); iter != polyMons.end();)
 		{
 			// от младших мономов к старшим
-			typename MP<_n, _O>::iterator iter1 = --polyMons.end();
+			auto iter1 = --polyMons.end();
 			for (; iter1 != iter; --iter1)
 				if (*iter1 | *iter)
 					break;
@@ -1116,16 +1115,17 @@ public:
 			MM<_n> mon = *(--tosee.end());
 			tosee.pop_back();
 			// один из старших мономов делит mon?
-			typename MP<_n, _O1>::reverse_iterator iter;
-			for (iter = mons.rbegin(); iter != mons.rend(); iter++)
-				if (*iter | mon) break;
+			auto iter = mons.rbegin();
+			for (; iter != mons.rend(); ++iter)
+				if (*iter | mon)
+					break;
 			// элемент базиса и еще не добавлен в базис?
 			if (iter == mons.rend() && !polyQB.IsContain(mon))
 			{
 				// добавить в базис
 				polyQB.Union(mon);
 				// умножаем его на всевозможные существенные переменные
-				for (size_t prev = SIZE_MAX, cur = 0; cur < _n; cur++)
+				for (size_t prev = SIZE_MAX, cur = 0; cur < _n; ++cur)
 					if (vars.Test(cur) && !mon.Test(cur))
 					{
 						mon.Set(cur, 1);
@@ -1186,8 +1186,8 @@ public:
 			{
 				// ищем тривиальное уравнение x_i = 0
 				// если тривиальных нет, то выбираем первое уравнение 
-				typename MP<_n, _O>::iterator iter;
-				for (iter = pair.second.end(); iter != pair.second.begin();)
+				auto iter = pair.second.end();
+				while (iter != pair.second.begin())
 					if ((--iter)->Weight() == 1) 
 						break;
 				// ищем переменную, которая будет исключаться

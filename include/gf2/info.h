@@ -4,7 +4,7 @@
 \brief Common info
 \project GF2 [algebra over GF(2)]
 \created 2016.05.01
-\version 2016.07.07
+\version 2020.07.15
 \license This program is released under the MIT License. See Copyright Notices 
 at the end of this file.
 *******************************************************************************
@@ -24,19 +24,19 @@ at the end of this file.
 #define GF2_NAME				"GF2"
 #define GF2_VERSION_MAJOR		"0"
 #define GF2_VERSION_MINOR 		"9"
-#define GF2_VERSION_PATCH		"2"
+#define GF2_VERSION_PATCH		"3"
 
 #define GF2_VERSION\
 		GF2_VERSION_MAJOR "." GF2_VERSION_MINOR "." GF2_VERSION_PATCH
 
 #define GF2_VERSION_NUM\
-		0, 9, 2
+		0, 9, 3
 
 /*!
 *******************************************************************************
 \mainpage Библиотека GF2
 
-\version 0.9.2
+\version 0.9.3
 
 \section toc Содержание
 
