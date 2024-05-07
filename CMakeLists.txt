@@ -25,22 +25,24 @@ else()
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Compiler: ${CMAKE_C_COMPILER_ID}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
 
-string(COMPARE EQUAL "GNU" CMAKE_COMPILER_IS_GNUCC "${CMAKE_C_COMPILER_ID}")
-string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
-string(COMPARE EQUAL "MSVC" CMAKE_COMPILER_IS_MSVC "${CMAKE_C_COMPILER_ID}")
+string(COMPARE EQUAL "GNU" CMAKE_COMPILER_IS_GNUCC "${CMAKE_CXX_COMPILER_ID}")
+string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_CXX_COMPILER_ID}")
+string(COMPARE EQUAL "MSVC" CMAKE_COMPILER_IS_MSVC "${CMAKE_CXX_COMPILER_ID}")
 
 # Lists of warnings and command-line flags:
 # * https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 # * https://clang.llvm.org/docs/ClangCommandLineReference.html
 # * https://clang.llvm.org/docs/DiagnosticsReference.html
 
-set(CMAKE_C_WARNINGS "-Wall -Wextra")
+set(CMAKE_CXX_WARNINGS "-Wall -Wextra -Wno-parentheses \
+  -Wno-bitwise-instead-of-logical -Wno-c++17-extensions \
+  -Wno-deprecated-copy-with-user-provided-copy")
 
 if(CMAKE_COMPILER_IS_GNUCC)
-  set(CMAKE_C_WARNINGS "${CMAKE_C_WARNINGS} -Wlogical-op")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_WARNINGS} -std=c++17")
+  set(CMAKE_CXX_WARNINGS "${CMAKE_CXX_WARNINGS} -Wlogical-op")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_WARNINGS} -std=c++17")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
   set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_COVERAGE} -O0 -g3 \
@@ -49,13 +51,13 @@ if(CMAKE_COMPILER_IS_GNUCC)
     -fno-common -O3")
   set(CMAKE_CXX_FLAGS_ASANDBG "${CMAKE_CXX_FLAGS_ASANDBG} -fsanitize=address \
     -fno-common -O1 -g3 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
-  set(CMAKE_C_FLAGS_CHECK "${CMAKE_C_FLAGS_CHECK} -Werror -O1 \
+  set(CMAKE_CXX_FLAGS_CHECK "${CMAKE_CXX_FLAGS_CHECK} -Werror -O1 \
     -Wcast-qual -fanalyzer")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if(CMAKE_COMPILER_IS_CLANG)
-  set(CMAKE_C_WARNINGS "${CMAKE_C_WARNINGS}")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_WARNINGS} -std=c++17")
+  set(CMAKE_CXX_WARNINGS "${CMAKE_CXX_WARNINGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_WARNINGS} -std=c++17")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
   set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_COVERAGE} -O0 -g3 \
@@ -74,7 +76,7 @@ endif(CMAKE_COMPILER_IS_CLANG)
 
 if(CMAKE_COMPILER_IS_MSVC)
   # disable security warnings for sprintf()
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D _CRT_SECURE_NO_WARNINGS")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D _CRT_SECURE_NO_WARNINGS")
 endif(CMAKE_COMPILER_IS_MSVC)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")

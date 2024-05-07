@@ -4,7 +4,7 @@
 \brief Multivariate polynomials in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.07.15
+\version 2024.05.08
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -1506,7 +1506,7 @@ public:
 	/*! Проверяется, что данный многочлен не больше многочлена-монома mRight.*/
 	bool operator<=(const MM<_n>& mRight) const
 	{	
-		return IsEmpty() || begin()->IsAllZero();
+		return IsEmpty() || _order.Compare(*begin(), mRight) <= 0;
 	}
 
 	//! Не больше константы?

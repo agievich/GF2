@@ -4,7 +4,7 @@
 \brief Buchberger's algorithm
 \project GF2 [algebra over GF(2)]
 \created 2006.01.01
-\version 2020.07.15
+\version 2024.05.08
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -436,7 +436,7 @@ protected:
 	//! Предварительная проверка дополнительных условий
 	/*! Выполняется проверка дополнительных условий для S-многочленов poly 
 		до их приведения по модулю текущего базиса. */
-	virtual bool ValidatePre(const _P& poly)
+	virtual bool ValidatePre(const _P&)
 	{
 		return true;
 	}
@@ -444,7 +444,7 @@ protected:
 	//! Проверка дополнительных условий
 	/*! Выполняется проверка дополнительных условий для многочленов poly, 
 		после их приведения по модулю текущего базиса. */
-	virtual bool Validate(const _P& poly)
+	virtual bool Validate(const _P&)
 	{
 		return true;
 	}
