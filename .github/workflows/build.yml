@@ -16,15 +16,15 @@ jobs:
       matrix:
         include:
         - BUILD_TYPE: Release
-          CXX: g++
+          CXX: g++-12
         - BUILD_TYPE: Check
-          CXX: g++
+          CXX: g++-10
         - BUILD_TYPE: ASan
-          CXX: g++
+          CXX: g++-13
         - BUILD_TYPE: MemSan
-          CXX: clang++
+          CXX: clang
         - BUILD_TYPE: Debug
-          CXX: clang++
+          CXX: clang
     steps:
     - name: Get source
       uses: actions/checkout@v3
