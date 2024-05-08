@@ -16,21 +16,21 @@ jobs:
       matrix:
         include:
         - BUILD_TYPE: Release
-          CC: gcc
+          CXX: g++
         - BUILD_TYPE: Check
-          CC: gcc
+          CXX: g++
         - BUILD_TYPE: ASan
-          CC: gcc
+          CXX: g++
         - BUILD_TYPE: MemSan
-          CC: clang
+          CXX: clang++
         - BUILD_TYPE: Debug
-          CC: clang
+          CXX: clang++
     steps:
     - name: Get source
       uses: actions/checkout@v3
     - name: Configure CMake
       run: > 
-        CC=${{matrix.CC}} cmake 
+        CXX=${{matrix.CXX}} cmake 
         -B ${{github.workspace}}/build 
         -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}} 
     - name: Build
