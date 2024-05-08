@@ -27,9 +27,9 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
 
-string(COMPARE EQUAL "GNU" CMAKE_COMPILER_IS_GNUCC "${CMAKE_CXX_COMPILER_ID}")
-string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_CXX_COMPILER_ID}")
-string(COMPARE EQUAL "MSVC" CMAKE_COMPILER_IS_MSVC "${CMAKE_CXX_COMPILER_ID}")
+string(COMPARE EQUAL "GNU" "${CMAKE_CXX_COMPILER_ID}" CMAKE_COMPILER_IS_GNUCC)
+string(REGEX MATCH "Clang" CMAKE_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
+string(COMPARE EQUAL "MSVC" "${CMAKE_CXX_COMPILER_ID}" CMAKE_COMPILER_IS_MSVC)
 
 # Lists of warnings and command-line flags:
 # * https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
@@ -38,10 +38,9 @@ string(COMPARE EQUAL "MSVC" CMAKE_COMPILER_IS_MSVC "${CMAKE_CXX_COMPILER_ID}")
 
 set(CMAKE_CXX_WARNINGS "-Wall -Wextra -Wno-parentheses \
   -Wno-bitwise-instead-of-logical -Wno-c++17-extensions \
-  -Wno-deprecated-copy-with-user-provided-copy")
+  -Wno-deprecated-copy -Wno-deprecated-copy-with-user-provided-copy")
 
 if(CMAKE_COMPILER_IS_GNUCC)
-  set(CMAKE_CXX_WARNINGS "${CMAKE_CXX_WARNINGS} -Wlogical-op")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_WARNINGS} -std=c++17")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
@@ -56,7 +55,6 @@ if(CMAKE_COMPILER_IS_GNUCC)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if(CMAKE_COMPILER_IS_CLANG)
-  set(CMAKE_CXX_WARNINGS "${CMAKE_CXX_WARNINGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_WARNINGS} -std=c++17")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
@@ -81,21 +79,13 @@ endif(CMAKE_COMPILER_IS_MSVC)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
   if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
-    set(CMAKE_SHARED_LINKER_FLAGS 
-      "${CMAKE_SHARED_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} \
+      -fprofile-arcs -ftest-coverage")
   endif()
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
-  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
-    set(CMAKE_SHARED_LINKER_FLAGS 
-      "${CMAKE_SHARED_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
-  endif()
-endif()
-
-# We have to use an additional linker option to support clock_gettime()
-IF(CMAKE_SYSTEM_NAME STREQUAL Linux)
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lrt -lstdc++")
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
 endif()
 
 include_directories(include/)
