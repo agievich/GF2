@@ -35,7 +35,7 @@ in GF2/info.h.
 namespace GF2 {
 
 template<size_t _n, class _O = MOLex<_n>> class MP;
-template<size_t _n, class _O = MOLex<_n>> class Ideal;
+template<size_t _n, class _O = MOLex<_n>> class MI;
 
 } // namespace GF2
 
@@ -2002,7 +2002,7 @@ operator%(MP<_n, _O1>&& polyLeft, MP<_n, _O2>&& polyRight)
 /*! Определяется остаток от деления многочлена polyLeft на согласованную 
 	систему iRight. */
 template<size_t _n, class _O> inline auto 
-operator%(const MP<_n, _O>& polyLeft, const Ideal<_n, _O>& iRight)
+operator%(const MP<_n, _O>& polyLeft, const MI<_n, _O>& iRight)
 {
 	MP<_n, _O> poly(polyLeft);
 	poly %= iRight;
@@ -2010,7 +2010,7 @@ operator%(const MP<_n, _O>& polyLeft, const Ideal<_n, _O>& iRight)
 }
 
 template<size_t _n, class _O> inline auto
-operator%(MP<_n, _O>&& polyLeft, const Ideal<_n, _O>& iRight)
+operator%(MP<_n, _O>&& polyLeft, const MI<_n, _O>& iRight)
 {
 	MP<_n, _O> poly(std::move(polyLeft));
 	poly %= iRight;
