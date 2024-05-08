@@ -1,7 +1,7 @@
 GF2: A C++ library for algebra over GF(2)
 =========================================
 
-[![Build Status](https://travis-ci.com/agievich/GF2.svg?branch=master)](https://travis-ci.com/agievich/GF2)
+[![Github Actions Build Status](https://github.com/agievich/gf2/actions/workflows/build.yml/badge.svg)](https://github.com/agievich/gf2/actions/workflows/build.yml)
 [![Coverity Static Analysis](https://scan.coverity.com/projects/9408/badge.svg)](https://scan.coverity.com/projects/agievich-gf2)
 [![Coverage Analysis](https://codecov.io/gh/agievich/GF2/coverage.svg?branch=master)](https://codecov.io/gh/agievich/GF2?branch=master)
 
