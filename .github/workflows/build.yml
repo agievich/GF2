@@ -16,11 +16,11 @@ jobs:
       matrix:
         include:
         - BUILD_TYPE: Release
-          CXX: g++-13
+          CXX: g++
         - BUILD_TYPE: Check
           CXX: clang
         - BUILD_TYPE: ASan
-          CXX: g++-9
+          CXX: clang
         - BUILD_TYPE: MemSan
           CXX: clang
         - BUILD_TYPE: Debug
