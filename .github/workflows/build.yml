@@ -20,7 +20,7 @@ jobs:
         - BUILD_TYPE: Check
           CXX: clang
         - BUILD_TYPE: ASan
-          CXX: g++-7
+          CXX: g++-9
         - BUILD_TYPE: MemSan
           CXX: clang
         - BUILD_TYPE: Debug
