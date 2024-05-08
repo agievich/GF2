@@ -195,17 +195,15 @@ public:
 	//! Конструктор по двум итераторам и атрибутам
 	/*! Создается пара многочленов (*i1, *i2). */
 	CritPair(iterator i1, iterator i2) :
-		var1(SIZE_MAX), iter1(i1), lm1(iter1->LM()),
-		iter2(i2), lm2(i2->LM()),
-		lcm(LCM(lm1, lm2))
+		var1(SIZE_MAX), iter1(i1), lm1(i1->LM()), iter2(i2), 
+		lm2(i2->LM()), lcm(LCM(lm1, lm2))
 	{
 	}
 
 	//! Конструктор по уравнению поля и итератору с атрибутом
 	/*! Создается пара многочленов (x_i^2-x_i, *i2). */
 	CritPair(size_t i, iterator i2) :
-		var1(i), iter1(), lm1(var1),
-		iter2(i2), lm2(iter2->LM()),
+		var1(i), iter1(), lm1(i), iter2(i2), lm2(i2->LM()),
 		lcm(LCM(lm1, lm2))
 	{
 	}
