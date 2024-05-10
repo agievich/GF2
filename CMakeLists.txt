@@ -59,7 +59,7 @@ if(CMAKE_COMPILER_IS_CLANG)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
   set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_COVERAGE} -O0 -g3 \
-    --coverage")
+    -fprofile-instr-generate -fcoverage-mapping")
   set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_ASAN} -fno-common  -O3 \
     -fsanitize=address -fsanitize=undefined -fno-sanitize-recover \
     -fsanitize-undefined-trap-on-error")
@@ -78,13 +78,6 @@ if(CMAKE_COMPILER_IS_MSVC)
   # disable security warnings for sprintf()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D _CRT_SECURE_NO_WARNINGS")
 endif(CMAKE_COMPILER_IS_MSVC)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
-  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} \
-      -fprofile-arcs -ftest-coverage")
-  endif()
-endif()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")

@@ -13,24 +13,24 @@ jobs:
     name: Measure code coverage
     runs-on: ubuntu-latest
     steps:
-    - name: Install lcov
-      run: sudo apt install -y lcov
+    - name: Install llvm
+      run: sudo apt install -y llvm
     - name: Get source
       uses: actions/checkout@v3
     - name: Configure CMake
       run: >
-        CXX=g++-13 cmake -B ${{github.workspace}}/build 
-        -DCMAKE_BUILD_TYPE=Coverage
+        CXX=clang cmake -B ${{github.workspace}}/build 
+          -DCMAKE_BUILD_TYPE=Coverage
     - name: Build
       run: cmake --build ${{github.workspace}}/build
     - name: Run tests
       working-directory: ${{github.workspace}}/build
       run: |
-        lcov -c -i -d .. -o coverage_base.info
+        export LLVM_PROFILE_FILE=./gf2.profraw
         test/testgf2
+        llvm-profdata merge -sparse gf2.profraw -o gf2.profdata
+        llvm-cov show ./test/testgf2 -instr-profile=gf2.profdata > coverage.txt
     - name: Upload coverage reports to Codecov
       working-directory: ${{github.workspace}}/build
       run: |
-        lcov -c -d .. -o coverage_test.info
-        lcov -a coverage_base.info -a coverage_test.info -o coverage.info
-        bash <(curl -s https://codecov.io/bash) -f coverage.info
+        bash <(curl -s https://codecov.io/bash)
