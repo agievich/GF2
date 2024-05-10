@@ -60,7 +60,5 @@
 # Specific files
 .aux
 apps
-backup
 build
-support
 clear.cmd
