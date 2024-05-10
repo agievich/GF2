@@ -27,7 +27,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: |
         export LLVM_PROFILE_FILE=./gf2.profraw
-	    test/testgf2
+        test/testgf2
         llvm-profdata merge -sparse gf2.profraw -o gf2.profdata
         llvm-cov show ./test/testgf2 -instr-profile=gf2.profdata > coverage.txt
     - name: Upload coverage to Codecov
