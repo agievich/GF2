@@ -4,7 +4,7 @@
 \brief Ideals in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.07.15
+\version 2024.05.10
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -1147,10 +1147,10 @@ public:
 	/*! Определяется размерность базиса факторкольца R/I как 
 		векторного пространства над двоичным полем.
 		\remark Расчеты сводятся к нахождению числа решений системы уравнений
-		m = 0, m из mons, относительно неизвестных vars. 
-		Здесь mons -- старшие мономы многочленов базиса Гребнера,
-		а vars -- существенные переменные. Такие расчеты намного проще, 
-		чем прямое нахождение базиса (см. метод QuotientBasis()).
+		{m = 0: m in mons} относительно неизвестных vars. Здесь mons -- старшие 
+		мономы многочленов базиса Гребнера, vars -- существенные переменные. 
+		Такие расчеты намного проще, чем прямое нахождение базиса 
+		(см. метод QuotientBasis()).
 		\pre Система должна быть базисом Гребнера. */
 	ZZ<_n> QuotientBasisDim() const
 	{
@@ -1282,38 +1282,33 @@ operator<<(std::basic_ostream<_Char, _Traits>& os, const MI<_n, _O>& iRight)
 //! Ввод из потока
 /*! Система многочленов iRight читается из потока is. 
 	\par Допустимый ввод представляет собой набор из лексем-многочленов.
-	Лексемы должны быть разделены знаком ",". Набор должен быть 
-	выделен фигурными скобками "{" и "}". Запятая перед закрывающей 
-	скобкой не допускается. Между лексемами и знаками из набора ",{}" 
-	допускается наличие произвольного числа пробелов, 
-	знаков табуляции и других пустых разделителей из набора " \n\r\t\v". 
-	Допускается повтор лексем-многочленов.
+	Лексемы должны быть разделены знаком ",". Набор должен быть выделен 
+	фигурными скобками "{" и "}". Запятая перед закрывающей скобкой не 
+	допускается. Между лексемами и знаками из набора ",{}" допускается наличие 
+	произвольного числа пробелов, знаков табуляции и других пустых разделителей 
+	из набора " \n\r\t\v". Допускается повтор лексем-многочленов.
 	\par Чтение системы прекращается, если 
 	1) прочитана закрывающая скобка,
 	2) достигнут конец файла или встретилась неподходящая лексема.
-	Во втором случае в состоянии потока будет установлен флаг 
-	ios_base::failbit, без снятия которого дальнейшее чтение 
-	из потока невозможно. Если ошибка чтения была связана с достижением
-	конца потока, то дополнительно будет установлен флаг 
-	ios_base::eofbit.
-	\par По окончании ввода система iRight будет содержать 
-	упрощенный (без повторов) набор многочленов. */
+	Во втором случае в состоянии потока будет установлен флаг ios_base::failbit, 
+	без снятия которого дальнейшее чтение из потока невозможно. Если ошибка 
+	чтения была связана с достижением конца потока, то дополнительно будет 
+	установлен флаг ios_base::eofbit.
+	\par По окончании ввода система iRight будет содержать упрощенный 
+	(без повторов) набор многочленов. */
 template<class _Char, class _Traits, size_t _n, class _O> inline
 std::basic_istream<_Char, _Traits>& 
 operator>>(std::basic_istream<_Char, _Traits>& is, MI<_n, _O>& iRight)
 {	
 	// предварительно обнуляем систему
 	iRight.SetEmpty();
-	// признак изменения
-	bool changed = false;
 	// захватываем поток и пропускаем пустые символы
 	typename std::basic_istream<_Char, _Traits>::sentry s(is);
 	// захват выполнен? 
 	if (s)
 	{
 		// флаги ожидания символов
-		bool waitforopen = true, waitforcomma = false, waitforpoly = false;
-		bool afteropen = false;
+		bool waitforopen = true, waitforcomma = false, afteropen = false;
 		// читаем символы
 		while (true)
 		{
@@ -1339,7 +1334,6 @@ operator>>(std::basic_istream<_Char, _Traits>& is, MI<_n, _O>& iRight)
 					break;
 				}
 				waitforopen = false;
-				waitforpoly = true;
 				afteropen = true;
 				continue;
 			}
@@ -1356,39 +1350,25 @@ operator>>(std::basic_istream<_Char, _Traits>& is, MI<_n, _O>& iRight)
 			{
 				waitforcomma = false;
 				if (c == ',')
-				{
-					waitforpoly = true;
 					continue;
-				}
 				if (c != '}')
 					is.setstate(std::ios_base::failbit);
 				break;
 			}
-			// ожидаем многочлен?
-			if (waitforpoly)
+			// возвращаем символ
+			is.rdbuf()->sputbackc(_Traits::to_char_type(c1));
+			// читаем многочлен
+			MP<_n, _O> poly(iRight.GetOrder());
+			is >> poly;
+			// ошибка чтения?
+			if (!is.good())
 			{
-				// возвращаем символ
-				is.rdbuf()->sputbackc(_Traits::to_char_type(c1));
-				// читаем многочлен
-				MP<_n, _O> poly(iRight.GetOrder());
-				is >> poly;
-				// ошибка чтения?
-				if (!is.good())
-				{
-					is.setstate(std::ios_base::failbit);
-					break;
-				}
-				// добавить многочлен
-				iRight.Insert(poly);
-				waitforpoly = false;
-				waitforcomma = true;
-				changed = true;
-				continue;
-			}
-			// недопустимый символ?
-			if (c != '}' || changed)
 				is.setstate(std::ios_base::failbit);
-			break;
+				break;
+			}
+			// добавляем многочлен
+			iRight.Insert(poly);
+			waitforcomma = true;
 		}
 	}
 	// чтение требовалось, но не удалось?
