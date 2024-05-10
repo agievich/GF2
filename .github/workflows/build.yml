@@ -22,7 +22,7 @@ jobs:
         - BUILD_TYPE: ASan
           CXX: clang
         - BUILD_TYPE: Debug
-          CXX: g++
+          CXX: 	clang
     steps:
     - name: Get source
       uses: actions/checkout@v3
