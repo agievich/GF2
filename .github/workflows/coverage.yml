@@ -4,9 +4,9 @@ name: coverage
 
 on:
   push:
-    branches: coverage
+    branches: master
   pull_request:
-    branches: coverage
+    branches: master
 
 jobs:
   run:
