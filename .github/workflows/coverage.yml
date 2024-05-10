@@ -31,9 +31,9 @@ jobs:
         llvm-profdata merge -sparse gf2.profraw -o gf2.profdata
         llvm-cov show ./test/testgf2 -instr-profile=gf2.profdata > coverage.txt
     - name: Upload coverage to Codecov
-      working-directory: ${{github.workspace}}/build
       uses: codecov/codecov-action@v4
       with:
+        directory: ${{github.workspace}}/build
         files: coverage.txt
         token: ${{secrets.CODECOV_TOKEN}}
         fail_ci_if_error: true
