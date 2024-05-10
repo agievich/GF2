@@ -4,9 +4,9 @@ name: coverage
 
 on:
   push:
-    branches: master
+    branches: coverage
   pull_request:
-    branches: master
+    branches: coverage
 
 jobs:
   run:
@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Configure CMake
       run: >
-        CXX=g++-8 cmake -B ${{github.workspace}}/build 
+        CXX=g++-13 cmake -B ${{github.workspace}}/build 
         -DCMAKE_BUILD_TYPE=Coverage
     - name: Build
       run: cmake --build ${{github.workspace}}/build
