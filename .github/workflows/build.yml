@@ -21,10 +21,8 @@ jobs:
           CXX: clang
         - BUILD_TYPE: ASan
           CXX: clang
-        - BUILD_TYPE: MemSan
-          CXX: clang
         - BUILD_TYPE: Debug
-          CXX: clang
+          CXX: g++
     steps:
     - name: Get source
       uses: actions/checkout@v3

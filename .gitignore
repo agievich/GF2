@@ -58,7 +58,7 @@
 *.opensdf
 
 # Specific files
-_docs
+.aux
 apps
 backup
 build

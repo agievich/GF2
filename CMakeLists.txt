@@ -46,10 +46,10 @@ if(CMAKE_COMPILER_IS_GNUCC)
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
   set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_COVERAGE} -O0 -g3 \
     --coverage")
-  set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_ASAN} -fsanitize=address \
-    -fno-common -O3")
-  set(CMAKE_CXX_FLAGS_ASANDBG "${CMAKE_CXX_FLAGS_ASANDBG} -fsanitize=address \
-    -fno-common -O1 -g3 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+  set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_ASAN} -fno-common -O3 \
+    -fsanitize=address")
+  set(CMAKE_CXX_FLAGS_ASANDBG "${CMAKE_CXX_FLAGS_ASANDBG} -fno-common -O1 -g3 \
+    -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
   set(CMAKE_CXX_FLAGS_CHECK "${CMAKE_CXX_FLAGS_CHECK} -Werror -O1 \
     -Wcast-qual -fanalyzer")
 endif(CMAKE_COMPILER_IS_GNUCC)
@@ -60,15 +60,17 @@ if(CMAKE_COMPILER_IS_CLANG)
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
   set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_COVERAGE} -O0 -g3 \
     --coverage")
-  set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_ASAN} -fsanitize=address \
-    -fno-common -fsanitize=undefined -fno-sanitize-recover -O3")
-  set(CMAKE_CXX_FLAGS_ASANDBG "${CMAKE_CXX_FLAGS_ASANDBG} -fsanitize=address \
-    -fno-common -fsanitize=undefined -fno-sanitize-recover -O1 -g3 \
+  set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_ASAN} -fno-common  -O3 \
+    -fsanitize=address -fsanitize=undefined -fno-sanitize-recover \
+    -fsanitize-undefined-trap-on-error")
+  set(CMAKE_CXX_FLAGS_ASANDBG "${CMAKE_CXX_FLAGS_ASANDBG} -fno-common  -O1 -g3 \
+    -fsanitize=address -fsanitize=undefined -fno-sanitize-recover \
+    -fsanitize-undefined-trap-on-error -fno-omit-frame-pointer \
+    -fno-optimize-sibling-calls")
+  set(CMAKE_CXX_FLAGS_MEMSAN "${CMAKE_CXX_FLAGS_MEMSAN} -O3 -fsanitize=memory")
+  set(CMAKE_CXX_FLAGS_MEMSANDBG "${CMAKE_CXX_FLAGS_MEMSANDBG} -O1 -g3 \ 
+    -fsanitize=memory -fsanitize-memory-track-origins=2 \
     -fno-omit-frame-pointer -fno-optimize-sibling-calls")
-  set(CMAKE_CXX_FLAGS_MEMSAN "${CMAKE_CXX_FLAGS_MEMSAN} -fsanitize=memory -O3")
-  set(CMAKE_CXX_FLAGS_MEMSANDBG "${CMAKE_CXX_FLAGS_MEMSANDBG} \
-    -fsanitize=memory -O1 -g3 -fno-omit-frame-pointer \ 
-    -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2")
   set(CMAKE_CXX_FLAGS_CHECK "${CMAKE_CXX_FLAGS_CHECK} -Werror -O1 -Wcast-qual")
 endif(CMAKE_COMPILER_IS_CLANG)
 
