@@ -4,7 +4,7 @@
 \brief Monomials in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.05.07
+\version 2026.06.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -421,7 +421,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, MM<_n>& mRight)
 				ZZ<_n> index;
 				(is >> index).flags(flags);
 				// ошибка чтения? неверный индекс? переменная уже прочитана?
-				if (!is.good() || index >= ZZ<_n>(_n) || mRight[index] != 0)
+				if (is.fail() || index >= ZZ<_n>(_n) || mRight[index] != 0)
 				{
 					is.setstate(std::ios_base::failbit);
 					break;

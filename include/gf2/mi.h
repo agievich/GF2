@@ -4,7 +4,7 @@
 \brief Ideals in GF(2)[x0,x1,...]
 \project GF2 [algebra over GF(2)]
 \created 2004.01.01
-\version 2020.07.15
+\version 2026.06.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -1373,11 +1373,8 @@ operator>>(std::basic_istream<_Char, _Traits>& is, MI<_n, _O>& iRight)
 				MP<_n, _O> poly(iRight.GetOrder());
 				is >> poly;
 				// ошибка чтения?
-				if (!is.good())
-				{
-					is.setstate(std::ios_base::failbit);
+				if (is.fail())
 					break;
-				}
 				// добавить многочлен
 				iRight.Insert(poly);
 				waitforpoly = false;

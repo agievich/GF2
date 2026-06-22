@@ -4,7 +4,7 @@
 \brief Functions {0, 1}^n \to T
 \project GF2 [algebra over GF(2)]
 \created 2004.06.10
-\version 2020.05.27
+\version 2026.06.22
 \license This program is released under the MIT License. See Copyright Notices 
 in GF2/info.h.
 *******************************************************************************
@@ -321,7 +321,7 @@ operator>>(std::basic_istream<_Char, _Traits>& is, Func<_n, _T>& fRight)
 		typename Func<_n, _T>::Image y;
 		is >> y;
 		// ошибка чтения?
-		if (is.fail() || is.bad())
+		if (is.fail())
 			break;
 		// все нормально
 		fRight.Set(x, y);
